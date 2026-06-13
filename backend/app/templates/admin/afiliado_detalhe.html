@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ aff.full_name }} – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <p><a href="/admin/afiliados">← Voltar à lista</a></p>
+  <h1>{{ aff.full_name }}</h1>
+  <div class="grid two">
+    <div class="card">
+      <h3>Dados cadastrais</h3>
+      <p><strong>CPF:</strong> {{ aff.cpf[:3] }}.{{ aff.cpf[3:6] }}.{{ aff.cpf[6:9] }}-{{ aff.cpf[9:] }}</p>
+      <p><strong>E-mail:</strong> {{ aff.email }}</p>
+      <p><strong>Telefone:</strong> {{ aff.phone }} · <strong>WhatsApp:</strong> {{ aff.whatsapp }}</p>
+      <p><strong>Cidade/UF:</strong> {{ aff.city }} – {{ aff.state }}</p>
+      <p><strong>Profissão:</strong> {{ L.professions[aff.profession] }} · <strong>MEI:</strong> {{ L.mei[aff.mei_status] }}</p>
+      <p><strong>Necessidades de apoio:</strong> {{ aff.support_needs or '—' }}</p>
+      <p><strong>Cadastro em:</strong> {{ aff.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+      {% if consent %}<p><strong>Aceite LGPD:</strong> versão {{ consent.policy_version }} em {{ consent.accepted_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+    </div>
+    <div class="card">
+      <h3>Solicitações de ajuda</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+        <tbody>{% for r in aff.requests %}
+        <tr><td>{{ r.id }}</td><td>{{ L.types[r.type] }}</td>
+        <td><span class="badge badge-{{ r.status }}">{{ L.statuses[r.status] }}</span></td>
+        <td><a href="/admin/solicitacoes/{{ r.id }}">Ver</a></td></tr>
+        {% else %}<tr><td colspan="4">Nenhuma solicitação.</td></tr>{% endfor %}</tbody>
+      </table></div>
+      <h3>Cursos inscritos</h3>
+      <ul>{% for e in aff.enrollments %}<li>{{ e.course.title }} ({{ e.created_at.strftime('%d/%m/%Y') }})</li>
+      {% else %}<li class="muted">Nenhuma inscrição.</li>{% endfor %}</ul>
+    </div>
+  </div>
+  <h2>Atendimentos registrados</h2>
+  <form class="card form" method="post" action="/admin/afiliados/{{ aff.id }}/atendimento">
+    <label>Registrar novo atendimento<textarea name="notes" rows="3" required placeholder="Descreva o atendimento realizado"></textarea></label>
+    <button class="btn btn-primary" type="submit">Registrar atendimento</button>
+  </form>
+  <ul class="timeline">
+    {% for at in attendances %}
+    <li><strong>{{ at.created_at.strftime('%d/%m/%Y %H:%M') }}</strong> — {{ at.admin.email }}<p>{{ at.notes }}</p></li>
+    {% else %}<li class="muted">Nenhum atendimento registrado.</li>{% endfor %}
+  </ul>
+</div></section>
+{% endblock %}

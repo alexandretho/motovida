@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Parceiros – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Rede de Parceiros</h1>
+  <details class="card"><summary><strong>+ Cadastrar novo parceiro</strong></summary>
+    <form class="form" method="post" action="/admin/parceiros">
+      <div class="form-row">
+        <label>Nome *<input name="name" required maxlength="180"></label>
+        <label>Categoria *
+          <select name="category" required>
+            {% for c in ['Oficinas mecânicas','Lojas de peças e acessórios','Clínicas médicas','Farmácias','Cursos profissionalizantes','Seguros','Combustíveis','Academias','Outros'] %}
+            <option>{{ c }}</option>{% endfor %}
+          </select></label>
+      </div>
+      <div class="form-row">
+        <label>Desconto/benefício<input name="discount" maxlength="120" placeholder="Ex.: 15% em revisões"></label>
+        <label>Contato<input name="contact" maxlength="180"></label>
+      </div>
+      <div class="form-row">
+        <label>Cidade<input name="city" maxlength="120"></label>
+        <label>UF<input name="state" maxlength="2"></label>
+      </div>
+      <button class="btn btn-primary" type="submit">Cadastrar parceiro</button>
+    </form>
+  </details>
+  {% for p in items %}
+  <details class="card">
+    <summary><strong>{{ p.name }}</strong> · {{ p.category }} · {{ p.discount or 'sem desconto informado' }}
+      {% if not p.active %}<span class="badge badge-cancelada">Inativo</span>{% endif %}</summary>
+    <form class="form" method="post" action="/admin/parceiros/{{ p.id }}/editar">
+      <div class="form-row">
+        <label>Nome<input name="name" value="{{ p.name }}" required maxlength="180"></label>
+        <label>Categoria<input name="category" value="{{ p.category }}" required maxlength="120"></label>
+      </div>
+      <div class="form-row">
+        <label>Desconto<input name="discount" value="{{ p.discount or '' }}" maxlength="120"></label>
+        <label>Contato<input name="contact" value="{{ p.contact or '' }}" maxlength="180"></label>
+      </div>
+      <div class="form-row">
+        <label>Cidade<input name="city" value="{{ p.city or '' }}" maxlength="120"></label>
+        <label>UF<input name="state" value="{{ p.state or '' }}" maxlength="2"></label>
+        <label class="check"><input type="checkbox" name="active" {{ 'checked' if p.active }}> Parceiro ativo</label>
+      </div>
+      <button class="btn btn-primary" type="submit">Salvar alterações</button>
+    </form>
+  </details>
+  {% endfor %}
+</div></section>
+{% endblock %}

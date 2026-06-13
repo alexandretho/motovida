@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Minha Área – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Olá, {{ aff.full_name.split(' ')[0] }} 👋</h1>
+    <p class="section-sub">{{ L.professions[aff.profession] }} · {{ aff.city }} – {{ aff.state }}</p>
+    <div class="grid stats">
+      <div class="stat"><strong>{{ counts.abertas }}</strong><span>solicitações em andamento</span></div>
+      <div class="stat"><strong>{{ counts.cursos }}</strong><span>cursos inscritos</span></div>
+      <div class="stat"><strong>{{ counts.juridico }}</strong><span>demandas jurídicas</span></div>
+      <div class="stat"><strong>{{ counts.psico }}</strong><span>pedidos de acolhimento</span></div>
+    </div>
+    <div class="grid cards" style="margin-top:1.5rem">
+      <a class="card card-link" href="/afiliado/juridico"><div class="card-icon">⚖️</div><h3>Apoio Jurídico</h3><p>Acidentes de trânsito, dúvidas trabalhistas e previdenciárias.</p></a>
+      <a class="card card-link" href="/afiliado/psicologico"><div class="card-icon">💙</div><h3>Apoio Psicológico</h3><p>Solicite acolhimento emocional e agende atendimento.</p></a>
+      <a class="card card-link" href="/afiliado/cursos"><div class="card-icon">📚</div><h3>Cursos</h3><p>Inscreva-se em capacitações gratuitas.</p></a>
+      <a class="card card-link" href="/afiliado/mei"><div class="card-icon">📋</div><h3>Auxílio MEI</h3><p>Abertura, regularização e dúvidas do MEI.</p></a>
+      <a class="card card-link" href="/afiliado/ajuda"><div class="card-icon">🆘</div><h3>Canal de Ajuda</h3><p>Abra e acompanhe solicitações de apoio.</p></a>
+    </div>
+    {% if requests %}
+    <h2 style="margin-top:2rem">Últimas solicitações</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Abertura</th><th></th></tr></thead>
+      <tbody>{% for r in requests %}
+      <tr><td>{{ r.id }}</td><td>{{ L.types[r.type] }}</td><td>{{ L.priorities[r.priority] }}</td>
+      <td><span class="badge badge-{{ r.status }}">{{ L.statuses[r.status] }}</span></td>
+      <td>{{ r.created_at.strftime('%d/%m/%Y') }}</td>
+      <td><a href="/afiliado/ajuda/{{ r.id }}">Ver</a></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

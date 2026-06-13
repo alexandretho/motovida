@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Solicitação #{{ item.id }} – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container narrow">
+  <p><a href="/afiliado/ajuda">← Voltar</a></p>
+  <h1>Solicitação #{{ item.id }}</h1>
+  <div class="card">
+    <p><strong>Tipo:</strong> {{ L.types[item.type] }} · <strong>Prioridade:</strong> {{ L.priorities[item.priority] }}</p>
+    <p><strong>Status:</strong> <span class="badge badge-{{ item.status }}">{{ L.statuses[item.status] }}</span></p>
+    <p><strong>Abertura:</strong> {{ item.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+    <p>{{ item.description }}</p>
+  </div>
+  <h2>Histórico de atendimento</h2>
+  <ul class="timeline">
+    {% for h in item.history %}
+    <li><strong>{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+      {% if h.new_status %}— status: <span class="badge badge-{{ h.new_status }}">{{ L.statuses[h.new_status] }}</span>{% endif %}
+      {% if h.note %}<p>{{ h.note }}</p>{% endif %}
+      {% if h.author %}<small class="muted">por {{ h.author }}</small>{% endif %}</li>
+    {% else %}<li>Sem registros de atendimento ainda.</li>{% endfor %}
+  </ul>
+</div></section>
+{% endblock %}

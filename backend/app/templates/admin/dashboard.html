@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Painel Administrativo – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Painel Administrativo</h1>
+  <div class="grid stats">
+    <div class="stat"><strong>{{ total_affiliates }}</strong><span>afiliados cadastrados</span></div>
+    {% for s, c in by_status %}<div class="stat"><strong>{{ c }}</strong><span>solicitações: {{ L.statuses[s] }}</span></div>{% endfor %}
+  </div>
+
+  <div class="grid two" style="margin-top:1.5rem">
+    <div class="card">
+      <h3>Afiliados por estado</h3>
+      {% set max1 = by_state[0][1] if by_state else 1 %}
+      {% for uf, c in by_state %}
+      <div class="bar-row"><span class="bar-label">{{ uf }}</span>
+        <span class="bar"><span class="bar-fill" style="width:{{ (c / max1 * 100) | round }}%"></span></span>
+        <span class="bar-value">{{ c }}</span></div>
+      {% else %}<p class="muted">Sem dados ainda.</p>{% endfor %}
+    </div>
+    <div class="card">
+      <h3>Solicitações por tipo</h3>
+      {% set max2 = by_type[0][1] if by_type else 1 %}
+      {% for t, c in by_type %}
+      <div class="bar-row"><span class="bar-label">{{ L.types[t] }}</span>
+        <span class="bar"><span class="bar-fill" style="width:{{ (c / max2 * 100) | round }}%"></span></span>
+        <span class="bar-value">{{ c }}</span></div>
+      {% else %}<p class="muted">Sem solicitações ainda.</p>{% endfor %}
+    </div>
+    <div class="card">
+      <h3>Afiliados por profissão</h3>
+      {% set max3 = by_profession[0][1] if by_profession else 1 %}
+      {% for p, c in by_profession %}
+      <div class="bar-row"><span class="bar-label">{{ L.professions[p] }}</span>
+        <span class="bar"><span class="bar-fill" style="width:{{ (c / max3 * 100) | round }}%"></span></span>
+        <span class="bar-value">{{ c }}</span></div>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Principais demandas (situação do MEI)</h3>
+      {% set max4 = by_mei[0][1] if by_mei else 1 %}
+      {% for m, c in by_mei %}
+      <div class="bar-row"><span class="bar-label">{{ L.mei[m] }}</span>
+        <span class="bar"><span class="bar-fill" style="width:{{ (c / max4 * 100) | round }}%"></span></span>
+        <span class="bar-value">{{ c }}</span></div>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h3>Top 10 cidades</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Cidade</th><th>UF</th><th>Afiliados</th></tr></thead>
+        <tbody>{% for city, uf, c in by_city %}<tr><td>{{ city }}</td><td>{{ uf }}</td><td>{{ c }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Cursos com mais inscritos</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Curso</th><th>Inscritos</th></tr></thead>
+        <tbody>{% for title, c in top_courses %}<tr><td>{{ title }}</td><td>{{ c }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:2rem">Solicitações aguardando atendimento</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for r in open_requests %}
+    <tr><td>{{ r.id }}</td><td>{{ r.affiliate.full_name }}</td><td>{{ L.types[r.type] }}</td>
+    <td>{{ L.priorities[r.priority] }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ L.statuses[r.status] }}</span></td>
+    <td><a href="/admin/solicitacoes/{{ r.id }}">Atender</a></td></tr>
+    {% else %}<tr><td colspan="6">Nenhuma solicitação pendente. 🎉</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

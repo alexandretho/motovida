@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <p class="eyebrow">Sistema Nacional de Cadastro e Atendimento</p>
+    <h1>Cuidando de quem move o Brasil <em>todos os dias.</em></h1>
+    <p class="lead">O Instituto MotoVida Guilherme França oferece apoio jurídico, psicológico e social,
+    cursos gratuitos, auxílio MEI e uma rede de parceiros com descontos para motoboys, motociclistas,
+    entregadores e suas famílias — em todo o país.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="/cadastro">Fazer meu cadastro gratuito</a>
+      <a class="btn btn-outline btn-lg" href="/parceiros">Ver rede de parceiros</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>O que o Instituto oferece</h2>
+    <p class="section-sub">Benefícios pensados para quem vive sobre duas rodas e para quem cuida de quem entrega.</p>
+    <div class="grid cards">
+      {% for icon, title, text in benefits %}
+      <article class="card">
+        <div class="card-icon">{{ icon }}</div>
+        <h3>{{ title }}</h3>
+        <p>{{ text }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <h2>Sobre o Instituto MotoVida</h2>
+    <p>O Instituto nasceu em memória de Guilherme França para transformar a realidade de quem trabalha
+    no trânsito brasileiro. Atuamos na prevenção de acidentes, no acolhimento de vítimas e familiares,
+    na formalização profissional (MEI) e na capacitação contínua dos trabalhadores de entrega.</p>
+    <p>Ao se afiliar, você ganha acesso a uma área exclusiva para solicitar orientação jurídica,
+    acolhimento psicológico, inscrever-se em cursos e acompanhar cada atendimento.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>Parceiros em destaque</h2>
+    <div class="grid cards">
+      {% for p in partners %}
+      <article class="card card-partner">
+        <span class="tag">{{ p.category }}</span>
+        <h3>{{ p.name }}</h3>
+        <p class="discount">{{ p.discount }}</p>
+        <p class="muted">{{ p.city }}{% if p.state %} – {{ p.state }}{% endif %}</p>
+      </article>
+      {% endfor %}
+    </div>
+    <p style="margin-top:1rem"><a class="btn btn-outline" href="/parceiros">Ver todos os parceiros</a></p>
+  </div>
+</section>
+{% endblock %}

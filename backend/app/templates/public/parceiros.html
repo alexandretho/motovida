@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Parceiros – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Rede de Parceiros</h1>
+    <p class="section-sub">Descontos e condições especiais para afiliados do Instituto MotoVida.</p>
+    <div class="grid cards">
+      {% for p in partners %}
+      <article class="card card-partner">
+        <span class="tag">{{ p.category }}</span>
+        <h3>{{ p.name }}</h3>
+        <p class="discount">{{ p.discount }}</p>
+        <p class="muted">{{ p.city }}{% if p.state %} – {{ p.state }}{% endif %}{% if p.contact %} · {{ p.contact }}{% endif %}</p>
+      </article>
+      {% else %}<p>Nenhum parceiro cadastrado ainda.</p>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

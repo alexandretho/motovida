@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Apoio Psicológico – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>💙 Apoio Psicológico</h1>
+  <p class="section-sub">Acolhimento emocional para afiliados, vítimas de acidente e familiares.</p>
+  <form class="card form" method="post" action="/afiliado/psicologico">
+    <div class="form-row">
+      <label>Você é... *
+        <select name="relation" required>
+          {% for k, v in L.psy.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+        </select></label>
+      <label>Preferência de data/horário<input name="preferred_date" maxlength="60" placeholder="Ex.: terças à tarde"></label>
+    </div>
+    <label>Como podemos acolher você? *<textarea name="description" rows="4" required></textarea></label>
+    <button class="btn btn-primary" type="submit">Solicitar acolhimento</button>
+  </form>
+  <h2>Meus pedidos</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Situação</th><th>Preferência</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>{% for i in items %}
+    <tr><td>{{ i.id }}</td><td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td>
+    <td><span class="badge badge-{{ i.status }}">{{ L.statuses[i.status] }}</span></td>
+    <td>{{ i.created_at.strftime('%d/%m/%Y') }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhum pedido registrado ainda.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

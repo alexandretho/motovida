@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Instituto MotoVida Guilherme França{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" href="/"><span class="brand-badge">🏍️</span><span><strong>MotoVida</strong><small>Instituto Guilherme França</small></span></a>
+    <button class="menu-toggle" aria-label="Abrir menu" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+    <nav class="nav">
+      {% if user and user.role == 'admin' %}
+        <a href="/admin">Painel</a><a href="/admin/afiliados">Afiliados</a>
+        <a href="/admin/solicitacoes">Solicitações</a><a href="/admin/atendimentos">Atendimentos</a>
+        <a href="/admin/cursos">Cursos</a><a href="/admin/eventos">Eventos</a>
+        <a href="/admin/parceiros">Parceiros</a><a class="btn btn-ghost" href="/logout">Sair</a>
+      {% elif user and user.role == 'affiliate' %}
+        <a href="/afiliado">Início</a><a href="/afiliado/juridico">Jurídico</a>
+        <a href="/afiliado/psicologico">Psicológico</a><a href="/afiliado/cursos">Cursos</a>
+        <a href="/afiliado/mei">MEI</a><a href="/afiliado/ajuda">Ajuda</a>
+        <a class="btn btn-ghost" href="/logout">Sair</a>
+      {% else %}
+        <a href="/">Início</a><a href="/parceiros">Parceiros</a><a href="/contato">Contato</a>
+        <a href="/login">Entrar</a><a class="btn btn-primary" href="/cadastro">Quero me afiliar</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+<div class="road-divider" aria-hidden="true"></div>
+{% if flash %}<div class="container"><div class="flash flash-{{ flash.category }}">{{ flash.message }}</div></div>{% endif %}
+<main>{% block content %}{% endblock %}</main>
+<footer class="footer">
+  <div class="container footer-inner">
+    <p><strong>Instituto MotoVida Guilherme França</strong><br>“Cuidando de quem move o Brasil todos os dias.” 🏍️💙</p>
+    <p><a href="/privacidade">Política de Privacidade (LGPD)</a> · <a href="/contato">Contato</a></p>
+  </div>
+</footer>
+</body>
+</html>

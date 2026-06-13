@@ -1,0 +1,163 @@
+/* ============================================================
+   Instituto MotoVida Guilherme França — identidade visual
+   Azul institucional + branco + tons escuros · mobile-first
+   Assinatura: divisor "faixa de pista" sob o cabeçalho
+   ============================================================ */
+:root {
+  --ink: #101826;          /* tom escuro principal */
+  --ink-soft: #3b4a5f;
+  --blue: #0b4fa0;         /* azul institucional */
+  --blue-deep: #083468;
+  --blue-sky: #e8f0fb;
+  --accent: #ffd23f;       /* amarelo de sinalização (faixa de pista) */
+  --paper: #ffffff;
+  --bg: #f5f7fb;
+  --line: #dfe6ef;
+  --ok: #1a7f4b; --warn: #b97700; --danger: #b3261e;
+  --radius: 12px;
+  --shadow: 0 2px 10px rgba(16, 24, 38, .07);
+  font-size: 16px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.55;
+}
+h1, h2, h3 { line-height: 1.2; color: var(--ink); }
+h1 { font-size: 1.7rem; margin: 0 0 .35rem; }
+h2 { font-size: 1.25rem; margin: 1.6rem 0 .6rem; }
+h3 { font-size: 1.05rem; margin: 0 0 .4rem; }
+a { color: var(--blue); text-decoration: none; }
+a:hover, a:focus { text-decoration: underline; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.container { width: min(1100px, 100% - 2rem); margin-inline: auto; }
+.narrow { max-width: 680px; }
+.muted { color: var(--ink-soft); font-size: .92rem; }
+
+/* ---------- Cabeçalho + assinatura "faixa de pista" ---------- */
+.topbar { background: var(--ink); color: #fff; }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .7rem 0; gap: .5rem; }
+.brand { display: flex; align-items: center; gap: .6rem; color: #fff; }
+.brand:hover { text-decoration: none; }
+.brand-badge { font-size: 1.5rem; background: var(--blue); border-radius: 10px; padding: .25rem .45rem; }
+.brand strong { display: block; font-size: 1.05rem; letter-spacing: .02em; }
+.brand small { display: block; color: #aebacb; font-size: .72rem; }
+.menu-toggle { display: block; background: none; border: 1px solid #44536a; color: #fff; font-size: 1.2rem; border-radius: 8px; padding: .25rem .6rem; cursor: pointer; }
+.nav { display: none; width: 100%; flex-direction: column; gap: .15rem; padding-bottom: .6rem; }
+.nav.open { display: flex; }
+.nav a { color: #e7edf6; padding: .5rem .4rem; border-radius: 8px; }
+.nav a:hover { background: #223043; text-decoration: none; }
+.road-divider {
+  height: 8px; background: var(--blue-deep);
+  background-image: repeating-linear-gradient(90deg, var(--accent) 0 26px, transparent 26px 58px);
+  background-size: 58px 3px; background-repeat: repeat-x; background-position: center;
+}
+
+/* ---------- Hero ---------- */
+.hero { background: linear-gradient(160deg, var(--ink) 0%, var(--blue-deep) 70%, var(--blue) 100%); color: #fff; }
+.hero-inner { padding: 2.6rem 0 2.8rem; }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .72rem; color: var(--accent); margin: 0 0 .6rem; }
+.hero h1 { color: #fff; font-size: 1.9rem; margin: 0 0 .8rem; max-width: 21ch; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lead { color: #d6e1f0; max-width: 56ch; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.4rem; }
+
+/* ---------- Seções, cards e grades ---------- */
+.section { padding: 2.2rem 0; }
+.section-alt { background: var(--blue-sky); }
+.section-sub { color: var(--ink-soft); margin-top: 0; }
+.grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.2rem; box-shadow: var(--shadow); }
+.card-link { display: block; color: inherit; }
+.card-link:hover { text-decoration: none; border-color: var(--blue); }
+.card-icon { font-size: 1.7rem; margin-bottom: .35rem; }
+.card-partner .discount { color: var(--blue); font-weight: 600; margin: .2rem 0; }
+.tag { display: inline-block; background: var(--blue-sky); color: var(--blue-deep); font-size: .74rem; font-weight: 600; padding: .15rem .55rem; border-radius: 99px; margin-bottom: .4rem; }
+.stat { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: var(--radius); padding: .9rem 1rem; }
+.stat strong { display: block; font-size: 1.6rem; color: var(--blue-deep); }
+.stat span { color: var(--ink-soft); font-size: .85rem; }
+
+/* ---------- Formulários ---------- */
+.form label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: .9rem; }
+.form input, .form select, .form textarea {
+  width: 100%; margin-top: .3rem; padding: .6rem .7rem; font: inherit; font-weight: 400;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+}
+.form input:focus, .form select:focus, .form textarea:focus { border-color: var(--blue); }
+.form .check { display: flex; gap: .5rem; align-items: flex-start; font-weight: 400; }
+.form .check input { width: auto; margin-top: .2rem; }
+.filters { display: grid; gap: .6rem; align-items: end; }
+.filters label { margin-bottom: 0; }
+.inline-form { display: flex; gap: .4rem; align-items: center; }
+.inline-form select { padding: .3rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: .85rem; }
+
+/* ---------- Botões ---------- */
+.btn { display: inline-block; border: 0; cursor: pointer; font: inherit; font-weight: 600; padding: .6rem 1.1rem; border-radius: 9px; background: var(--blue-sky); color: var(--blue-deep); }
+.btn:hover { text-decoration: none; filter: brightness(.96); }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-deep); }
+.btn-outline { background: transparent; border: 2px solid var(--accent); color: #fff; }
+.section .btn-outline { border-color: var(--blue); color: var(--blue); }
+.btn-ghost { background: transparent; border: 1px solid #44536a; color: #fff !important; }
+.btn-lg { padding: .8rem 1.4rem; font-size: 1.02rem; }
+.btn-sm { padding: .3rem .7rem; font-size: .82rem; }
+
+/* ---------- Tabelas ---------- */
+.table-wrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+th, td { text-align: left; padding: .65rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--blue-sky); color: var(--blue-deep); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+tr:last-child td { border-bottom: 0; }
+
+/* ---------- Badges de status ---------- */
+.badge { display: inline-block; font-size: .74rem; font-weight: 700; padding: .18rem .6rem; border-radius: 99px; white-space: nowrap; }
+.badge-aberta { background: #e8f0fb; color: var(--blue-deep); }
+.badge-em_analise { background: #fff4d6; color: var(--warn); }
+.badge-em_atendimento { background: #e2ecff; color: #2747a8; }
+.badge-concluida { background: #e3f4ea; color: var(--ok); }
+.badge-cancelada { background: #fdeceb; color: var(--danger); }
+
+/* ---------- Gráficos simples em barras ---------- */
+.bar-row { display: grid; grid-template-columns: 110px 1fr 2.2rem; gap: .5rem; align-items: center; margin: .35rem 0; font-size: .85rem; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar { background: var(--blue-sky); border-radius: 99px; height: 12px; overflow: hidden; }
+.bar-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-deep)); border-radius: 99px; }
+.bar-value { text-align: right; font-weight: 700; color: var(--blue-deep); }
+
+/* ---------- Linha do tempo, flash e rodapé ---------- */
+.timeline { list-style: none; padding: 0; }
+.timeline li { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: .6rem; }
+.timeline p { margin: .3rem 0 0; }
+.flash { margin: 1rem 0 0; padding: .8rem 1rem; border-radius: var(--radius); font-weight: 600; }
+.flash ul { margin: 0; padding-left: 1.1rem; font-weight: 400; }
+.flash-success { background: #e3f4ea; color: var(--ok); border: 1px solid #bfe6cf; }
+.flash-error { background: #fdeceb; color: var(--danger); border: 1px solid #f3c6c3; }
+.footer { background: var(--ink); color: #c6d2e2; margin-top: 2rem; }
+.footer-inner { padding: 1.6rem 0; }
+.footer a { color: var(--accent); }
+.prose ol li, .prose h3 { margin-bottom: .4rem; }
+details.card { margin-bottom: .8rem; }
+details.card summary { cursor: pointer; }
+details.card form { margin-top: 1rem; }
+
+/* ---------- Telas maiores ---------- */
+@media (min-width: 760px) {
+  h1 { font-size: 2.1rem; }
+  .hero h1 { font-size: 2.6rem; }
+  .menu-toggle { display: none; }
+  .nav { display: flex !important; flex-direction: row; align-items: center; gap: .2rem; width: auto; padding: 0; }
+  .nav a { padding: .45rem .7rem; }
+  .cards { grid-template-columns: repeat(3, 1fr); }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  .two { grid-template-columns: 1fr 1fr; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .filters { grid-template-columns: repeat(3, 1fr) auto; }
+}
+@media (min-width: 480px) and (max-width: 759px) {
+  .cards { grid-template-columns: repeat(2, 1fr); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Solicitação #{{ item.id }} – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container narrow">
+  <p><a href="/admin/solicitacoes">← Voltar</a></p>
+  <h1>Solicitação #{{ item.id }}</h1>
+  <div class="card">
+    <p><strong>Afiliado:</strong> <a href="/admin/afiliados/{{ item.affiliate.id }}">{{ item.affiliate.full_name }}</a>
+      · {{ item.affiliate.city }} – {{ item.affiliate.state }}</p>
+    <p><strong>Tipo:</strong> {{ L.types[item.type] }} · <strong>Prioridade:</strong> {{ L.priorities[item.priority] }}</p>
+    <p><strong>Status atual:</strong> <span class="badge badge-{{ item.status }}">{{ L.statuses[item.status] }}</span></p>
+    <p>{{ item.description }}</p>
+  </div>
+  <form class="card form" method="post" action="/admin/solicitacoes/{{ item.id }}/status">
+    <div class="form-row">
+      <label>Novo status
+        <select name="status">{% for k, v in L.statuses.items() %}
+          <option value="{{ k }}" {{ 'selected' if item.status == k }}>{{ v }}</option>{% endfor %}
+        </select></label>
+    </div>
+    <label>Anotação do atendimento<textarea name="note" rows="3" placeholder="Registre o que foi feito"></textarea></label>
+    <button class="btn btn-primary" type="submit">Atualizar solicitação</button>
+  </form>
+  <h2>Histórico</h2>
+  <ul class="timeline">
+    {% for h in item.history %}
+    <li><strong>{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+      {% if h.old_status %}{{ L.statuses[h.old_status] }} →{% endif %}
+      {% if h.new_status %}<span class="badge badge-{{ h.new_status }}">{{ L.statuses[h.new_status] }}</span>{% endif %}
+      {% if h.note %}<p>{{ h.note }}</p>{% endif %}
+      {% if h.author %}<small class="muted">por {{ h.author }}</small>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</div></section>
+{% endblock %}

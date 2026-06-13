@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Apoio Jurídico – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>⚖️ Apoio Jurídico</h1>
+  <p class="section-sub">Registre sua demanda e acompanhe o status. Nossa equipe jurídica entrará em contato.</p>
+  <form class="card form" method="post" action="/afiliado/juridico">
+    <label>Tipo de demanda *
+      <select name="category" required>
+        {% for k, v in L.legal.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+      </select></label>
+    <label>Descreva sua situação *<textarea name="description" rows="4" required></textarea></label>
+    <button class="btn btn-primary" type="submit">Solicitar orientação jurídica</button>
+  </form>
+  <h2>Minhas demandas</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Tipo</th><th>Descrição</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>{% for i in items %}
+    <tr><td>{{ i.id }}</td><td>{{ L.legal[i.category] }}</td><td>{{ i.description[:80] }}{% if i.description|length > 80 %}…{% endif %}</td>
+    <td><span class="badge badge-{{ i.status }}">{{ L.statuses[i.status] }}</span></td>
+    <td>{{ i.created_at.strftime('%d/%m/%Y') }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhuma demanda registrada ainda.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

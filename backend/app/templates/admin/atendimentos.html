@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Atendimentos Especializados – Painel Admin{% endblock %}
+{% macro status_form(kind, item) %}
+<form class="inline-form" method="post" action="/admin/atendimentos/{{ kind }}/{{ item.id }}/status">
+  <select name="status">{% for k, v in L.statuses.items() %}
+    <option value="{{ k }}" {{ 'selected' if item.status == k }}>{{ v }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-sm" type="submit">Salvar</button>
+</form>
+{% endmacro %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Atendimentos Especializados</h1>
+
+  <h2>⚖️ Jurídico</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Tipo</th><th>Descrição</th><th>Status</th></tr></thead>
+    <tbody>{% for i in legal %}
+    <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
+    <td>{{ L.legal[i.category] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('juridico', i) }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhuma demanda jurídica.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2>💙 Psicológico</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Situação</th><th>Preferência</th><th>Status</th></tr></thead>
+    <tbody>{% for i in psy %}
+    <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
+    <td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td><td>{{ status_form('psicologico', i) }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhum pedido de acolhimento.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2>📋 MEI</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Assunto</th><th>Descrição</th><th>Status</th></tr></thead>
+    <tbody>{% for i in mei %}
+    <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
+    <td>{{ L.mei_topics[i.topic] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('mei', i) }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhuma solicitação MEI.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}
