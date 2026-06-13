@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Eventos – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Eventos e Palestras</h1>
+  <details class="card"><summary><strong>+ Cadastrar novo evento</strong></summary>
+    <form class="form" method="post" action="/admin/eventos">
+      <label>Título *<input name="title" required maxlength="180"></label>
+      <label>Descrição<textarea name="description" rows="3"></textarea></label>
+      <div class="form-row">
+        <label>Data e hora<input type="datetime-local" name="event_date"></label>
+        <label>Local<input name="location" maxlength="180"></label>
+      </div>
+      <button class="btn btn-primary" type="submit">Cadastrar evento</button>
+    </form>
+  </details>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Título</th><th>Data</th><th>Local</th><th>Descrição</th></tr></thead>
+    <tbody>{% for e in items %}
+    <tr><td>{{ e.title }}</td><td>{{ e.event_date.strftime('%d/%m/%Y %H:%M') if e.event_date else 'A definir' }}</td>
+    <td>{{ e.location or '—' }}</td><td>{{ (e.description or '')[:80] }}</td></tr>
+    {% else %}<tr><td colspan="4">Nenhum evento cadastrado.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

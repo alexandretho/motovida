@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Entrar – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <h1>Entrar</h1>
+    <form class="card form" method="post" action="/login">
+      <label>E-mail<input type="email" name="email" required maxlength="180" autocomplete="email"></label>
+      <label>Senha<input type="password" name="password" required autocomplete="current-password"></label>
+      <button class="btn btn-primary" type="submit">Entrar</button>
+      <p class="muted">Ainda não é afiliado? <a href="/cadastro">Cadastre-se gratuitamente</a>.</p>
+    </form>
+  </div>
+</section>
+{% endblock %}

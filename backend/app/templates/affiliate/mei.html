@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Auxílio MEI – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>📋 Auxílio MEI</h1>
+  <p class="section-sub">Formalize-se e garanta benefícios previdenciários e nota fiscal.</p>
+  <div class="card prose">
+    <h3>Passo a passo para abrir o MEI</h3>
+    <ol>
+      <li>Tenha em mãos CPF, RG, comprovante de endereço e título de eleitor (ou recibo do IR).</li>
+      <li>Acesse o Portal do Empreendedor (gov.br) e crie/entre na sua conta gov.br.</li>
+      <li>Escolha a atividade: para entregas, a ocupação usual é “motoboy / entrega de documentos e pequenos volumes”.</li>
+      <li>Informe o endereço da atividade e confirme os dados.</li>
+      <li>Emita o CCMEI (certificado) e guarde o boleto mensal (DAS) — pague todo mês até o dia 20.</li>
+      <li>Faça a declaração anual (DASN-SIMEI) até 31 de maio de cada ano.</li>
+    </ol>
+    <p class="muted">Ficou com dúvida em qualquer etapa? Peça o suporte especializado abaixo — é gratuito.</p>
+  </div>
+  <form class="card form" method="post" action="/afiliado/mei">
+    <label>Assunto *
+      <select name="topic" required>
+        {% for k, v in L.mei_topics.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+      </select></label>
+    <label>Descreva sua dúvida ou situação *<textarea name="description" rows="4" required></textarea></label>
+    <button class="btn btn-primary" type="submit">Solicitar suporte MEI</button>
+  </form>
+  <h2>Minhas solicitações MEI</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Assunto</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>{% for i in items %}
+    <tr><td>{{ i.id }}</td><td>{{ L.mei_topics[i.topic] }}</td>
+    <td><span class="badge badge-{{ i.status }}">{{ L.statuses[i.status] }}</span></td>
+    <td>{{ i.created_at.strftime('%d/%m/%Y') }}</td></tr>
+    {% else %}<tr><td colspan="4">Nenhuma solicitação ainda.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

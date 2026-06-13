@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Cursos – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Cursos e Capacitações</h1>
+  <details class="card"><summary><strong>+ Cadastrar novo curso</strong></summary>
+    <form class="form" method="post" action="/admin/cursos">
+      <div class="form-row">
+        <label>Título *<input name="title" required maxlength="180"></label>
+        <label>Categoria *<input name="category" required maxlength="120" placeholder="Ex.: Trânsito"></label>
+      </div>
+      <label>Descrição *<textarea name="description" rows="3" required></textarea></label>
+      <label>Carga horária (h)<input type="number" name="workload_hours" min="0" value="8"></label>
+      <button class="btn btn-primary" type="submit">Cadastrar curso</button>
+    </form>
+  </details>
+  {% for c in items %}
+  <details class="card">
+    <summary><strong>{{ c.title }}</strong> · {{ c.category }} · {{ c.enrollments|length }} inscrito(s)
+      {% if not c.active %}<span class="badge badge-cancelada">Inativo</span>{% endif %}
+      — <a href="/admin/cursos/{{ c.id }}/inscritos">ver inscritos</a></summary>
+    <form class="form" method="post" action="/admin/cursos/{{ c.id }}/editar">
+      <div class="form-row">
+        <label>Título<input name="title" value="{{ c.title }}" required maxlength="180"></label>
+        <label>Categoria<input name="category" value="{{ c.category }}" required maxlength="120"></label>
+      </div>
+      <label>Descrição<textarea name="description" rows="3" required>{{ c.description }}</textarea></label>
+      <div class="form-row">
+        <label>Carga horária (h)<input type="number" name="workload_hours" min="0" value="{{ c.workload_hours }}"></label>
+        <label class="check"><input type="checkbox" name="active" {{ 'checked' if c.active }}> Curso ativo</label>
+      </div>
+      <button class="btn btn-primary" type="submit">Salvar alterações</button>
+    </form>
+  </details>
+  {% endfor %}
+</div></section>
+{% endblock %}

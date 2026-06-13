@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Cadastro de Afiliado – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <h1>Cadastro de Afiliado</h1>
+    <p class="section-sub">Gratuito e aberto a motoboys, motociclistas, entregadores e familiares.</p>
+    {% if errors %}<div class="flash flash-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+    <form class="card form" method="post" action="/cadastro">
+      <label>Nome completo *<input name="full_name" required maxlength="180" value="{{ form.full_name or '' }}"></label>
+      <div class="form-row">
+        <label>CPF *<input name="cpf" required placeholder="000.000.000-00" value="{{ form.cpf or '' }}"></label>
+        <label>E-mail *<input type="email" name="email" required maxlength="180" value="{{ form.email or '' }}"></label>
+      </div>
+      <div class="form-row">
+        <label>Telefone *<input name="phone" required maxlength="20" value="{{ form.phone or '' }}"></label>
+        <label>WhatsApp *<input name="whatsapp" required maxlength="20" value="{{ form.whatsapp or '' }}"></label>
+      </div>
+      <div class="form-row">
+        <label>Cidade *<input name="city" required maxlength="120" value="{{ form.city or '' }}"></label>
+        <label>Estado (UF) *
+          <select name="state" required>
+            <option value="">Selecione</option>
+            {% for uf in ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] %}
+            <option value="{{ uf }}" {{ 'selected' if form.state == uf }}>{{ uf }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Profissão *
+          <select name="profession" required>
+            <option value="">Selecione</option>
+            {% for k, v in L.professions.items() %}<option value="{{ k }}" {{ 'selected' if form.profession == k }}>{{ v }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Situação do MEI *
+          <select name="mei_status" required>
+            <option value="">Selecione</option>
+            {% for k, v in L.mei.items() %}<option value="{{ k }}" {{ 'selected' if form.mei_status == k }}>{{ v }}</option>{% endfor %}
+          </select>
+        </label>
+      </div>
+      <label>Necessidades de apoio<textarea name="support_needs" rows="3" placeholder="Conte como o Instituto pode ajudar você.">{{ form.support_needs or '' }}</textarea></label>
+      <label>Senha de acesso * (mínimo 6 caracteres)<input type="password" name="password" required minlength="6" autocomplete="new-password"></label>
+      <label class="check"><input type="checkbox" name="lgpd_accept" required>
+        Li e aceito a <a href="/privacidade" target="_blank">Política de Privacidade (LGPD)</a>. *</label>
+      <button class="btn btn-primary btn-lg" type="submit">Concluir cadastro</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

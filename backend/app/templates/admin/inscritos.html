@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Inscritos – {{ course.title }}{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <p><a href="/admin/cursos">← Voltar aos cursos</a></p>
+  <h1>Inscritos: {{ course.title }}</h1>
+  <p class="muted">{{ course.enrollments|length }} inscrito(s)</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Cidade</th><th>UF</th><th>WhatsApp</th><th>Inscrição</th></tr></thead>
+    <tbody>{% for e in course.enrollments %}
+    <tr><td><a href="/admin/afiliados/{{ e.affiliate.id }}">{{ e.affiliate.full_name }}</a></td>
+    <td>{{ e.affiliate.city }}</td><td>{{ e.affiliate.state }}</td><td>{{ e.affiliate.whatsapp }}</td>
+    <td>{{ e.created_at.strftime('%d/%m/%Y') }}</td></tr>
+    {% else %}<tr><td colspan="5">Nenhum inscrito ainda.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

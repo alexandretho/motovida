@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Cursos – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>📚 Cursos e Capacitações</h1>
+  <p class="section-sub">Formações gratuitas para sua segurança e seu crescimento profissional.</p>
+  <div class="grid cards">
+    {% for c in courses %}
+    <article class="card">
+      <span class="tag">{{ c.category }}</span>
+      <h3>{{ c.title }}</h3>
+      <p>{{ c.description }}</p>
+      <p class="muted">Carga horária: {{ c.workload_hours }}h</p>
+      {% if c.id in enrolled_ids %}
+        <span class="badge badge-concluida">✓ Inscrito</span>
+      {% else %}
+        <form method="post" action="/afiliado/cursos/{{ c.id }}/inscrever">
+          <button class="btn btn-primary" type="submit">Inscrever-se</button>
+        </form>
+      {% endif %}
+    </article>
+    {% else %}<p>Nenhum curso disponível no momento.</p>{% endfor %}
+  </div>
+</div></section>
+{% endblock %}

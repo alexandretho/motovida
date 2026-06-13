@@ -1,0 +1,57 @@
+# === SEGREDOS E CREDENCIAIS ===
+.env
+*.env
+.env.*
+!.env.example
+
+# Chaves SSH e certificados
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_ed25519
+id_ecdsa
+
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# === DOCKER ===
+# Não ignorar docker-compose.yml nem Dockerfile (são seguros)
+# Volumes locais mapeados (se criados na raiz)
+mysql_data/
+data/
+volumes/
+
+# === EDITOR / OS ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

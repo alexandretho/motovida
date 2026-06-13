@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Afiliados – Painel Admin{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>Afiliados</h1>
+  <form class="card form filters" method="get" action="/admin/afiliados">
+    <label>Estado<select name="estado"><option value="">Todos</option>
+      {% for uf in states %}<option value="{{ uf }}" {{ 'selected' if f_estado == uf }}>{{ uf }}</option>{% endfor %}
+    </select></label>
+    <label>Cidade<input name="cidade" value="{{ f_cidade }}" placeholder="Buscar cidade"></label>
+    <label>Profissão<select name="profissao"><option value="">Todas</option>
+      {% for k, v in L.professions.items() %}<option value="{{ k }}" {{ 'selected' if f_profissao == k }}>{{ v }}</option>{% endfor %}
+    </select></label>
+    <button class="btn btn-primary" type="submit">Filtrar</button>
+  </form>
+  <p class="muted">{{ items|length }} afiliado(s) encontrado(s).</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Cidade</th><th>UF</th><th>Profissão</th><th>MEI</th><th>Cadastro</th><th></th></tr></thead>
+    <tbody>{% for a in items %}
+    <tr><td>{{ a.full_name }}</td><td>{{ a.city }}</td><td>{{ a.state }}</td>
+    <td>{{ L.professions[a.profession] }}</td><td>{{ L.mei[a.mei_status] }}</td>
+    <td>{{ a.created_at.strftime('%d/%m/%Y') }}</td>
+    <td><a href="/admin/afiliados/{{ a.id }}">Detalhes</a></td></tr>
+    {% else %}<tr><td colspan="7">Nenhum afiliado encontrado com esses filtros.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}

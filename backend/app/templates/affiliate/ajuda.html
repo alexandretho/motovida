@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Canal de Ajuda – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section"><div class="container">
+  <h1>🆘 Canal de Ajuda</h1>
+  <p class="section-sub">Abra solicitações de apoio social, jurídico, psicológico, administrativo ou MEI.</p>
+  <form class="card form" method="post" action="/afiliado/ajuda">
+    <div class="form-row">
+      <label>Tipo de apoio *
+        <select name="type" required>
+          {% for k, v in L.types.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+        </select></label>
+      <label>Prioridade *
+        <select name="priority" required>
+          {% for k, v in L.priorities.items() %}<option value="{{ k }}" {{ 'selected' if k == 'media' }}>{{ v }}</option>{% endfor %}
+        </select></label>
+    </div>
+    <label>Descrição *<textarea name="description" rows="4" required></textarea></label>
+    <button class="btn btn-primary" type="submit">Abrir solicitação</button>
+  </form>
+  <h2>Minhas solicitações</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Abertura</th><th></th></tr></thead>
+    <tbody>{% for r in items %}
+    <tr><td>{{ r.id }}</td><td>{{ L.types[r.type] }}</td><td>{{ L.priorities[r.priority] }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ L.statuses[r.status] }}</span></td>
+    <td>{{ r.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+    <td><a href="/afiliado/ajuda/{{ r.id }}">Ver histórico</a></td></tr>
+    {% else %}<tr><td colspan="6">Nenhuma solicitação aberta ainda.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div></section>
+{% endblock %}
