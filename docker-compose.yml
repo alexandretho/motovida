@@ -34,23 +34,32 @@ services:
       SECRET_KEY: ${SECRET_KEY:-troque-esta-chave-em-producao}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@motovida.org.br}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
-    # Sem expose de porta para fora — o NPM acessa internamente
     expose:
       - "8000"
+    networks:
+      - default
 
   nginx-proxy-manager:
     image: jc21/nginx-proxy-manager:latest
     container_name: motovida-npm
     restart: unless-stopped
     ports:
-      - "80:80"      # HTTP (redirecionamento e ACME challenge)
-      - "443:443"    # HTTPS
-      - "81:81"      # Painel admin do NPM
+      - "80:80"
+      - "443:443"
+      - "81:81"
     volumes:
       - npm_data:/data
       - npm_letsencrypt:/etc/letsencrypt
     depends_on:
       - app
+    networks:
+      - default      # alcança motovida-app
+      - npm_shared   # alcança apps de outros projetos
+
+networks:
+  default:
+  npm_shared:
+    external: true
 
 volumes:
   mysql_data:
