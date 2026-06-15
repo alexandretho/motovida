@@ -11,6 +11,7 @@ Plataforma nacional de cadastro, atendimento e gestão de afiliados (motoboys, m
 | Backend | Python 3.12 + **FastAPI** + SQLAlchemy |
 | Banco de dados | **MySQL 8** (Docker, volume persistente) |
 | Frontend | Jinja2 + HTML/CSS responsivo mobile-first (sem dependências externas) |
+| Proxy / SSL | **Nginx Proxy Manager** (Let's Encrypt automático) |
 | Infra | Docker + docker-compose (com healthcheck) |
 
 FastAPI foi escolhido por ser leve, rápido e simples de containerizar; os templates são servidos pelo próprio backend, então **um único serviço de aplicação** atende área pública, área do afiliado e painel admin.
@@ -27,7 +28,9 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Pronto. A aplicação fica disponível em **http://localhost:8000**.
+**Desenvolvimento local:** a aplicação fica em **http://localhost:8000** (acesso direto, sem passar pelo NPM).
+
+**Produção com domínio e HTTPS:** veja a seção [Configuração SSL](#configuração-ssl-produção) abaixo.
 
 No primeiro boot, automaticamente:
 - o MySQL é criado com volume persistente (`mysql_data`);
@@ -66,6 +69,41 @@ No primeiro boot, automaticamente:
 - `/admin/atendimentos` — demandas jurídicas, psicológicas e MEI
 - `/admin/cursos` — cadastro/edição de cursos e lista de inscritos
 - `/admin/eventos` e `/admin/parceiros` — cadastro e edição
+
+## Configuração SSL (produção)
+
+O `docker-compose.yml` inclui o **Nginx Proxy Manager** que gerencia certificados SSL via Let's Encrypt automaticamente.
+
+### Portas expostas
+
+| Porta | Função |
+|---|---|
+| `80` | HTTP — redirecionamento para HTTPS e ACME challenge |
+| `443` | HTTPS |
+| `81` | Painel admin do NPM (pode ser bloqueado no firewall após configurar) |
+
+### Passo a passo
+
+1. Aponte o DNS do seu domínio para o IP do servidor (registro `A`).
+
+2. Suba os containers:
+   ```bash
+   docker compose up -d
+   ```
+
+3. Acesse o painel do NPM: `http://IP_DO_SERVIDOR:81`
+   - Login inicial: `admin@example.com` / `changeme`
+   - **Troque a senha imediatamente.**
+
+4. Crie um **Proxy Host**:
+   - **Domain Names:** `seudominio.com.br`
+   - **Forward Hostname:** `motovida-app`
+   - **Forward Port:** `8000`
+   - Aba **SSL** → "Request a new SSL Certificate" → ative "Force SSL" e "HTTP/2"
+
+5. Pronto — o NPM emite e renova o certificado automaticamente.
+
+> **Firewall:** em produção bloqueie a porta `81` após a configuração inicial e a porta `8000` (o app não deve ser acessível diretamente, apenas via NPM).
 
 ## Banco de dados
 
@@ -117,8 +155,10 @@ motovida/
 ## Comandos úteis
 
 ```bash
-docker compose up --build      # subir tudo
-docker compose down            # parar (mantém os dados do banco)
-docker compose down -v         # parar e APAGAR o volume do banco
-docker compose logs -f app     # acompanhar os logs da aplicação
+docker compose up --build           # subir tudo (primeira vez)
+docker compose up -d                # subir em background
+docker compose down                 # parar (mantém os dados)
+docker compose down -v              # parar e APAGAR todos os volumes
+docker compose logs -f app          # logs da aplicação
+docker compose logs -f nginx-proxy-manager  # logs do NPM
 ```
