@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Eventos – Minha Área MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Eventos e ações</h1>
+    <p class="section-sub">Acompanhe oportunidades de capacitação, encontros e atendimentos do Instituto.</p>
+    <div class="grid cards">
+      {% for e in events %}
+      <article class="card">
+        <span class="tag">Evento</span>
+        <h3>{{ e.title }}</h3>
+        {% if e.event_date %}<p class="discount"><strong>{{ e.event_date.strftime('%d/%m/%Y às %H:%M') }}</strong></p>{% endif %}
+        {% if e.location %}<p class="muted">📍 {{ e.location }}</p>{% endif %}
+        {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+      </article>
+      {% else %}
+      <p>Nenhum evento ativo cadastrado no momento.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

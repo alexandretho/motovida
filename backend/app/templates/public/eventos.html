@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Eventos – Instituto MotoVida{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Eventos MotoVida</h1>
+    <p class="section-sub">Ações, encontros, capacitações e atendimentos abertos à comunidade MotoVida.</p>
+    <div class="grid cards">
+      {% for e in events %}
+      <article class="card">
+        <span class="tag">Evento</span>
+        <h3>{{ e.title }}</h3>
+        {% if e.event_date %}<p class="discount"><strong>{{ e.event_date.strftime('%d/%m/%Y às %H:%M') }}</strong></p>{% endif %}
+        {% if e.location %}<p class="muted">📍 {{ e.location }}</p>{% endif %}
+        {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+      </article>
+      {% else %}
+      <p>Nenhum evento ativo cadastrado no momento.</p>
+      {% endfor %}
+    </div>
+    <p style="margin-top:1.5rem"><a class="btn btn-primary" href="/cadastro">Quero me afiliar</a></p>
+  </div>
+</section>
+{% endblock %}

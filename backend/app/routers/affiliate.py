@@ -105,6 +105,16 @@ def courses(request: Request, db: Session = Depends(get_db)):
         base_ctx(request, user, courses=courses_, enrolled_ids=enrolled_ids))
 
 
+@router.get("/eventos")
+def events(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    events_ = db.query(models.Event).filter_by(active=True)\
+        .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
+    return templates.TemplateResponse("affiliate/eventos.html", base_ctx(request, user, events=events_))
+
+
 @router.post("/cursos/{course_id}/inscrever")
 def enroll(request: Request, course_id: int, db: Session = Depends(get_db)):
     user = require_affiliate(request, db)

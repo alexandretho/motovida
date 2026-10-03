@@ -38,6 +38,14 @@ def partners_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("public/parceiros.html", base_ctx(request, user, partners=partners))
 
 
+@router.get("/eventos")
+def events_page(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    events = db.query(models.Event).filter_by(active=True)\
+        .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
+    return templates.TemplateResponse("public/eventos.html", base_ctx(request, user, events=events))
+
+
 @router.get("/contato")
 def contact(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("public/contato.html", base_ctx(request, get_current_user(request, db)))
