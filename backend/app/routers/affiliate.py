@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
-from ..validators import sanitize
+from ..validators import format_cpf, is_valid_uf, sanitize
 
 router = APIRouter(prefix="/afiliado")
 templates = Jinja2Templates(directory="app/templates")
@@ -40,6 +40,64 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     }
     return templates.TemplateResponse("affiliate/dashboard.html",
         base_ctx(request, user, aff=aff, requests=requests_, counts=counts))
+
+
+@router.get("/perfil")
+def profile(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    return templates.TemplateResponse("affiliate/perfil.html",
+        base_ctx(request, user, aff=user.affiliate, cpf_format=format_cpf(user.affiliate.cpf)))
+
+
+@router.post("/perfil")
+def profile_update(
+    request: Request,
+    full_name: str = Form(...), phone: str = Form(...), whatsapp: str = Form(...),
+    city: str = Form(...), state: str = Form(...), profession: str = Form(...),
+    mei_status: str = Form(...), support_needs: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+
+    form = {k: sanitize(v, 300) for k, v in {
+        "full_name": full_name, "phone": phone, "whatsapp": whatsapp,
+        "city": city, "state": state.upper(), "profession": profession,
+        "mei_status": mei_status}.items()}
+    form["support_needs"] = sanitize(support_needs)
+
+    errors = []
+    if len(form["full_name"]) < 5:
+        errors.append("Informe o nome completo.")
+    if not form["phone"] or not form["whatsapp"] or not form["city"]:
+        errors.append("Preencha telefone, WhatsApp e cidade.")
+    if not is_valid_uf(form["state"]):
+        errors.append("Selecione um estado (UF) válido.")
+    if form["profession"] not in models.PROFESSIONS:
+        errors.append("Selecione uma profissão válida.")
+    if form["mei_status"] not in models.MEI_STATUSES:
+        errors.append("Selecione a situação do MEI.")
+
+    if errors:
+        flash(request, " ".join(errors), "error")
+        return RedirectResponse("/afiliado/perfil", status_code=303)
+
+    aff = user.affiliate
+    aff.full_name = form["full_name"]
+    aff.phone = form["phone"]
+    aff.whatsapp = form["whatsapp"]
+    aff.city = form["city"]
+    aff.state = form["state"]
+    aff.profession = form["profession"]
+    aff.mei_status = form["mei_status"]
+    aff.support_needs = form["support_needs"]
+    db.commit()
+
+    flash(request, "Perfil atualizado com sucesso.")
+    return RedirectResponse("/afiliado/perfil", status_code=303)
 
 
 @router.get("/juridico")
