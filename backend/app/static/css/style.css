@@ -97,6 +97,8 @@ a:hover, a:focus { text-decoration: underline; }
 .btn:hover { text-decoration: none; filter: brightness(.96); }
 .btn-primary { background: var(--blue); color: #fff; }
 .btn-primary:hover { background: var(--blue-deep); }
+.btn-warning { background: #fff4d6; color: var(--warn); }
+.btn-secondary { background: #eef2f7; color: var(--ink); }
 .btn-outline { background: transparent; border: 2px solid var(--accent); color: #fff; }
 .section .btn-outline { border-color: var(--blue); color: var(--blue); }
 .btn-ghost { background: transparent; border: 1px solid #44536a; color: #fff !important; }
@@ -117,6 +119,8 @@ tr:last-child td { border-bottom: 0; }
 .badge-em_atendimento { background: #e2ecff; color: #2747a8; }
 .badge-concluida { background: #e3f4ea; color: var(--ok); }
 .badge-cancelada { background: #fdeceb; color: var(--danger); }
+.badge-success { background: #e3f4ea; color: var(--ok); }
+.badge-muted { background: #eef2f7; color: var(--muted); }
 
 /* ---------- Gráficos simples em barras ---------- */
 .bar-row { display: grid; grid-template-columns: 110px 1fr 2.2rem; gap: .5rem; align-items: center; margin: .35rem 0; font-size: .85rem; }

@@ -3,7 +3,24 @@
 {% block content %}
 <section class="section"><div class="container">
   <h1>Eventos e Palestras</h1>
-  <details class="card"><summary><strong>+ Cadastrar novo evento</strong></summary>
+
+  <details class="card"{% if editing %} open{% endif %}>
+    <summary><strong>{% if editing %}Editar evento: {{ editing.title }}{% else %}+ Cadastrar novo evento{% endif %}</strong></summary>
+    {% if editing %}
+    <form class="form" method="post" action="/admin/eventos/{{ editing.id }}/editar">
+      <label>Título *<input name="title" required maxlength="180" value="{{ editing.title }}"></label>
+      <label>Descrição<textarea name="description" rows="3">{{ editing.description or '' }}</textarea></label>
+      <div class="form-row">
+        <label>Data e hora<input type="datetime-local" name="event_date"
+          value="{{ editing.event_date.strftime('%Y-%m-%dT%H:%M') if editing.event_date else '' }}"></label>
+        <label>Local<input name="location" maxlength="180" value="{{ editing.location or '' }}"></label>
+      </div>
+      <div class="form-row">
+        <button class="btn btn-primary" type="submit">Salvar alterações</button>
+        <a class="btn" href="/admin/eventos">Cancelar</a>
+      </div>
+    </form>
+    {% else %}
     <form class="form" method="post" action="/admin/eventos">
       <label>Título *<input name="title" required maxlength="180"></label>
       <label>Descrição<textarea name="description" rows="3"></textarea></label>
@@ -13,13 +30,28 @@
       </div>
       <button class="btn btn-primary" type="submit">Cadastrar evento</button>
     </form>
+    {% endif %}
   </details>
+
   <div class="table-wrap"><table>
-    <thead><tr><th>Título</th><th>Data</th><th>Local</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Título</th><th>Data</th><th>Local</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead>
     <tbody>{% for e in items %}
-    <tr><td>{{ e.title }}</td><td>{{ e.event_date.strftime('%d/%m/%Y %H:%M') if e.event_date else 'A definir' }}</td>
-    <td>{{ e.location or '—' }}</td><td>{{ (e.description or '')[:80] }}</td></tr>
-    {% else %}<tr><td colspan="4">Nenhum evento cadastrado.</td></tr>{% endfor %}</tbody>
+    <tr>
+      <td>{{ e.title }}</td>
+      <td>{{ e.event_date.strftime('%d/%m/%Y %H:%M') if e.event_date else 'A definir' }}</td>
+      <td>{{ e.location or '—' }}</td>
+      <td>{{ (e.description or '')[:80] }}</td>
+      <td>{% if e.active %}<span class="badge badge-success">Ativo</span>{% else %}<span class="badge badge-muted">Inativo</span>{% endif %}</td>
+      <td>
+        <a class="btn btn-sm" href="/admin/eventos/{{ e.id }}/editar">Editar</a>
+        <form method="post" action="/admin/eventos/{{ e.id }}/toggle" style="display:inline">
+          <button class="btn btn-sm {% if e.active %}btn-warning{% else %}btn-secondary{% endif %}" type="submit">
+            {% if e.active %}Desativar{% else %}Ativar{% endif %}
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="6">Nenhum evento cadastrado.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div></section>
 {% endblock %}

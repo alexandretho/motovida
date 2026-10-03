@@ -260,6 +260,63 @@ def event_create(request: Request, title: str = Form(...), description: str = Fo
     return RedirectResponse("/admin/eventos", status_code=303)
 
 
+@router.get("/eventos/{event_id}/editar")
+def event_edit_form(event_id: int, request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    event = db.get(models.Event, event_id)
+    if not event:
+        flash(request, "Evento não encontrado.")
+        return RedirectResponse("/admin/eventos", status_code=303)
+    return templates.TemplateResponse("admin/eventos.html",
+                                      base_ctx(request, user, items=db.query(models.Event)
+                                               .order_by(models.Event.event_date.desc()).all(),
+                                               editing=event))
+
+
+@router.post("/eventos/{event_id}/editar")
+def event_edit(event_id: int, request: Request, title: str = Form(...),
+               description: str = Form(""), event_date: str = Form(""),
+               location: str = Form(""), db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    event = db.get(models.Event, event_id)
+    if not event:
+        flash(request, "Evento não encontrado.")
+        return RedirectResponse("/admin/eventos", status_code=303)
+    parsed: Optional[datetime] = None
+    if event_date:
+        try:
+            parsed = datetime.fromisoformat(event_date)
+        except ValueError:
+            parsed = None
+    event.title = sanitize(title, 180)
+    event.description = sanitize(description)
+    event.event_date = parsed
+    event.location = sanitize(location, 180)
+    db.commit()
+    flash(request, "Evento atualizado.")
+    return RedirectResponse("/admin/eventos", status_code=303)
+
+
+@router.post("/eventos/{event_id}/toggle")
+def event_toggle(event_id: int, request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    event = db.get(models.Event, event_id)
+    if not event:
+        flash(request, "Evento não encontrado.")
+        return RedirectResponse("/admin/eventos", status_code=303)
+    event.active = not event.active
+    db.commit()
+    estado = "ativado" if event.active else "desativado"
+    flash(request, f"Evento {estado}.")
+    return RedirectResponse("/admin/eventos", status_code=303)
+
+
 @router.get("/parceiros")
 def partners(request: Request, db: Session = Depends(get_db)):
     user = require_admin(request, db)
