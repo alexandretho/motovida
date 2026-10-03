@@ -5,6 +5,7 @@
   <h1>💙 Apoio Psicológico</h1>
   <p class="section-sub">Acolhimento emocional para afiliados, vítimas de acidente e familiares.</p>
   <form class="card form" method="post" action="/afiliado/psicologico">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="form-row">
       <label>Você é... *
         <select name="relation" required>

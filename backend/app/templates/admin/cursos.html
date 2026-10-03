@@ -5,6 +5,7 @@
   <h1>Cursos e Capacitações</h1>
   <details class="card"><summary><strong>+ Cadastrar novo curso</strong></summary>
     <form class="form" method="post" action="/admin/cursos">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="form-row">
         <label>Título *<input name="title" required maxlength="180"></label>
         <label>Categoria *<input name="category" required maxlength="120" placeholder="Ex.: Trânsito"></label>
@@ -20,6 +21,7 @@
       {% if not c.active %}<span class="badge badge-cancelada">Inativo</span>{% endif %}
       — <a href="/admin/cursos/{{ c.id }}/inscritos">ver inscritos</a></summary>
     <form class="form" method="post" action="/admin/cursos/{{ c.id }}/editar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="form-row">
         <label>Título<input name="title" value="{{ c.title }}" required maxlength="180"></label>
         <label>Categoria<input name="category" value="{{ c.category }}" required maxlength="120"></label>

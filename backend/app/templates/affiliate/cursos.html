@@ -15,6 +15,7 @@
         <span class="badge badge-concluida">✓ Inscrito</span>
       {% else %}
         <form method="post" action="/afiliado/cursos/{{ c.id }}/inscrever">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <button class="btn btn-primary" type="submit">Inscrever-se</button>
         </form>
       {% endif %}

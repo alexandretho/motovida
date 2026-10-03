@@ -33,6 +33,7 @@
   </div>
   <h2>Atendimentos registrados</h2>
   <form class="card form" method="post" action="/admin/afiliados/{{ aff.id }}/atendimento">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label>Registrar novo atendimento<textarea name="notes" rows="3" required placeholder="Descreva o atendimento realizado"></textarea></label>
     <button class="btn btn-primary" type="submit">Registrar atendimento</button>
   </form>

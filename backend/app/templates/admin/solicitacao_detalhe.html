@@ -12,6 +12,7 @@
     <p>{{ item.description }}</p>
   </div>
   <form class="card form" method="post" action="/admin/solicitacoes/{{ item.id }}/status">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="form-row">
       <label>Novo status
         <select name="status">{% for k, v in L.statuses.items() %}

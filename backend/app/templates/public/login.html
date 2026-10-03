@@ -5,6 +5,7 @@
   <div class="container narrow">
     <h1>Entrar</h1>
     <form class="card form" method="post" action="/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>E-mail<input type="email" name="email" required maxlength="180" autocomplete="email"></label>
       <label>Senha<input type="password" name="password" required autocomplete="current-password"></label>
       <button class="btn btn-primary" type="submit">Entrar</button>

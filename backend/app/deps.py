@@ -1,3 +1,4 @@
+from secrets import compare_digest, token_urlsafe
 from typing import Optional
 from fastapi import Request
 from sqlalchemy.orm import Session
@@ -36,7 +37,28 @@ def pop_flash(request: Request):
     return request.session.pop("flash", None)
 
 
+def get_csrf_token(request: Request) -> str:
+    token = request.session.get("csrf_token")
+    if not token:
+        token = token_urlsafe(32)
+        request.session["csrf_token"] = token
+    return token
+
+
+def is_valid_csrf_token(request: Request, token: str | None) -> bool:
+    session_token = request.session.get("csrf_token")
+    if not session_token or not token:
+        return False
+    return compare_digest(session_token, token)
+
+
 def base_ctx(request: Request, user=None, **extra):
-    ctx = {"request": request, "user": user, "flash": pop_flash(request), "L": LABELS}
+    ctx = {
+        "request": request,
+        "user": user,
+        "flash": pop_flash(request),
+        "L": LABELS,
+        "csrf_token": get_csrf_token(request),
+    }
     ctx.update(extra)
     return ctx

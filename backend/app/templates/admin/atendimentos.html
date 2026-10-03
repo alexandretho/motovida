@@ -2,6 +2,7 @@
 {% block title %}Atendimentos Especializados – Painel Admin{% endblock %}
 {% macro status_form(kind, item) %}
 <form class="inline-form" method="post" action="/admin/atendimentos/{{ kind }}/{{ item.id }}/status">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <select name="status">{% for k, v in L.statuses.items() %}
     <option value="{{ k }}" {{ 'selected' if item.status == k }}>{{ v }}</option>{% endfor %}
   </select>

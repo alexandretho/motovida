@@ -5,6 +5,7 @@
   <h1>🆘 Canal de Ajuda</h1>
   <p class="section-sub">Abra solicitações de apoio social, jurídico, psicológico, administrativo ou MEI.</p>
   <form class="card form" method="post" action="/afiliado/ajuda">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="form-row">
       <label>Tipo de apoio *
         <select name="type" required>

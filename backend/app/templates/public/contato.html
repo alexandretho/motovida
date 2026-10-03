@@ -15,6 +15,7 @@
     <p class="section-sub">Usaremos seus dados apenas para responder este contato, conforme nossa Política de Privacidade.</p>
     {% if errors %}<div class="flash flash-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
     <form class="card form" method="post" action="/contato" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>Nome *
         <input name="name" required minlength="3" maxlength="180" value="{{ form.name or '' }}" autocomplete="name">
       </label>

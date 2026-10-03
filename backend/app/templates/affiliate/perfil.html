@@ -6,6 +6,7 @@
     <h1>Meu Perfil</h1>
     <p class="section-sub">Mantenha seus dados de contato e apoio atualizados.</p>
     <form class="card form" method="post" action="/afiliado/perfil">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>Nome completo *<input name="full_name" required maxlength="180" value="{{ aff.full_name }}"></label>
       <div class="form-row">
         <label>CPF<input value="{{ cpf_format }}" readonly></label>

@@ -5,6 +5,7 @@
   <h1>Rede de Parceiros</h1>
   <details class="card"><summary><strong>+ Cadastrar novo parceiro</strong></summary>
     <form class="form" method="post" action="/admin/parceiros">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="form-row">
         <label>Nome *<input name="name" required maxlength="180"></label>
         <label>Categoria *
@@ -29,6 +30,7 @@
     <summary><strong>{{ p.name }}</strong> · {{ p.category }} · {{ p.discount or 'sem desconto informado' }}
       {% if not p.active %}<span class="badge badge-cancelada">Inativo</span>{% endif %}</summary>
     <form class="form" method="post" action="/admin/parceiros/{{ p.id }}/editar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="form-row">
         <label>Nome<input name="name" value="{{ p.name }}" required maxlength="180"></label>
         <label>Categoria<input name="category" value="{{ p.category }}" required maxlength="120"></label>
