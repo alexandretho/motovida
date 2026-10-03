@@ -3,11 +3,13 @@ from typing import Optional
 from fastapi import Request
 from sqlalchemy.orm import Session
 from . import models
+from .validators import UFS
 
 SITE_URL = "https://motovida.syntratech.com.br"
 GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
 
 LABELS = {
+    "ufs": tuple(sorted(UFS)),
     "professions": {"motoboy": "Motoboy", "motociclista": "Motociclista", "entregador": "Entregador",
                     "familiar": "Familiar", "outro": "Outro"},
     "mei": {"ja_sou_mei": "Já sou MEI", "quero_abrir_mei": "Quero abrir MEI",
