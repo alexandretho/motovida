@@ -11,6 +11,7 @@ from .database import Base, SessionLocal, engine, wait_for_db
 from .deps import is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
 from .seeds import run_seeds
+from .security import is_sensitive_scanner_path
 
 app = FastAPI(title="Sistema Nacional de Cadastro e Atendimento – Instituto MotoVida Guilherme França")
 
@@ -24,14 +25,25 @@ SECURITY_HEADERS = {
 }
 
 
+def apply_security_headers(response):
+    for header, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
+
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+    if is_sensitive_scanner_path(request.url.path):
+        return apply_security_headers(PlainTextResponse("Not Found", status_code=404))
+
     if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
         body = await request.body()
         parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
-            return PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
+            return apply_security_headers(
+                PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
+            )
 
         async def receive():
             return {"type": "http.request", "body": body, "more_body": False}
@@ -39,9 +51,7 @@ async def add_security_headers(request: Request, call_next):
         request._receive = receive
 
     response = await call_next(request)
-    for header, value in SECURITY_HEADERS.items():
-        response.headers.setdefault(header, value)
-    return response
+    return apply_security_headers(response)
 
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8, same_site="lax")

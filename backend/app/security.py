@@ -4,6 +4,34 @@ import os
 
 ITERATIONS = 260_000
 
+SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
+    "/wp-login.php",
+    "/xmlrpc.php",
+    "/phpinfo.php",
+    "/php_info.php",
+    "/i.php",
+})
+
+SENSITIVE_SCANNER_PREFIXES = frozenset({
+    "/.git",
+    "/wp-admin",
+})
+
+
+def is_sensitive_scanner_path(path: str) -> bool:
+    normalized_path = f"/{path.lstrip('/')}".lower()
+
+    if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
+        return True
+
+    if normalized_path.startswith("/.env"):
+        return True
+
+    return any(
+        normalized_path == prefix or normalized_path.startswith(f"{prefix}/")
+        for prefix in SENSITIVE_SCANNER_PREFIXES
+    )
+
 
 def hash_password(password: str) -> str:
     """PBKDF2-SHA256 — nunca armazena a senha em texto puro."""
