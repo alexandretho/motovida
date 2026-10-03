@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,24 @@ from ..validators import (clean_cpf, is_valid_cpf, is_valid_email, is_valid_uf, 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+
+@router.get("/robots.txt", include_in_schema=False)
+def robots_txt():
+    content = "\n".join([
+        "User-agent: *",
+        "Disallow: /admin",
+        "Disallow: /afiliado",
+        "Disallow: /login",
+        "Allow: /",
+        "",
+    ])
+    return PlainTextResponse(content)
+
+
+@router.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
 
 BENEFITS = [
     ("⚖️", "Apoio Jurídico", "Orientação em acidentes de trânsito, dúvidas trabalhistas e previdenciárias."),
