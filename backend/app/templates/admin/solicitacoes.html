@@ -12,6 +12,9 @@
     </select></label>
     <button class="btn btn-primary" type="submit">Filtrar</button>
   </form>
+  <p class="muted">
+    Mostrando {{ pagination.start }}–{{ pagination.end }} de {{ pagination.total }} solicitação(ões).
+  </p>
   <div class="table-wrap"><table>
     <thead><tr><th>#</th><th>Afiliado</th><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Abertura</th><th></th></tr></thead>
     <tbody>{% for r in items %}
@@ -22,5 +25,12 @@
     <td><a href="/admin/solicitacoes/{{ r.id }}">Atender</a></td></tr>
     {% else %}<tr><td colspan="7">Nenhuma solicitação encontrada.</td></tr>{% endfor %}</tbody>
   </table></div>
+  {% if pagination.pages > 1 %}
+  <nav class="pagination" aria-label="Paginação de solicitações">
+    {% if pagination.has_prev %}<a class="btn btn-secondary btn-sm" href="{{ pagination.prev_url }}">← Anterior</a>{% endif %}
+    <span>Página {{ pagination.page }} de {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a class="btn btn-secondary btn-sm" href="{{ pagination.next_url }}">Próxima →</a>{% endif %}
+  </nav>
+  {% endif %}
 </div></section>
 {% endblock %}

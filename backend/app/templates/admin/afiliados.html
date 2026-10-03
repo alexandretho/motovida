@@ -13,7 +13,9 @@
     </select></label>
     <button class="btn btn-primary" type="submit">Filtrar</button>
   </form>
-  <p class="muted">{{ items|length }} afiliado(s) encontrado(s).</p>
+  <p class="muted">
+    Mostrando {{ pagination.start }}–{{ pagination.end }} de {{ pagination.total }} afiliado(s).
+  </p>
   <div class="table-wrap"><table>
     <thead><tr><th>Nome</th><th>Cidade</th><th>UF</th><th>Profissão</th><th>MEI</th><th>Cadastro</th><th></th></tr></thead>
     <tbody>{% for a in items %}
@@ -23,5 +25,12 @@
     <td><a href="/admin/afiliados/{{ a.id }}">Detalhes</a></td></tr>
     {% else %}<tr><td colspan="7">Nenhum afiliado encontrado com esses filtros.</td></tr>{% endfor %}</tbody>
   </table></div>
+  {% if pagination.pages > 1 %}
+  <nav class="pagination" aria-label="Paginação de afiliados">
+    {% if pagination.has_prev %}<a class="btn btn-secondary btn-sm" href="{{ pagination.prev_url }}">← Anterior</a>{% endif %}
+    <span>Página {{ pagination.page }} de {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a class="btn btn-secondary btn-sm" href="{{ pagination.next_url }}">Próxima →</a>{% endif %}
+  </nav>
+  {% endif %}
 </div></section>
 {% endblock %}

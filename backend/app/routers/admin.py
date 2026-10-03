@@ -1,5 +1,7 @@
 from datetime import datetime
+from math import ceil
 from typing import Optional
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -14,9 +16,46 @@ from ..validators import sanitize
 
 router = APIRouter(prefix="/admin")
 templates = Jinja2Templates(directory="app/templates")
+ADMIN_PAGE_SIZE = 20
 
 KIND_MODELS = {"juridico": models.LegalSupport, "psicologico": models.PsychologicalSupport,
                "mei": models.MeiSupport}
+
+
+def build_pagination(total: int, page: int, per_page: int = ADMIN_PAGE_SIZE) -> dict:
+    pages = max(1, ceil(total / per_page))
+    current = min(max(page, 1), pages)
+    return {
+        "page": current,
+        "per_page": per_page,
+        "total": total,
+        "pages": pages,
+        "has_prev": current > 1,
+        "has_next": current < pages,
+        "prev_page": current - 1,
+        "next_page": current + 1,
+        "start": 0 if total == 0 else (current - 1) * per_page + 1,
+        "end": min(current * per_page, total),
+    }
+
+
+def paginate_query(query, page: int, per_page: int = ADMIN_PAGE_SIZE):
+    total = query.count()
+    pagination = build_pagination(total, page, per_page)
+    items = query.offset((pagination["page"] - 1) * per_page).limit(per_page).all()
+    return items, pagination
+
+
+def with_page_urls(pagination: dict, path: str, **params) -> dict:
+    clean_params = {key: value for key, value in params.items() if value not in (None, "")}
+
+    def page_url(page_number: int) -> str:
+        query = urlencode({**clean_params, "page": page_number})
+        return f"{path}?{query}"
+
+    pagination["prev_url"] = page_url(pagination["prev_page"])
+    pagination["next_url"] = page_url(pagination["next_page"])
+    return pagination
 
 
 def require_admin(request: Request, db: Session):
@@ -59,7 +98,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/afiliados")
-def affiliates(request: Request, estado: str = "", cidade: str = "", profissao: str = "",
+def affiliates(request: Request, estado: str = "", cidade: str = "", profissao: str = "", page: int = 1,
                db: Session = Depends(get_db)):
     user = require_admin(request, db)
     if (r := guard(user)):
@@ -71,11 +110,13 @@ def affiliates(request: Request, estado: str = "", cidade: str = "", profissao: 
         q = q.filter(models.Affiliate.city.ilike(f"%{sanitize(cidade, 120)}%"))
     if profissao in models.PROFESSIONS:
         q = q.filter(models.Affiliate.profession == profissao)
-    items = q.order_by(models.Affiliate.created_at.desc()).all()
+    items, pagination = paginate_query(q.order_by(models.Affiliate.created_at.desc()), page)
+    pagination = with_page_urls(pagination, "/admin/afiliados", estado=estado.upper(), cidade=cidade,
+                                profissao=profissao)
     states = [s[0] for s in db.query(models.Affiliate.state).distinct().order_by(models.Affiliate.state)]
     return templates.TemplateResponse("admin/afiliados.html", base_ctx(
         request, user, items=items, states=states,
-        f_estado=estado.upper(), f_cidade=cidade, f_profissao=profissao))
+        f_estado=estado.upper(), f_cidade=cidade, f_profissao=profissao, pagination=pagination))
 
 
 @router.get("/afiliados/{aff_id}")
@@ -108,7 +149,7 @@ def add_attendance(request: Request, aff_id: int, notes: str = Form(...),
 
 
 @router.get("/solicitacoes")
-def requests_list(request: Request, tipo: str = "", status: str = "",
+def requests_list(request: Request, tipo: str = "", status: str = "", page: int = 1,
                   db: Session = Depends(get_db)):
     user = require_admin(request, db)
     if (r := guard(user)):
@@ -118,9 +159,10 @@ def requests_list(request: Request, tipo: str = "", status: str = "",
         q = q.filter(models.SupportRequest.type == tipo)
     if status in models.STATUSES:
         q = q.filter(models.SupportRequest.status == status)
-    items = q.order_by(models.SupportRequest.created_at.desc()).all()
+    items, pagination = paginate_query(q.order_by(models.SupportRequest.created_at.desc()), page)
+    pagination = with_page_urls(pagination, "/admin/solicitacoes", tipo=tipo, status=status)
     return templates.TemplateResponse("admin/solicitacoes.html", base_ctx(
-        request, user, items=items, f_tipo=tipo, f_status=status))
+        request, user, items=items, f_tipo=tipo, f_status=status, pagination=pagination))
 
 
 @router.get("/solicitacoes/{req_id}")
