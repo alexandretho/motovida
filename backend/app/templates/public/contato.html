@@ -11,6 +11,30 @@
       <p class="muted">Se você já é afiliado, abra uma solicitação pelo <a href="/login">Canal de Ajuda</a>
       na sua área exclusiva — assim conseguimos acompanhar todo o histórico do seu atendimento.</p>
     </div>
+    <h2>Envie uma mensagem</h2>
+    <p class="section-sub">Usaremos seus dados apenas para responder este contato, conforme nossa Política de Privacidade.</p>
+    {% if errors %}<div class="flash flash-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+    <form class="card form" method="post" action="/contato" novalidate>
+      <label>Nome *
+        <input name="name" required minlength="3" maxlength="180" value="{{ form.name or '' }}" autocomplete="name">
+      </label>
+      <div class="form-row">
+        <label>E-mail *
+          <input type="email" name="email" required maxlength="180" value="{{ form.email or '' }}" autocomplete="email">
+        </label>
+        <label>Telefone/WhatsApp
+          <input name="phone" maxlength="30" value="{{ form.phone or '' }}" autocomplete="tel">
+        </label>
+      </div>
+      <label>Assunto *
+        <input name="subject" required minlength="3" maxlength="160" value="{{ form.subject or '' }}">
+      </label>
+      <label>Mensagem *
+        <textarea name="message" required minlength="10" rows="6">{{ form.message or '' }}</textarea>
+      </label>
+      <p class="muted">Ao enviar, você declara ciência de que os dados informados serão tratados para retorno do Instituto MotoVida. Consulte a <a href="/privacidade" target="_blank">Política de Privacidade (LGPD)</a>.</p>
+      <button class="btn btn-primary btn-lg" type="submit">Enviar mensagem</button>
+    </form>
   </div>
 </section>
 {% endblock %}

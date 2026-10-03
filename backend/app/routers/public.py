@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from secrets import token_urlsafe
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -40,6 +41,50 @@ BENEFITS = [
     ("🆘", "Canal de Ajuda", "Abra solicitações de apoio social, jurídico, psicológico ou administrativo."),
 ]
 
+PUBLIC_CONTACT_USER_EMAIL = "visitante-contato@motovida.local"
+PUBLIC_CONTACT_CPF = "00000000001"
+
+
+def get_public_contact_affiliate(db: Session) -> models.Affiliate:
+    affiliate = db.query(models.Affiliate).filter_by(cpf=PUBLIC_CONTACT_CPF).first()
+    if affiliate:
+        return affiliate
+
+    user = db.query(models.User).filter_by(email=PUBLIC_CONTACT_USER_EMAIL).first()
+    if not user:
+        user = models.User(
+            email=PUBLIC_CONTACT_USER_EMAIL,
+            password_hash=hash_password(token_urlsafe(32)),
+            role="affiliate",
+        )
+        db.add(user)
+        db.flush()
+
+    affiliate = models.Affiliate(
+        user_id=user.id,
+        full_name="Visitante do site",
+        cpf=PUBLIC_CONTACT_CPF,
+        phone="nao_informado",
+        whatsapp="nao_informado",
+        email=PUBLIC_CONTACT_USER_EMAIL,
+        city="Não informado",
+        state="SP",
+        profession="outro",
+        mei_status="nao_sei_informar",
+        support_needs="Conta técnica para solicitações enviadas pelo formulário público de contato.",
+    )
+    db.add(affiliate)
+    db.flush()
+    return affiliate
+
+
+def contact_template(request: Request, user, form=None, errors=None, status_code: int = 200):
+    return templates.TemplateResponse(
+        "public/contato.html",
+        base_ctx(request, user, form=form or {}, errors=errors or []),
+        status_code=status_code,
+    )
+
 
 @router.get("/")
 def index(request: Request, db: Session = Depends(get_db)):
@@ -66,7 +111,75 @@ def events_page(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/contato")
 def contact(request: Request, db: Session = Depends(get_db)):
-    return templates.TemplateResponse("public/contato.html", base_ctx(request, get_current_user(request, db)))
+    return contact_template(request, get_current_user(request, db))
+
+
+@router.post("/contato")
+def contact_create(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(""),
+    subject: str = Form(...),
+    message: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    user = get_current_user(request, db)
+    form = {
+        "name": sanitize(name, 180),
+        "email": sanitize(email, 180).lower(),
+        "phone": sanitize(phone, 30),
+        "subject": sanitize(subject, 160),
+        "message": sanitize(message, 3000),
+    }
+
+    errors = []
+    if len(form["name"]) < 3:
+        errors.append("Informe seu nome com pelo menos 3 caracteres.")
+    if not is_valid_email(form["email"]):
+        errors.append("Informe um e-mail válido.")
+    if len(form["subject"]) < 3:
+        errors.append("Informe um assunto com pelo menos 3 caracteres.")
+    if len(form["message"]) < 10:
+        errors.append("Escreva uma mensagem com pelo menos 10 caracteres.")
+
+    if errors:
+        return contact_template(request, user, form=form, errors=errors, status_code=400)
+
+    if user and user.role == "affiliate" and user.affiliate:
+        affiliate = user.affiliate
+        history_note = "Solicitação aberta pelo formulário público de contato por afiliado logado."
+    else:
+        affiliate = get_public_contact_affiliate(db)
+        history_note = "Solicitação aberta pelo formulário público de contato por visitante."
+
+    phone_line = form["phone"] or "Não informado"
+    description = (
+        "Origem: formulário público de contato\n"
+        f"Nome: {form['name']}\n"
+        f"E-mail: {form['email']}\n"
+        f"Telefone/WhatsApp: {phone_line}\n"
+        f"Assunto: {form['subject']}\n\n"
+        f"Mensagem:\n{form['message']}"
+    )
+    support_request = models.SupportRequest(
+        affiliate_id=affiliate.id,
+        type="administrativo",
+        priority="baixa",
+        description=description,
+    )
+    db.add(support_request)
+    db.flush()
+    db.add(models.RequestHistory(
+        request_id=support_request.id,
+        new_status="aberta",
+        note=history_note,
+        author=form["name"],
+    ))
+    db.commit()
+
+    flash(request, "Mensagem enviada com sucesso. Nossa equipe entrará em contato pelos dados informados.")
+    return RedirectResponse("/contato", status_code=303)
 
 
 @router.get("/privacidade")
