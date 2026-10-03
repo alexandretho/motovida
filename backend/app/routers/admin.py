@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
+from ..security import hash_password, verify_password
 from ..support_history import add_specialized_history, build_specialized_history_map
 from ..validators import sanitize
 
@@ -68,6 +69,20 @@ def guard(user):
     return RedirectResponse("/login", status_code=303) if user is None else None
 
 
+def validate_admin_password_change(current_password: str, new_password: str, confirm_password: str,
+                                   stored_hash: str) -> list[str]:
+    errors = []
+    if not verify_password(current_password, stored_hash):
+        errors.append("Senha atual incorreta.")
+    if len(new_password) < 8:
+        errors.append("A nova senha deve ter pelo menos 8 caracteres.")
+    if new_password != confirm_password:
+        errors.append("A confirmação da nova senha não confere.")
+    if current_password and new_password and current_password == new_password:
+        errors.append("Escolha uma senha diferente da atual.")
+    return errors
+
+
 @router.get("")
 def dashboard(request: Request, db: Session = Depends(get_db)):
     user = require_admin(request, db)
@@ -96,6 +111,33 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         request, user, total_affiliates=total_affiliates, by_state=by_state, by_city=by_city,
         by_type=by_type, by_status=by_status, by_profession=by_profession, by_mei=by_mei,
         top_courses=top_courses, open_requests=open_requests))
+
+
+@router.get("/senha")
+def password_form(request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    return templates.TemplateResponse("admin/senha.html", base_ctx(request, user))
+
+
+@router.post("/senha")
+def password_update(request: Request, current_password: str = Form(...), new_password: str = Form(...),
+                    confirm_password: str = Form(...), db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    errors = validate_admin_password_change(current_password, new_password, confirm_password,
+                                            user.password_hash)
+    if errors:
+        flash(request, " ".join(errors), "error")
+        return RedirectResponse("/admin/senha", status_code=303)
+
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    flash(request, "Senha administrativa atualizada com sucesso.")
+    return RedirectResponse("/admin", status_code=303)
 
 
 @router.get("/afiliados")
