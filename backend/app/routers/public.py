@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from secrets import token_urlsafe
 from sqlalchemy.orm import Session
@@ -7,29 +7,74 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..config import POLICY_VERSION
 from ..database import get_db
-from ..deps import base_ctx, flash, get_current_user
+from ..deps import SITE_URL, base_ctx, flash, get_current_user
 from ..security import hash_password
 from ..validators import (clean_cpf, is_valid_cpf, is_valid_email, is_valid_uf, sanitize)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+PUBLIC_SITEMAP_PATHS = [
+    ("/", "daily", "1.0"),
+    ("/eventos", "weekly", "0.8"),
+    ("/parceiros", "weekly", "0.8"),
+    ("/contato", "monthly", "0.6"),
+    ("/privacidade", "yearly", "0.3"),
+]
+
 
 @router.get("/robots.txt", include_in_schema=False)
 def robots_txt():
     content = "\n".join([
         "User-agent: *",
-        "Disallow: /admin",
-        "Disallow: /afiliado",
+        "Disallow: /admin/",
+        "Disallow: /afiliado/",
         "Disallow: /login",
+        "Disallow: /logout",
+        "Disallow: /cadastro",
         "Allow: /",
+        f"Sitemap: {SITE_URL}/sitemap.xml",
         "",
     ])
     return PlainTextResponse(content)
 
 
+@router.head("/robots.txt", include_in_schema=False)
+def robots_txt_head():
+    return Response(media_type="text/plain")
+
+
+@router.get("/sitemap.xml", include_in_schema=False)
+def sitemap_xml():
+    items = "\n".join(
+        f"  <url><loc>{SITE_URL}{path}</loc><changefreq>{freq}</changefreq><priority>{priority}</priority></url>"
+        for path, freq, priority in PUBLIC_SITEMAP_PATHS
+    )
+    content = f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
+{items}
+</urlset>
+"""
+    return Response(content, media_type="application/xml")
+
+
+@router.head("/sitemap.xml", include_in_schema=False)
+def sitemap_xml_head():
+    return Response(media_type="application/xml")
+
+
 @router.get("/favicon.ico", include_in_schema=False)
 def favicon():
+    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
+
+
+@router.head("/favicon.ico", include_in_schema=False)
+def favicon_head():
+    return Response(media_type="image/svg+xml")
+
+
+@router.get("/favicon.svg", include_in_schema=False)
+def favicon_svg():
     return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
 
 BENEFITS = [

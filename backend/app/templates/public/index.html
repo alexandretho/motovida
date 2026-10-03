@@ -1,4 +1,22 @@
 {% extends "base.html" %}
+{% block title %}Instituto MotoVida | Apoio para motoboys, motociclistas e entregadores{% endblock %}
+{% block meta_description %}Cadastro gratuito no Instituto MotoVida Guilherme França para acessar apoio jurídico, psicológico e social, cursos, auxílio MEI e rede de parceiros para motociclistas e entregadores.{% endblock %}
+{% block canonical_path %}/{% endblock %}
+{% block og_path %}/{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Instituto MotoVida Guilherme França",
+  "url": "{{ site_url }}/",
+  "logo": "{{ site_url }}/favicon.svg",
+  "description": "Apoio jurídico, psicológico e social, cursos, auxílio MEI e rede de parceiros para motoboys, motociclistas, entregadores e familiares.",
+  "areaServed": "BR",
+  "sameAs": []
+}
+</script>
+{% endblock %}
 {% block content %}
 <section class="hero">
   <div class="container hero-inner">

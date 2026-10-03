@@ -4,8 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Instituto MotoVida Guilherme França{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}Instituto MotoVida Guilherme França: apoio jurídico, psicológico e social, cursos, auxílio MEI e rede de parceiros para motoboys, motociclistas, entregadores e familiares no Brasil.{% endblock %}">
+<meta name="robots" content="{% block robots_meta %}{% if user or request.url.path.startswith('/admin') or request.url.path.startswith('/afiliado') or request.url.path in ['/login', '/logout'] %}noindex, nofollow{% else %}index, follow{% endif %}{% endblock %}">
+<link rel="canonical" href="{{ site_url }}{% block canonical_path %}{{ request.url.path }}{% endblock %}">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Instituto MotoVida Guilherme França">
+<meta property="og:title" content="{% block og_title %}Instituto MotoVida Guilherme França{% endblock %}">
+<meta property="og:description" content="{% block og_description %}Apoio jurídico, psicológico e social para motoboys, motociclistas, entregadores e familiares.{% endblock %}">
+<meta property="og:url" content="{{ site_url }}{% block og_path %}{{ request.url.path }}{% endblock %}">
+<meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="/static/css/style.css">
-<link rel="icon" href="/favicon.ico" type="image/svg+xml">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="shortcut icon" href="/favicon.ico" type="image/svg+xml">
+{% block extra_head %}{% endblock %}
 </head>
 <body>
 <header class="topbar">

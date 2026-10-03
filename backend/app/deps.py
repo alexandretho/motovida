@@ -4,6 +4,8 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 from . import models
 
+SITE_URL = "https://motovida.syntratech.com.br"
+
 LABELS = {
     "professions": {"motoboy": "Motoboy", "motociclista": "Motociclista", "entregador": "Entregador",
                     "familiar": "Familiar", "outro": "Outro"},
@@ -59,6 +61,7 @@ def base_ctx(request: Request, user=None, **extra):
         "flash": pop_flash(request),
         "L": LABELS,
         "csrf_token": get_csrf_token(request),
+        "site_url": SITE_URL,
     }
     ctx.update(extra)
     return ctx
