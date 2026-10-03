@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
+from ..support_history import add_specialized_history, build_specialized_history_map
 from ..validators import sanitize
 
 router = APIRouter(prefix="/admin")
@@ -201,13 +202,21 @@ def specialized(request: Request, db: Session = Depends(get_db)):
     legal = db.query(models.LegalSupport).order_by(models.LegalSupport.created_at.desc()).all()
     psy = db.query(models.PsychologicalSupport).order_by(models.PsychologicalSupport.created_at.desc()).all()
     mei = db.query(models.MeiSupport).order_by(models.MeiSupport.created_at.desc()).all()
+    histories = db.query(models.SpecializedSupportHistory)\
+        .order_by(models.SpecializedSupportHistory.created_at.desc()).all()
+    history_map = build_specialized_history_map(histories)
+
+    def histories_for(kind: str, item_id: int):
+        return history_map.get((kind, item_id), [])
+
     return templates.TemplateResponse("admin/atendimentos.html",
-        base_ctx(request, user, legal=legal, psy=psy, mei=mei))
+        base_ctx(request, user, legal=legal, psy=psy, mei=mei,
+                 histories_for=histories_for))
 
 
 @router.post("/atendimentos/{kind}/{item_id}/status")
 def specialized_status(request: Request, kind: str, item_id: int, status: str = Form(...),
-                       db: Session = Depends(get_db)):
+                       note: str = Form(""), db: Session = Depends(get_db)):
     user = require_admin(request, db)
     if (r := guard(user)):
         return r
@@ -215,6 +224,7 @@ def specialized_status(request: Request, kind: str, item_id: int, status: str = 
     if model and status in models.STATUSES:
         item = db.query(model).filter_by(id=item_id).first()
         if item:
+            add_specialized_history(db, kind, item.id, item.status, status, note, user.email)
             item.status = status
             db.commit()
             flash(request, "Status atualizado.")

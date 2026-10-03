@@ -87,6 +87,18 @@ class RequestHistory(Base):
     request = relationship("SupportRequest", back_populates="history")
 
 
+class SpecializedSupportHistory(Base):
+    __tablename__ = "specialized_support_history"
+    id = Column(Integer, primary_key=True)
+    kind = Column(Enum("juridico", "psicologico", "mei", name="specialized_support_kind"), nullable=False)
+    item_id = Column(Integer, nullable=False, index=True)
+    old_status = Column(String(20))
+    new_status = Column(String(20))
+    note = Column(Text)
+    author = Column(String(180))
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class LegalSupport(Base):
     __tablename__ = "legal_support"
     id = Column(Integer, primary_key=True)

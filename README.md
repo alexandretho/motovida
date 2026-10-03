@@ -107,7 +107,7 @@ O `docker-compose.yml` inclui o **Nginx Proxy Manager** que gerencia certificado
 
 ## Banco de dados
 
-Tabelas criadas automaticamente: `users`, `affiliates`, `support_requests`, `request_history`, `legal_support`, `psychological_support`, `mei_support`, `courses`, `course_enrollments`, `events`, `partners`, `attendances`, `lgpd_consents`.
+Tabelas criadas automaticamente: `users`, `affiliates`, `support_requests`, `request_history`, `legal_support`, `psychological_support`, `mei_support`, `specialized_support_history`, `courses`, `course_enrollments`, `events`, `partners`, `attendances`, `lgpd_consents`.
 
 Para inspecionar o banco:
 
@@ -138,7 +138,7 @@ motovida/
         ├── main.py            # entrypoint FastAPI (startup: espera DB, cria tabelas, seeds)
         ├── config.py          # variáveis de ambiente
         ├── database.py        # engine, sessão e espera do MySQL
-        ├── models.py          # 13 tabelas (SQLAlchemy)
+        ├── models.py          # 14 tabelas (SQLAlchemy)
         ├── security.py        # hash de senha PBKDF2
         ├── validators.py      # CPF, e-mail, UF, sanitização
         ├── seeds.py           # admin, afiliado demo, cursos, parceiros, evento

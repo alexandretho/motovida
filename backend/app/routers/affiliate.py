@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
+from ..support_history import add_specialized_history
 from ..validators import format_cpf, is_valid_uf, sanitize
 
 router = APIRouter(prefix="/afiliado")
@@ -119,8 +120,12 @@ def legal_create(request: Request, category: str = Form(...), description: str =
     if category not in models.LEGAL_CATEGORIES or not sanitize(description):
         flash(request, "Preencha todos os campos da solicitação jurídica.", "error")
         return RedirectResponse("/afiliado/juridico", status_code=303)
-    db.add(models.LegalSupport(affiliate_id=user.affiliate.id, category=category,
-                               description=sanitize(description)))
+    item = models.LegalSupport(affiliate_id=user.affiliate.id, category=category,
+                               description=sanitize(description))
+    db.add(item)
+    db.flush()
+    add_specialized_history(db, "juridico", item.id, None, "aberta",
+                            "Solicitação jurídica aberta pelo afiliado.", user.affiliate.full_name)
     db.commit()
     flash(request, "Solicitação jurídica registrada. Nossa equipe entrará em contato.")
     return RedirectResponse("/afiliado/juridico", status_code=303)
@@ -145,8 +150,12 @@ def psy_create(request: Request, relation: str = Form(...), preferred_date: str 
     if relation not in models.PSY_RELATIONS or not sanitize(description):
         flash(request, "Preencha todos os campos do pedido de acolhimento.", "error")
         return RedirectResponse("/afiliado/psicologico", status_code=303)
-    db.add(models.PsychologicalSupport(affiliate_id=user.affiliate.id, relation=relation,
-        preferred_date=sanitize(preferred_date, 60), description=sanitize(description)))
+    item = models.PsychologicalSupport(affiliate_id=user.affiliate.id, relation=relation,
+        preferred_date=sanitize(preferred_date, 60), description=sanitize(description))
+    db.add(item)
+    db.flush()
+    add_specialized_history(db, "psicologico", item.id, None, "aberta",
+                            "Pedido de acolhimento aberto pelo afiliado.", user.affiliate.full_name)
     db.commit()
     flash(request, "Pedido de acolhimento registrado. Você será contatado para o agendamento.")
     return RedirectResponse("/afiliado/psicologico", status_code=303)
@@ -207,8 +216,12 @@ def mei_create(request: Request, topic: str = Form(...), description: str = Form
     if topic not in models.MEI_TOPICS or not sanitize(description):
         flash(request, "Preencha todos os campos da solicitação MEI.", "error")
         return RedirectResponse("/afiliado/mei", status_code=303)
-    db.add(models.MeiSupport(affiliate_id=user.affiliate.id, topic=topic,
-                             description=sanitize(description)))
+    item = models.MeiSupport(affiliate_id=user.affiliate.id, topic=topic,
+                             description=sanitize(description))
+    db.add(item)
+    db.flush()
+    add_specialized_history(db, "mei", item.id, None, "aberta",
+                            "Solicitação MEI aberta pelo afiliado.", user.affiliate.full_name)
     db.commit()
     flash(request, "Solicitação de suporte MEI registrada.")
     return RedirectResponse("/afiliado/mei", status_code=303)

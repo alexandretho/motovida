@@ -90,7 +90,8 @@ a:hover, a:focus { text-decoration: underline; }
 .filters { display: grid; gap: .6rem; align-items: end; }
 .filters label { margin-bottom: 0; }
 .inline-form { display: flex; gap: .4rem; align-items: center; }
-.inline-form select { padding: .3rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: .85rem; }
+.inline-form select, .inline-form input { padding: .3rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: .85rem; }
+.inline-form input { width: 11rem; }
 
 /* ---------- Botões ---------- */
 .btn { display: inline-block; border: 0; cursor: pointer; font: inherit; font-weight: 600; padding: .6rem 1.1rem; border-radius: 9px; background: var(--blue-sky); color: var(--blue-deep); }
@@ -135,6 +136,8 @@ tr:last-child td { border-bottom: 0; }
 .timeline { list-style: none; padding: 0; }
 .timeline li { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: .6rem; }
 .timeline p { margin: .3rem 0 0; }
+.history-snippet { min-width: 14rem; font-size: .84rem; }
+.history-snippet p { margin: .25rem 0; color: var(--ink-soft); }
 .flash { margin: 1rem 0 0; padding: .8rem 1rem; border-radius: var(--radius); font-weight: 600; }
 .flash ul { margin: 0; padding-left: 1.1rem; font-weight: 400; }
 .flash-success { background: #e3f4ea; color: var(--ok); border: 1px solid #bfe6cf; }

@@ -6,8 +6,24 @@
   <select name="status">{% for k, v in L.statuses.items() %}
     <option value="{{ k }}" {{ 'selected' if item.status == k }}>{{ v }}</option>{% endfor %}
   </select>
+  <input type="text" name="note" placeholder="Nota opcional">
   <button class="btn btn-sm" type="submit">Salvar</button>
 </form>
+{% endmacro %}
+{% macro history_snippet(histories) %}
+  {% if histories %}
+    {% set last = histories[0] %}
+    <div class="history-snippet">
+      <strong>Última:</strong>
+      {% if last.old_status %}{{ L.statuses[last.old_status] }} → {% endif %}
+      {% if last.new_status %}<span class="badge badge-{{ last.new_status }}">{{ L.statuses[last.new_status] }}</span>{% endif %}
+      <span class="muted">{{ last.created_at.strftime('%d/%m/%Y %H:%M') }}{% if last.author %} · {{ last.author }}{% endif %}</span>
+      {% if last.note %}<p>{{ last.note }}</p>{% endif %}
+      {% if histories|length > 1 %}<small class="muted">{{ histories|length }} movimentações no total</small>{% endif %}
+    </div>
+  {% else %}
+    <span class="muted">Sem movimentações.</span>
+  {% endif %}
 {% endmacro %}
 {% block content %}
 <section class="section"><div class="container">
@@ -15,29 +31,32 @@
 
   <h2>⚖️ Jurídico</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Afiliado</th><th>Tipo</th><th>Descrição</th><th>Status</th></tr></thead>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Tipo</th><th>Descrição</th><th>Status</th><th>Movimentação</th></tr></thead>
     <tbody>{% for i in legal %}
     <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
-    <td>{{ L.legal[i.category] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('juridico', i) }}</td></tr>
-    {% else %}<tr><td colspan="5">Nenhuma demanda jurídica.</td></tr>{% endfor %}</tbody>
+    <td>{{ L.legal[i.category] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('juridico', i) }}</td>
+    <td>{{ history_snippet(histories_for('juridico', i.id)) }}</td></tr>
+    {% else %}<tr><td colspan="6">Nenhuma demanda jurídica.</td></tr>{% endfor %}</tbody>
   </table></div>
 
   <h2>💙 Psicológico</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Afiliado</th><th>Situação</th><th>Preferência</th><th>Status</th></tr></thead>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Situação</th><th>Preferência</th><th>Status</th><th>Movimentação</th></tr></thead>
     <tbody>{% for i in psy %}
     <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
-    <td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td><td>{{ status_form('psicologico', i) }}</td></tr>
-    {% else %}<tr><td colspan="5">Nenhum pedido de acolhimento.</td></tr>{% endfor %}</tbody>
+    <td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td><td>{{ status_form('psicologico', i) }}</td>
+    <td>{{ history_snippet(histories_for('psicologico', i.id)) }}</td></tr>
+    {% else %}<tr><td colspan="6">Nenhum pedido de acolhimento.</td></tr>{% endfor %}</tbody>
   </table></div>
 
   <h2>📋 MEI</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Afiliado</th><th>Assunto</th><th>Descrição</th><th>Status</th></tr></thead>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Assunto</th><th>Descrição</th><th>Status</th><th>Movimentação</th></tr></thead>
     <tbody>{% for i in mei %}
     <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
-    <td>{{ L.mei_topics[i.topic] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('mei', i) }}</td></tr>
-    {% else %}<tr><td colspan="5">Nenhuma solicitação MEI.</td></tr>{% endfor %}</tbody>
+    <td>{{ L.mei_topics[i.topic] }}</td><td>{{ i.description[:70] }}…</td><td>{{ status_form('mei', i) }}</td>
+    <td>{{ history_snippet(histories_for('mei', i.id)) }}</td></tr>
+    {% else %}<tr><td colspan="6">Nenhuma solicitação MEI.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div></section>
 {% endblock %}
