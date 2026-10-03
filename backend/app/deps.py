@@ -56,12 +56,14 @@ def is_valid_csrf_token(request: Request, token: str | None) -> bool:
 
 
 def base_ctx(request: Request, user=None, **extra):
+    csp_nonce = getattr(request.state, "csp_nonce", "")
     ctx = {
         "request": request,
         "user": user,
         "flash": pop_flash(request),
         "L": LABELS,
         "csrf_token": get_csrf_token(request),
+        "csp_nonce": csp_nonce,
         "site_url": SITE_URL,
         "ga_measurement_id": GA_MEASUREMENT_ID,
     }

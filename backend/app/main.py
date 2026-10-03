@@ -1,3 +1,4 @@
+from secrets import token_urlsafe
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, Request
@@ -25,6 +26,21 @@ SECURITY_HEADERS = {
 }
 
 
+def build_content_security_policy(nonce: str) -> str:
+    return "; ".join([
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
+        "style-src 'self' 'unsafe-inline'",
+        f"script-src 'self' 'nonce-{nonce}' https://www.googletagmanager.com",
+        "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com",
+        "upgrade-insecure-requests",
+    ])
+
+
 def apply_security_headers(response):
     for header, value in SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
@@ -33,17 +49,22 @@ def apply_security_headers(response):
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+    csp_nonce = token_urlsafe(16)
+    request.state.csp_nonce = csp_nonce
+
     if is_sensitive_scanner_path(request.url.path):
-        return apply_security_headers(PlainTextResponse("Not Found", status_code=404))
+        response = PlainTextResponse("Not Found", status_code=404)
+        response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+        return apply_security_headers(response)
 
     if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
         body = await request.body()
         parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
-            return apply_security_headers(
-                PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
-            )
+            response = PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
+            response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+            return apply_security_headers(response)
 
         async def receive():
             return {"type": "http.request", "body": body, "more_body": False}
@@ -51,6 +72,7 @@ async def add_security_headers(request: Request, call_next):
         request._receive = receive
 
     response = await call_next(request)
+    response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
     return apply_security_headers(response)
 
 

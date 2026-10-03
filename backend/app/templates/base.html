@@ -18,21 +18,22 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="shortcut icon" href="/favicon.ico" type="image/svg+xml">
 {% if ga_measurement_id %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}" async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+<script nonce="{{ csp_nonce }}">
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', '{{ ga_measurement_id }}');
 </script>
 {% endif %}
+<script nonce="{{ csp_nonce }}" defer src="/static/js/app.js"></script>
 {% block extra_head %}{% endblock %}
 </head>
 <body>
 <header class="topbar">
   <div class="container topbar-inner">
     <a class="brand" href="/"><span class="brand-badge">🏍️</span><span><strong>MotoVida</strong><small>Instituto Guilherme França</small></span></a>
-    <button class="menu-toggle" aria-label="Abrir menu" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+    <button class="menu-toggle" aria-label="Abrir menu" type="button" data-menu-toggle>☰</button>
     <nav class="nav">
       {% if user and user.role == 'admin' %}
         <a href="/admin">Painel</a><a href="/admin/afiliados">Afiliados</a>
