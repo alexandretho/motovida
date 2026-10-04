@@ -40,7 +40,7 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 3. Atendimentos especializados (jurídico/psico/MEI) não registram histórico de mudança de status (só o Canal de Ajuda registra, em `request_history`)
 4. Afiliado não edita o próprio perfil nem recupera senha
 5. Página de contato sem formulário funcional
-6. Sem gestão de usuários administradores (criar novos admins, trocar senha)
+6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); falta criar novos admins e recuperação self-service por e-mail (sem SMTP)
 7. Sem proteção CSRF nos formulários (cookie SameSite=lax apenas)
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
 9. Sem paginação nas listagens do admin

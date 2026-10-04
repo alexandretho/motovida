@@ -31,6 +31,18 @@
       {% else %}<li class="muted">Nenhuma inscrição.</li>{% endfor %}</ul>
     </div>
   </div>
+  <div class="grid two">
+    <div class="card">
+      <h2>Redefinir senha do afiliado</h2>
+      <p class="muted">Uso administrativo para recuperação assistida. Informe a nova senha ao afiliado por um canal seguro.</p>
+      <form class="form" method="post" action="/admin/afiliados/{{ aff.id }}/senha">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label>Nova senha<input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
+        <label>Confirmar nova senha<input type="password" name="confirm_password" required minlength="8" autocomplete="new-password"></label>
+        <button class="btn btn-secondary" type="submit">Redefinir senha</button>
+      </form>
+    </div>
+  </div>
   <h2>Atendimentos registrados</h2>
   <form class="card form" method="post" action="/admin/afiliados/{{ aff.id }}/atendimento">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

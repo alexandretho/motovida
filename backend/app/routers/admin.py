@@ -83,6 +83,15 @@ def validate_admin_password_change(current_password: str, new_password: str, con
     return errors
 
 
+def validate_affiliate_password_reset(new_password: str, confirm_password: str) -> list[str]:
+    errors = []
+    if len(new_password) < 8:
+        errors.append("A nova senha deve ter pelo menos 8 caracteres.")
+    if new_password != confirm_password:
+        errors.append("A confirmação da nova senha não confere.")
+    return errors
+
+
 @router.get("")
 def dashboard(request: Request, db: Session = Depends(get_db)):
     user = require_admin(request, db)
@@ -188,6 +197,38 @@ def add_attendance(request: Request, aff_id: int, notes: str = Form(...),
         db.add(models.Attendance(affiliate_id=aff_id, admin_id=user.id, notes=sanitize(notes)))
         db.commit()
         flash(request, "Atendimento registrado.")
+    return RedirectResponse(f"/admin/afiliados/{aff_id}", status_code=303)
+
+
+@router.post("/afiliados/{aff_id}/senha")
+def affiliate_password_reset(request: Request, aff_id: int, new_password: str = Form(...),
+                             confirm_password: str = Form(...), db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    affiliate = db.query(models.Affiliate).filter_by(id=aff_id).first()
+    if not affiliate:
+        flash(request, "Afiliado não encontrado.", "error")
+        return RedirectResponse("/admin/afiliados", status_code=303)
+
+    errors = validate_affiliate_password_reset(new_password, confirm_password)
+    if errors:
+        flash(request, " ".join(errors), "error")
+        return RedirectResponse(f"/admin/afiliados/{aff_id}", status_code=303)
+
+    if not affiliate.user:
+        flash(request, "Usuário de acesso do afiliado não encontrado.", "error")
+        return RedirectResponse(f"/admin/afiliados/{aff_id}", status_code=303)
+
+    affiliate.user.password_hash = hash_password(new_password)
+    db.add(models.Attendance(
+        affiliate_id=affiliate.id,
+        admin_id=user.id,
+        notes="Senha de acesso redefinida pelo painel administrativo.",
+    ))
+    db.commit()
+    flash(request, "Senha do afiliado redefinida com sucesso.")
     return RedirectResponse(f"/admin/afiliados/{aff_id}", status_code=303)
 
 

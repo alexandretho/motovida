@@ -64,7 +64,7 @@ No primeiro boot, automaticamente:
 
 **Painel administrativo** (`/admin` — requer login de admin)
 - Dashboard com relatórios: total de afiliados, por estado, por cidade, por profissão, solicitações por tipo/status, cursos com mais inscritos e principais demandas
-- `/admin/afiliados` — listagem com filtros por estado, cidade e profissão + detalhe completo + registro de atendimentos
+- `/admin/afiliados` — listagem com filtros por estado, cidade e profissão + detalhe completo + registro de atendimentos + redefinição assistida de senha do afiliado (registrada no histórico de atendimentos)
 - `/admin/solicitacoes` — gestão de solicitações com alteração de status e histórico
 - `/admin/atendimentos` — demandas jurídicas, psicológicas e MEI
 - `/admin/cursos` — cadastro/edição de cursos e lista de inscritos
