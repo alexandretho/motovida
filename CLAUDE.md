@@ -38,7 +38,7 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 1. Eventos só existem no admin — falta página pública/afiliado para visualizá-los, e falta edição/desativação de eventos
 2. Agendamento psicológico é só texto livre — admin não confirma data/hora
 3. Atendimentos especializados (jurídico/psico/MEI) não registram histórico de mudança de status (só o Canal de Ajuda registra, em `request_history`)
-4. Afiliado não edita o próprio perfil nem recupera senha
+4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); falta recuperação de senha por e-mail (sem SMTP)
 5. Página de contato sem formulário funcional
 6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); falta criar novos admins e recuperação self-service por e-mail (sem SMTP)
 7. Sem proteção CSRF nos formulários (cookie SameSite=lax apenas)

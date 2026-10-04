@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
+from ..security import hash_password, verify_password
 from ..support_history import add_specialized_history
 from ..validators import format_cpf, is_valid_uf, sanitize
 
@@ -98,6 +99,45 @@ def profile_update(
     db.commit()
 
     flash(request, "Perfil atualizado com sucesso.")
+    return RedirectResponse("/afiliado/perfil", status_code=303)
+
+
+def validate_affiliate_password_change(current_password: str, new_password: str, confirm_password: str,
+                                       stored_hash: str) -> list[str]:
+    errors = []
+    if not verify_password(current_password, stored_hash):
+        errors.append("Senha atual incorreta.")
+    if len(new_password) < 8:
+        errors.append("A nova senha deve ter pelo menos 8 caracteres.")
+    if new_password != confirm_password:
+        errors.append("A confirmação da nova senha não confere.")
+    if current_password and new_password and current_password == new_password:
+        errors.append("Escolha uma senha diferente da atual.")
+    return errors
+
+
+@router.get("/senha")
+def password_form(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    return templates.TemplateResponse("affiliate/senha.html", base_ctx(request, user))
+
+
+@router.post("/senha")
+def password_update(request: Request, current_password: str = Form(...), new_password: str = Form(...),
+                    confirm_password: str = Form(...), db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    errors = validate_affiliate_password_change(current_password, new_password, confirm_password,
+                                                user.password_hash)
+    if errors:
+        flash(request, " ".join(errors), "error")
+        return RedirectResponse("/afiliado/senha", status_code=303)
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    flash(request, "Senha atualizada com sucesso.")
     return RedirectResponse("/afiliado/perfil", status_code=303)
 
 
