@@ -126,7 +126,7 @@ def get_public_contact_affiliate(db: Session) -> models.Affiliate:
 
 def contact_template(request: Request, user, form=None, errors=None, status_code: int = 200):
     return templates.TemplateResponse(
-        "public/contato.html",
+        request, "public/contato.html",
         base_ctx(request, user, form=form or {}, errors=errors or []),
         status_code=status_code,
     )
@@ -136,7 +136,7 @@ def contact_template(request: Request, user, form=None, errors=None, status_code
 def index(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     partners = db.query(models.Partner).filter_by(active=True).limit(6).all()
-    return templates.TemplateResponse("public/index.html",
+    return templates.TemplateResponse(request, "public/index.html",
         base_ctx(request, user, benefits=BENEFITS, partners=partners))
 
 
@@ -144,7 +144,7 @@ def index(request: Request, db: Session = Depends(get_db)):
 def partners_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     partners = db.query(models.Partner).filter_by(active=True).order_by(models.Partner.category).all()
-    return templates.TemplateResponse("public/parceiros.html", base_ctx(request, user, partners=partners))
+    return templates.TemplateResponse(request, "public/parceiros.html", base_ctx(request, user, partners=partners))
 
 
 @router.get("/eventos")
@@ -152,7 +152,7 @@ def events_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     events = db.query(models.Event).filter_by(active=True)\
         .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
-    return templates.TemplateResponse("public/eventos.html", base_ctx(request, user, events=events))
+    return templates.TemplateResponse(request, "public/eventos.html", base_ctx(request, user, events=events))
 
 
 @router.get("/contato")
@@ -233,13 +233,13 @@ def contact_create(
 
 @router.get("/privacidade")
 def privacy(request: Request, db: Session = Depends(get_db)):
-    return templates.TemplateResponse("public/privacidade.html",
+    return templates.TemplateResponse(request, "public/privacidade.html",
         base_ctx(request, get_current_user(request, db), version=POLICY_VERSION))
 
 
 @router.get("/cadastro")
 def register_form(request: Request, db: Session = Depends(get_db)):
-    return templates.TemplateResponse("public/cadastro.html",
+    return templates.TemplateResponse(request, "public/cadastro.html",
         base_ctx(request, get_current_user(request, db), form={}, errors=[]))
 
 
@@ -287,7 +287,7 @@ def register(
             errors.append("Já existe um cadastro com este CPF.")
 
     if errors:
-        return templates.TemplateResponse("public/cadastro.html",
+        return templates.TemplateResponse(request, "public/cadastro.html",
             base_ctx(request, None, form=form, errors=errors), status_code=400)
 
     user = models.User(email=form["email"], password_hash=hash_password(password), role="affiliate")

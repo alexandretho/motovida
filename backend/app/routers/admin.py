@@ -129,7 +129,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     open_requests = db.query(models.SupportRequest)\
         .filter(models.SupportRequest.status.in_(["aberta", "em_analise"]))\
         .order_by(models.SupportRequest.created_at.desc()).limit(8).all()
-    return templates.TemplateResponse("admin/dashboard.html", base_ctx(
+    return templates.TemplateResponse(request, "admin/dashboard.html", base_ctx(
         request, user, total_affiliates=total_affiliates, by_state=by_state, by_city=by_city,
         by_type=by_type, by_status=by_status, by_profession=by_profession, by_mei=by_mei,
         top_courses=top_courses, open_requests=open_requests))
@@ -140,7 +140,7 @@ def password_form(request: Request, db: Session = Depends(get_db)):
     user = require_admin(request, db)
     if (r := guard(user)):
         return r
-    return templates.TemplateResponse("admin/senha.html", base_ctx(request, user))
+    return templates.TemplateResponse(request, "admin/senha.html", base_ctx(request, user))
 
 
 @router.post("/senha")
@@ -179,7 +179,7 @@ def affiliates(request: Request, estado: str = "", cidade: str = "", profissao: 
     pagination = with_page_urls(pagination, "/admin/afiliados", estado=estado.upper(), cidade=cidade,
                                 profissao=profissao)
     states = [s[0] for s in db.query(models.Affiliate.state).distinct().order_by(models.Affiliate.state)]
-    return templates.TemplateResponse("admin/afiliados.html", base_ctx(
+    return templates.TemplateResponse(request, "admin/afiliados.html", base_ctx(
         request, user, items=items, states=states,
         f_estado=estado.upper(), f_cidade=cidade, f_profissao=profissao, pagination=pagination))
 
@@ -196,7 +196,7 @@ def affiliate_detail(request: Request, aff_id: int, db: Session = Depends(get_db
         .order_by(models.LgpdConsent.accepted_at.desc()).first()
     attendances = db.query(models.Attendance).filter_by(affiliate_id=aff.id)\
         .order_by(models.Attendance.created_at.desc()).all()
-    return templates.TemplateResponse("admin/afiliado_detalhe.html", base_ctx(
+    return templates.TemplateResponse(request, "admin/afiliado_detalhe.html", base_ctx(
         request, user, aff=aff, consent=consent, attendances=attendances))
 
 
@@ -258,7 +258,7 @@ def requests_list(request: Request, tipo: str = "", status: str = "", page: int 
         q = q.filter(models.SupportRequest.status == status)
     items, pagination = paginate_query(q.order_by(models.SupportRequest.created_at.desc()), page)
     pagination = with_page_urls(pagination, "/admin/solicitacoes", tipo=tipo, status=status)
-    return templates.TemplateResponse("admin/solicitacoes.html", base_ctx(
+    return templates.TemplateResponse(request, "admin/solicitacoes.html", base_ctx(
         request, user, items=items, f_tipo=tipo, f_status=status, pagination=pagination))
 
 
@@ -270,7 +270,7 @@ def request_detail(request: Request, req_id: int, db: Session = Depends(get_db))
     item = db.query(models.SupportRequest).filter_by(id=req_id).first()
     if not item:
         return RedirectResponse("/admin/solicitacoes", status_code=303)
-    return templates.TemplateResponse("admin/solicitacao_detalhe.html", base_ctx(request, user, item=item))
+    return templates.TemplateResponse(request, "admin/solicitacao_detalhe.html", base_ctx(request, user, item=item))
 
 
 @router.post("/solicitacoes/{req_id}/status")
@@ -305,7 +305,7 @@ def specialized(request: Request, db: Session = Depends(get_db)):
     def histories_for(kind: str, item_id: int):
         return history_map.get((kind, item_id), [])
 
-    return templates.TemplateResponse("admin/atendimentos.html",
+    return templates.TemplateResponse(request, "admin/atendimentos.html",
         base_ctx(request, user, legal=legal, psy=psy, mei=mei,
                  histories_for=histories_for))
 
@@ -333,7 +333,7 @@ def courses(request: Request, db: Session = Depends(get_db)):
     if (r := guard(user)):
         return r
     items = db.query(models.Course).order_by(models.Course.title).all()
-    return templates.TemplateResponse("admin/cursos.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "admin/cursos.html", base_ctx(request, user, items=items))
 
 
 @router.post("/cursos")
@@ -376,7 +376,7 @@ def course_enrollees(request: Request, course_id: int, db: Session = Depends(get
     course = db.query(models.Course).filter_by(id=course_id).first()
     if not course:
         return RedirectResponse("/admin/cursos", status_code=303)
-    return templates.TemplateResponse("admin/inscritos.html", base_ctx(request, user, course=course))
+    return templates.TemplateResponse(request, "admin/inscritos.html", base_ctx(request, user, course=course))
 
 
 @router.get("/eventos")
@@ -385,7 +385,7 @@ def events(request: Request, db: Session = Depends(get_db)):
     if (r := guard(user)):
         return r
     items = db.query(models.Event).order_by(models.Event.event_date.desc()).all()
-    return templates.TemplateResponse("admin/eventos.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "admin/eventos.html", base_ctx(request, user, items=items))
 
 
 @router.post("/eventos")
@@ -417,7 +417,7 @@ def event_edit_form(event_id: int, request: Request, db: Session = Depends(get_d
     if not event:
         flash(request, "Evento não encontrado.")
         return RedirectResponse("/admin/eventos", status_code=303)
-    return templates.TemplateResponse("admin/eventos.html",
+    return templates.TemplateResponse(request, "admin/eventos.html",
                                       base_ctx(request, user, items=db.query(models.Event)
                                                .order_by(models.Event.event_date.desc()).all(),
                                                editing=event))
@@ -471,7 +471,7 @@ def partners(request: Request, db: Session = Depends(get_db)):
     if (r := guard(user)):
         return r
     items = db.query(models.Partner).order_by(models.Partner.category, models.Partner.name).all()
-    return templates.TemplateResponse("admin/parceiros.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "admin/parceiros.html", base_ctx(request, user, items=items))
 
 
 @router.post("/parceiros")
@@ -514,7 +514,7 @@ def admins_list(request: Request, db: Session = Depends(get_db)):
     if (r := guard(user)):
         return r
     admins = db.query(models.User).filter(models.User.role == "admin").order_by(models.User.created_at).all()
-    return templates.TemplateResponse("admin/admins.html", base_ctx(request, user, admins=admins))
+    return templates.TemplateResponse(request, "admin/admins.html", base_ctx(request, user, admins=admins))
 
 
 @router.post("/admins")

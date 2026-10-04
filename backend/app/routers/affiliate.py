@@ -40,7 +40,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "juridico": db.query(models.LegalSupport).filter_by(affiliate_id=aff.id).count(),
         "psico": db.query(models.PsychologicalSupport).filter_by(affiliate_id=aff.id).count(),
     }
-    return templates.TemplateResponse("affiliate/dashboard.html",
+    return templates.TemplateResponse(request, "affiliate/dashboard.html",
         base_ctx(request, user, aff=aff, requests=requests_, counts=counts))
 
 
@@ -49,7 +49,7 @@ def profile(request: Request, db: Session = Depends(get_db)):
     user = require_affiliate(request, db)
     if (r := guard(user)):
         return r
-    return templates.TemplateResponse("affiliate/perfil.html",
+    return templates.TemplateResponse(request, "affiliate/perfil.html",
         base_ctx(request, user, aff=user.affiliate, cpf_format=format_cpf(user.affiliate.cpf)))
 
 
@@ -121,7 +121,7 @@ def password_form(request: Request, db: Session = Depends(get_db)):
     user = require_affiliate(request, db)
     if (r := guard(user)):
         return r
-    return templates.TemplateResponse("affiliate/senha.html", base_ctx(request, user))
+    return templates.TemplateResponse(request, "affiliate/senha.html", base_ctx(request, user))
 
 
 @router.post("/senha")
@@ -148,7 +148,7 @@ def legal(request: Request, db: Session = Depends(get_db)):
         return r
     items = db.query(models.LegalSupport).filter_by(affiliate_id=user.affiliate.id)\
         .order_by(models.LegalSupport.created_at.desc()).all()
-    return templates.TemplateResponse("affiliate/juridico.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "affiliate/juridico.html", base_ctx(request, user, items=items))
 
 
 @router.post("/juridico")
@@ -178,7 +178,7 @@ def psy(request: Request, db: Session = Depends(get_db)):
         return r
     items = db.query(models.PsychologicalSupport).filter_by(affiliate_id=user.affiliate.id)\
         .order_by(models.PsychologicalSupport.created_at.desc()).all()
-    return templates.TemplateResponse("affiliate/psicologico.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "affiliate/psicologico.html", base_ctx(request, user, items=items))
 
 
 @router.post("/psicologico")
@@ -208,7 +208,7 @@ def courses(request: Request, db: Session = Depends(get_db)):
         return r
     courses_ = db.query(models.Course).filter_by(active=True).order_by(models.Course.title).all()
     enrolled_ids = {e.course_id for e in user.affiliate.enrollments}
-    return templates.TemplateResponse("affiliate/cursos.html",
+    return templates.TemplateResponse(request, "affiliate/cursos.html",
         base_ctx(request, user, courses=courses_, enrolled_ids=enrolled_ids))
 
 
@@ -219,7 +219,7 @@ def events(request: Request, db: Session = Depends(get_db)):
         return r
     events_ = db.query(models.Event).filter_by(active=True)\
         .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
-    return templates.TemplateResponse("affiliate/eventos.html", base_ctx(request, user, events=events_))
+    return templates.TemplateResponse(request, "affiliate/eventos.html", base_ctx(request, user, events=events_))
 
 
 @router.post("/cursos/{course_id}/inscrever")
@@ -244,7 +244,7 @@ def mei(request: Request, db: Session = Depends(get_db)):
         return r
     items = db.query(models.MeiSupport).filter_by(affiliate_id=user.affiliate.id)\
         .order_by(models.MeiSupport.created_at.desc()).all()
-    return templates.TemplateResponse("affiliate/mei.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "affiliate/mei.html", base_ctx(request, user, items=items))
 
 
 @router.post("/mei")
@@ -274,7 +274,7 @@ def help_center(request: Request, db: Session = Depends(get_db)):
         return r
     items = db.query(models.SupportRequest).filter_by(affiliate_id=user.affiliate.id)\
         .order_by(models.SupportRequest.created_at.desc()).all()
-    return templates.TemplateResponse("affiliate/ajuda.html", base_ctx(request, user, items=items))
+    return templates.TemplateResponse(request, "affiliate/ajuda.html", base_ctx(request, user, items=items))
 
 
 @router.post("/ajuda")
@@ -306,4 +306,4 @@ def help_detail(request: Request, request_id: int, db: Session = Depends(get_db)
         id=request_id, affiliate_id=user.affiliate.id).first()
     if not item:
         return RedirectResponse("/afiliado/ajuda", status_code=303)
-    return templates.TemplateResponse("affiliate/solicitacao.html", base_ctx(request, user, item=item))
+    return templates.TemplateResponse(request, "affiliate/solicitacao.html", base_ctx(request, user, item=item))

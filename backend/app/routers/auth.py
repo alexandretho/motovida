@@ -76,7 +76,7 @@ def login_form(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     if user:
         return RedirectResponse("/admin" if user.role == "admin" else "/afiliado", status_code=303)
-    return templates.TemplateResponse("public/login.html", base_ctx(request, None))
+    return templates.TemplateResponse(request, "public/login.html", base_ctx(request, None))
 
 
 @router.post("/login")
