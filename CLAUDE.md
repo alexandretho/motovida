@@ -41,7 +41,7 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); falta recuperação de senha por e-mail (sem SMTP)
 5. Página de contato sem formulário funcional
 6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); falta criar novos admins e recuperação self-service por e-mail (sem SMTP)
-7. Sem proteção CSRF nos formulários (cookie SameSite=lax apenas)
+7. CSRF implementado (token em sessão + middleware, testes em `backend/tests/test_csrf.py`)
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
-9. Sem paginação nas listagens do admin
+9. Paginação admin implementada
 10. App nunca foi executado de ponta a ponta com Docker — validar o primeiro `docker compose up --build` e corrigir eventuais erros de runtime
