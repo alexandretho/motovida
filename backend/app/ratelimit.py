@@ -1,4 +1,6 @@
 """Limitador simples em memória (por processo) para POSTs públicos sensíveis."""
+import ipaddress
+import os
 from threading import Lock
 from time import monotonic
 
@@ -7,6 +9,15 @@ _lock = Lock()
 
 
 def client_ip(request) -> str:
+    """IP do cliente. Só confia em CF-Connecting-IP/X-Forwarded-For com TRUST_PROXY_HEADERS=1."""
+    if os.getenv("TRUST_PROXY_HEADERS") == "1":
+        raw = request.headers.get("cf-connecting-ip") or (
+            request.headers.get("x-forwarded-for", "").split(",")[0]
+        )
+        try:
+            return str(ipaddress.ip_address(raw.strip()))
+        except ValueError:
+            pass
     return request.client.host if request.client else "unknown"
 
 

@@ -18,6 +18,8 @@ templates = Jinja2Templates(directory="app/templates")
 
 LOGIN_FAILURE_LIMIT = 5
 LOGIN_FAILURE_WINDOW_SECONDS = 5 * 60
+from app.ratelimit import client_ip  # noqa: E402
+
 LOGIN_RATE_LIMIT_MESSAGE = "Muitas tentativas inválidas. Aguarde alguns minutos antes de tentar novamente."
 
 
@@ -32,7 +34,7 @@ _login_failures_lock = Lock()
 
 
 def _login_rate_limit_key(request: Request, email: str) -> tuple[str, str]:
-    ip = request.client.host if request.client else "unknown"
+    ip = client_ip(request)
     return ip, email.strip().lower()
 
 
