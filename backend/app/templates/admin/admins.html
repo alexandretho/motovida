@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Administradores – Admin MotoVida{% endblock %}
+{% block robots_meta %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <h1>Administradores</h1>
+    <div class="card">
+      <ul>{% for a in admins %}<li>{{ a.email }} <small>({{ a.created_at.strftime("%d/%m/%Y") }})</small></li>{% endfor %}</ul>
+    </div>
+    <form class="card form" method="post" action="/admin/admins" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>E-mail <input type="email" name="email" required maxlength="180"></label>
+      <label>Senha <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+      <label>Confirmar senha <input type="password" name="confirm_password" required minlength="8" autocomplete="new-password"></label>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Criar administrador</button></div>
+    </form>
+  </div>
+</section>
+{% endblock %}

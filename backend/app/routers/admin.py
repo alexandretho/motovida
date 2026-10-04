@@ -14,7 +14,7 @@ from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
 from ..security import hash_password, verify_password
 from ..support_history import add_specialized_history, build_specialized_history_map
-from ..validators import sanitize
+from ..validators import is_valid_email, sanitize
 
 router = APIRouter(prefix="/admin")
 templates = Jinja2Templates(directory="app/templates")
@@ -89,6 +89,19 @@ def validate_affiliate_password_reset(new_password: str, confirm_password: str) 
         errors.append("A nova senha deve ter pelo menos 8 caracteres.")
     if new_password != confirm_password:
         errors.append("A confirmação da nova senha não confere.")
+    return errors
+
+
+def validate_new_admin(email: str, password: str, confirm_password: str, email_exists: bool) -> list[str]:
+    errors = []
+    if not is_valid_email(email):
+        errors.append("E-mail inválido.")
+    elif email_exists:
+        errors.append("Já existe um usuário com este e-mail.")
+    if len(password) < 8:
+        errors.append("A senha deve ter pelo menos 8 caracteres.")
+    if password != confirm_password:
+        errors.append("A confirmação da senha não confere.")
     return errors
 
 
@@ -493,3 +506,30 @@ def partner_edit(request: Request, partner_id: int, name: str = Form(...),
         db.commit()
         flash(request, "Parceiro atualizado.")
     return RedirectResponse("/admin/parceiros", status_code=303)
+
+
+@router.get("/admins")
+def admins_list(request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    admins = db.query(models.User).filter(models.User.role == "admin").order_by(models.User.created_at).all()
+    return templates.TemplateResponse("admin/admins.html", base_ctx(request, user, admins=admins))
+
+
+@router.post("/admins")
+def admins_create(request: Request, email: str = Form(...), password: str = Form(...),
+                  confirm_password: str = Form(...), db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    email = sanitize(email).lower()
+    exists = bool(db.query(models.User).filter(models.User.email == email).first())
+    errors = validate_new_admin(email, password, confirm_password, exists)
+    if errors:
+        flash(request, " ".join(errors), "error")
+        return RedirectResponse("/admin/admins", status_code=303)
+    db.add(models.User(email=email, password_hash=hash_password(password), role="admin"))
+    db.commit()
+    flash(request, "Novo administrador criado com sucesso.")
+    return RedirectResponse("/admin/admins", status_code=303)

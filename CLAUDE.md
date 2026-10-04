@@ -40,7 +40,7 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 3. Histórico de status de atendimentos especializados implementado (testes em `test_specialized_support_history.py`)
 4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); falta recuperação de senha por e-mail (sem SMTP)
 5. Formulário de contato funcional (`/contato`, com rate limit; gera solicitação no Canal de Ajuda)
-6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); falta criar novos admins e recuperação self-service por e-mail (sem SMTP)
+6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); cria novos admins em `/admin/admins`; falta recuperação self-service por e-mail (sem SMTP)
 7. CSRF implementado (token em sessão + middleware, testes em `backend/tests/test_csrf.py`)
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
 9. Paginação admin implementada
