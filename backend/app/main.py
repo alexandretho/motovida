@@ -23,7 +23,10 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+    "Strict-Transport-Security": "max-age=31536000",
 }
+
+NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout")
 
 
 def build_content_security_policy(nonce: str) -> str:
@@ -41,9 +44,12 @@ def build_content_security_policy(nonce: str) -> str:
     ])
 
 
-def apply_security_headers(response):
+def apply_security_headers(response, path: str = ""):
     for header, value in SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
+    if path.startswith(NO_STORE_PREFIXES):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
     return response
 
 
@@ -55,7 +61,7 @@ async def add_security_headers(request: Request, call_next):
     if is_sensitive_scanner_path(request.url.path):
         response = PlainTextResponse("Not Found", status_code=404)
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
-        return apply_security_headers(response)
+        return apply_security_headers(response, request.url.path)
 
     if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
         body = await request.body()
@@ -64,7 +70,7 @@ async def add_security_headers(request: Request, call_next):
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
             response = PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
-            return apply_security_headers(response)
+            return apply_security_headers(response, request.url.path)
 
         async def receive():
             return {"type": "http.request", "body": body, "more_body": False}
@@ -73,7 +79,7 @@ async def add_security_headers(request: Request, call_next):
 
     response = await call_next(request)
     response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
-    return apply_security_headers(response)
+    return apply_security_headers(response, request.url.path)
 
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8, same_site="lax")
