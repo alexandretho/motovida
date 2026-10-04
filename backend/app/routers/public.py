@@ -8,6 +8,7 @@ from .. import models
 from ..config import POLICY_VERSION
 from ..database import get_db
 from ..deps import SITE_URL, base_ctx, flash, get_current_user
+from .. import ratelimit
 from ..security import hash_password
 from ..validators import (clean_cpf, is_valid_cpf, is_valid_email, is_valid_uf, sanitize)
 
@@ -170,6 +171,9 @@ def contact_create(
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
+    if ratelimit.hit("contato", ratelimit.client_ip(request), 5, 600):
+        flash(request, "Muitas mensagens enviadas em pouco tempo. Aguarde alguns minutos e tente novamente.", "error")
+        return RedirectResponse("/contato", status_code=303)
     form = {
         "name": sanitize(name, 180),
         "email": sanitize(email, 180).lower(),
@@ -248,6 +252,9 @@ def register(
     support_needs: str = Form(""), password: str = Form(...),
     lgpd_accept: str = Form(None), db: Session = Depends(get_db),
 ):
+    if ratelimit.hit("cadastro", ratelimit.client_ip(request), 10, 600):
+        flash(request, "Muitas tentativas de cadastro em pouco tempo. Aguarde alguns minutos e tente novamente.", "error")
+        return RedirectResponse("/cadastro", status_code=303)
     form = {k: sanitize(v, 300) for k, v in {
         "full_name": full_name, "cpf": cpf, "phone": phone, "whatsapp": whatsapp,
         "email": email, "city": city, "state": state.upper(), "profession": profession,
