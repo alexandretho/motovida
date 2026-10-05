@@ -18,12 +18,12 @@
   </form>
   <h2>Meus pedidos</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Situação</th><th>Preferência</th><th>Status</th><th>Data</th></tr></thead>
+    <thead><tr><th>#</th><th>Situação</th><th>Preferência</th><th>Agendamento confirmado</th><th>Status</th><th>Data</th></tr></thead>
     <tbody>{% for i in items %}
-    <tr><td>{{ i.id }}</td><td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td>
+    <tr><td>{{ i.id }}</td><td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td><td>{{ i.scheduled_at or 'Aguardando confirmação' }}</td>
     <td><span class="badge badge-{{ i.status }}">{{ L.statuses[i.status] }}</span></td>
     <td>{{ i.created_at.strftime('%d/%m/%Y') }}</td></tr>
-    {% else %}<tr><td colspan="5">Nenhum pedido registrado ainda.</td></tr>{% endfor %}</tbody>
+    {% else %}<tr><td colspan="6">Nenhum pedido registrado ainda.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div></section>
 {% endblock %}

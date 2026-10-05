@@ -36,7 +36,7 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 ## Pendências conhecidas (backlog)
 
 1. Eventos: página pública `/eventos`, edição e ativar/desativar no admin já implementados
-2. Agendamento psicológico é só texto livre — admin não confirma data/hora
+2. Agendamento psicológico: admin confirma data/hora em `/admin/atendimentos` (`scheduled_at`, coluna adicionada no startup via `app/scheduling.py`); afiliado vê a confirmação. Falta notificação por e-mail (sem SMTP)
 3. Histórico de status de atendimentos especializados implementado (testes em `test_specialized_support_history.py`)
 4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); falta recuperação de senha por e-mail (sem SMTP)
 5. Formulário de contato funcional (`/contato`, com rate limit; gera solicitação no Canal de Ajuda)

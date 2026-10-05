@@ -41,12 +41,18 @@
 
   <h2>💙 Psicológico</h2>
   <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>Afiliado</th><th>Situação</th><th>Preferência</th><th>Status</th><th>Movimentação</th></tr></thead>
+    <thead><tr><th>#</th><th>Afiliado</th><th>Situação</th><th>Preferência</th><th>Agendamento</th><th>Status</th><th>Movimentação</th></tr></thead>
     <tbody>{% for i in psy %}
     <tr><td>{{ i.id }}</td><td><a href="/admin/afiliados/{{ i.affiliate.id }}">{{ i.affiliate.full_name }}</a></td>
-    <td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td><td>{{ status_form('psicologico', i) }}</td>
+    <td>{{ L.psy[i.relation] }}</td><td>{{ i.preferred_date or '—' }}</td>
+    <td><form method="post" action="/admin/atendimentos/psicologico/{{ i.id }}/agendar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="datetime-local" name="scheduled_at" aria-label="Data e hora confirmadas">
+      <button class="btn btn-sm" type="submit">Confirmar</button>
+      {% if i.scheduled_at %}<br><small>Atual: {{ i.scheduled_at }}</small>{% endif %}</form></td>
+    <td>{{ status_form('psicologico', i) }}</td>
     <td>{{ history_snippet(histories_for('psicologico', i.id)) }}</td></tr>
-    {% else %}<tr><td colspan="6">Nenhum pedido de acolhimento.</td></tr>{% endfor %}</tbody>
+    {% else %}<tr><td colspan="7">Nenhum pedido de acolhimento.</td></tr>{% endfor %}</tbody>
   </table></div>
 
   <h2>📋 MEI</h2>

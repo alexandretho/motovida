@@ -117,6 +117,7 @@ class PsychologicalSupport(Base):
     affiliate_id = Column(Integer, ForeignKey("affiliates.id"), nullable=False)
     relation = Column(Enum(*PSY_RELATIONS, name="psy_relation"), nullable=False)
     preferred_date = Column(String(60))
+    scheduled_at = Column(String(60))
     description = Column(Text, nullable=False)
     status = Column(Enum(*STATUSES, name="psy_status"), nullable=False, default="aberta")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

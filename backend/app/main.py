@@ -11,6 +11,7 @@ from .config import SECRET_KEY
 from .database import Base, SessionLocal, engine, wait_for_db
 from .deps import is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
+from .scheduling import ensure_scheduled_at_column
 from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
@@ -95,6 +96,7 @@ app.include_router(admin.router)
 def startup():
     wait_for_db()
     Base.metadata.create_all(bind=engine)
+    ensure_scheduled_at_column(engine)
     db = SessionLocal()
     try:
         run_seeds(db)

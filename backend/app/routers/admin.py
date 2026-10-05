@@ -10,6 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..scheduling import parse_schedule
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
 from ..security import hash_password, verify_password
@@ -324,6 +325,28 @@ def specialized_status(request: Request, kind: str, item_id: int, status: str = 
             item.status = status
             db.commit()
             flash(request, "Status atualizado.")
+    return RedirectResponse("/admin/atendimentos", status_code=303)
+
+
+@router.post("/atendimentos/psicologico/{item_id}/agendar")
+def psy_schedule(request: Request, item_id: int, scheduled_at: str = Form(""),
+                 db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+    item = db.query(models.PsychologicalSupport).filter_by(id=item_id).first()
+    if not item:
+        flash(request, "Pedido não encontrado.")
+    elif not scheduled_at.strip():
+        item.scheduled_at = None
+        db.commit()
+        flash(request, "Agendamento removido.")
+    elif (when := parse_schedule(sanitize(scheduled_at, 40))):
+        item.scheduled_at = when
+        db.commit()
+        flash(request, "Agendamento confirmado.")
+    else:
+        flash(request, "Data/hora inválida.")
     return RedirectResponse("/admin/atendimentos", status_code=303)
 
 
