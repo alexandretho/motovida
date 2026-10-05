@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
+from ..data_export import build_affiliate_export, export_json_bytes
 from ..deps import base_ctx, flash, get_current_user
 from ..security import hash_password, verify_password
 from ..support_history import add_specialized_history
@@ -114,6 +115,17 @@ def validate_affiliate_password_change(current_password: str, new_password: str,
     if current_password and new_password and current_password == new_password:
         errors.append("Escolha uma senha diferente da atual.")
     return errors
+
+
+@router.get("/meus-dados")
+def my_data(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    body = export_json_bytes(build_affiliate_export(db, user))
+    return Response(body, media_type="application/json; charset=utf-8", headers={
+        "Content-Disposition": 'attachment; filename="meus-dados-motovida.json"',
+        "Cache-Control": "no-store"})
 
 
 @router.get("/senha")

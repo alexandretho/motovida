@@ -44,4 +44,5 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 7. CSRF implementado (token em sessão + middleware, testes em `backend/tests/test_csrf.py`)
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
 9. Paginação admin implementada
-10. App nunca foi executado de ponta a ponta com Docker — validar o primeiro `docker compose up --build` e corrigir eventuais erros de runtime
+10. LGPD: afiliado baixa seus dados em JSON em `/afiliado/meus-dados` (`app/data_export.py`)
+11. App nunca foi executado de ponta a ponta com Docker — validar o primeiro `docker compose up --build` e corrigir eventuais erros de runtime
