@@ -10,6 +10,7 @@ os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.main import app  # noqa: E402
+from app.security import is_sensitive_scanner_path  # noqa: E402
 
 
 client = TestClient(app)
@@ -20,13 +21,27 @@ client = TestClient(app)
     [
         "/.env",
         "/.env.local",
+        "/vendor/.env",
+        "/app/.env.production",
+        "/.aws/credentials",
+        "/.ssh/id_rsa",
+        "/.svn/entries",
+        "/.hg/store",
         "/.git/config",
         "/wp-admin/setup-config.php",
+        "/wp-content/plugins/revslider/readme.txt",
+        "/wp-includes/wlwmanifest.xml",
         "/wp-login.php",
         "/xmlrpc.php",
         "/phpinfo.php",
         "/php_info.php",
         "/i.php",
+        "/server-status",
+        "/server-info",
+        "/cgi-bin/test.cgi",
+        "/actuator/env",
+        "/composer.json",
+        "/debug/default/view",
     ],
 )
 def test_common_scanner_paths_are_blocked(path):
@@ -41,3 +56,11 @@ def test_legitimate_public_route_is_preserved():
 
     assert response.status_code == 200
     assert "User-agent: *" in response.text
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["/", "/parceiros", "/eventos", "/contato", "/privacidade", "/cadastro"],
+)
+def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
+    assert is_sensitive_scanner_path(path) is False

@@ -5,6 +5,9 @@ import os
 ITERATIONS = 260_000
 
 SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
+    "/composer.json",
+    "/composer.lock",
+    "/debug/default/view",
     "/wp-login.php",
     "/xmlrpc.php",
     "/phpinfo.php",
@@ -13,18 +16,42 @@ SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
 })
 
 SENSITIVE_SCANNER_PREFIXES = frozenset({
+    "/.aws",
     "/.git",
+    "/.hg",
+    "/.ssh",
+    "/.svn",
+    "/actuator",
+    "/cgi-bin",
+    "/server-info",
+    "/server-status",
+    "/vendor",
     "/wp-admin",
+    "/wp-content",
+    "/wp-includes",
+})
+
+SENSITIVE_SCANNER_SEGMENTS = frozenset({
+    ".env",
+    ".git",
+    ".hg",
+    ".ssh",
+    ".svn",
 })
 
 
 def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = f"/{path.lstrip('/')}".lower()
+    segments = [segment for segment in normalized_path.split("/") if segment]
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
 
-    if normalized_path.startswith("/.env"):
+    if any(
+        segment == sensitive or segment.startswith(f"{sensitive}.")
+        for segment in segments
+        for sensitive in SENSITIVE_SCANNER_SEGMENTS
+    ):
         return True
 
     return any(
