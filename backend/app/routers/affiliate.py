@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -151,6 +153,43 @@ def password_update(request: Request, current_password: str = Form(...), new_pas
     db.commit()
     flash(request, "Senha atualizada com sucesso.")
     return RedirectResponse("/afiliado/perfil", status_code=303)
+
+
+def anonymize_affiliate(db: Session, user) -> None:
+    """Anonimiza dados pessoais (LGPD art. 18) preservando registros agregados."""
+    aff = user.affiliate
+    aff.full_name = "Conta excluída"
+    aff.cpf = f"X{aff.id:010d}"[-11:]
+    aff.phone = ""
+    aff.whatsapp = ""
+    aff.email = f"excluido-{aff.id}@anonimizado.invalid"
+    aff.city = "-"
+    aff.support_needs = None
+    user.email = f"excluido-{user.id}@anonimizado.invalid"
+    user.password_hash = hash_password(secrets.token_urlsafe(32))
+    db.commit()
+
+
+@router.get("/excluir-conta")
+def delete_account_form(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    return templates.TemplateResponse(request, "affiliate/excluir_conta.html", base_ctx(request, user))
+
+
+@router.post("/excluir-conta")
+def delete_account(request: Request, current_password: str = Form(...), db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    if not verify_password(current_password, user.password_hash):
+        flash(request, "Senha atual incorreta.", "error")
+        return RedirectResponse("/afiliado/excluir-conta", status_code=303)
+    anonymize_affiliate(db, user)
+    request.session.clear()
+    flash(request, "Sua conta foi excluída e seus dados pessoais anonimizados.")
+    return RedirectResponse("/", status_code=303)
 
 
 @router.get("/juridico")

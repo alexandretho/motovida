@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Excluir conta – Instituto MotoVida{% endblock %}
+{% block robots_meta %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <h1>Excluir minha conta</h1>
+    <p class="section-sub">Seus dados pessoais (nome, CPF, contatos, cidade e necessidades) serão anonimizados e o acesso encerrado. Registros de atendimento ficam sem identificação, apenas para fins estatísticos. Esta ação não pode ser desfeita.</p>
+    <form class="card form" method="post" action="/afiliado/excluir-conta" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Confirme sua senha atual
+        <input type="password" name="current_password" required autocomplete="current-password">
+      </label>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Excluir definitivamente</button>
+        <a class="btn btn-ghost" href="/afiliado/perfil">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
