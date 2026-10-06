@@ -46,7 +46,8 @@ Checks executados com sucesso:
 - `docker compose config`
 - `docker compose up -d --build`
 - containers `mysql`, `app` e `nginx-proxy-manager` em execução, com MySQL saudável
-- smoke HTTP de `/`, `/robots.txt`, `/favicon.ico`, `/.env` e `/wp-admin/`
+- healthcheck do app em `/healthz`
+- smoke HTTP de `/`, `/healthz`, `/robots.txt`, `/favicon.ico`, `/.env` e `/wp-admin/`
 - login admin e login do afiliado demo redirecionando para as áreas corretas
 
 ## Usuários de teste

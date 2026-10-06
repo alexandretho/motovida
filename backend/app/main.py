@@ -92,6 +92,16 @@ app.include_router(affiliate.router)
 app.include_router(admin.router)
 
 
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    return PlainTextResponse("ok")
+
+
+@app.head("/healthz", include_in_schema=False)
+def healthz_head():
+    return PlainTextResponse("")
+
+
 @app.on_event("startup")
 def startup():
     wait_for_db()
