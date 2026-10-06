@@ -38,6 +38,17 @@ No primeiro boot, automaticamente:
 - **todas as tabelas são criadas** (SQLAlchemy `create_all`);
 - os **seeds** são aplicados: usuário admin, afiliado de demonstração, 5 cursos, 8 parceiros e 1 evento.
 
+## Validação operacional
+
+Última validação Docker ponta a ponta: **2026-10-06**.
+
+Checks executados com sucesso:
+- `docker compose config`
+- `docker compose up -d --build`
+- containers `mysql`, `app` e `nginx-proxy-manager` em execução, com MySQL saudável
+- smoke HTTP de `/`, `/robots.txt`, `/favicon.ico`, `/.env` e `/wp-admin/`
+- login admin e login do afiliado demo redirecionando para as áreas corretas
+
 ## Usuários de teste
 
 | Perfil | E-mail | Senha |
