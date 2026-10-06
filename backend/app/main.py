@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
-from .config import SECRET_KEY
+from .config import SECRET_KEY, SESSION_COOKIE_SECURE
 from .database import Base, SessionLocal, engine, wait_for_db
 from .deps import is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
@@ -86,7 +86,13 @@ async def add_security_headers(request: Request, call_next):
     return apply_security_headers(response, request.url.path)
 
 
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8, same_site="lax")
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    max_age=60 * 60 * 8,
+    same_site="lax",
+    https_only=SESSION_COOKIE_SECURE,
+)
 
 
 app.include_router(public.router)

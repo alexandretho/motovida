@@ -32,6 +32,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-motovida}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gere-uma-senha-forte-para-o-banco}
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-0}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.invalid}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-dev-only-change-me}
