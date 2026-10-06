@@ -8,7 +8,9 @@ SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
     "/composer.json",
     "/composer.lock",
     "/debug/default/view",
+    "/adminer.php",
     "/wp-login.php",
+    "/wp-config.php",
     "/xmlrpc.php",
     "/phpinfo.php",
     "/php_info.php",
@@ -23,6 +25,8 @@ SENSITIVE_SCANNER_PREFIXES = frozenset({
     "/.svn",
     "/actuator",
     "/cgi-bin",
+    "/phpmyadmin",
+    "/pma",
     "/server-info",
     "/server-status",
     "/vendor",
@@ -39,6 +43,20 @@ SENSITIVE_SCANNER_SEGMENTS = frozenset({
     ".svn",
 })
 
+SENSITIVE_SCANNER_FILENAMES = frozenset({
+    ".ds_store",
+    "adminer.php",
+    "backup.zip",
+    "config.json",
+    "config.php",
+    "config.yaml",
+    "config.yml",
+    "database.sql",
+    "db.sql",
+    "dump.sql",
+    "wp-config.php",
+})
+
 
 def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = f"/{path.lstrip('/')}".lower()
@@ -52,6 +70,9 @@ def is_sensitive_scanner_path(path: str) -> bool:
         for segment in segments
         for sensitive in SENSITIVE_SCANNER_SEGMENTS
     ):
+        return True
+
+    if any(segment in SENSITIVE_SCANNER_FILENAMES for segment in segments):
         return True
 
     return any(
