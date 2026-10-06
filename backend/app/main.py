@@ -28,6 +28,7 @@ SECURITY_HEADERS = {
 }
 
 NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout")
+NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
 
 
 def build_content_security_policy(nonce: str) -> str:
@@ -51,6 +52,8 @@ def apply_security_headers(response, path: str = ""):
     if path.startswith(NO_STORE_PREFIXES):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
+    if path.startswith(NO_INDEX_PREFIXES) or is_sensitive_scanner_path(path):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
 
 

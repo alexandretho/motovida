@@ -23,8 +23,21 @@ def test_login_is_not_cacheable():
     r = client.get("/login")
     assert r.headers["cache-control"] == "no-store"
     assert r.headers["pragma"] == "no-cache"
+    assert r.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+def test_public_registration_is_noindex_but_cacheable():
+    r = client.get("/cadastro")
+    assert r.headers["x-robots-tag"] == "noindex, nofollow"
+    assert "no-store" not in r.headers.get("cache-control", "")
+
+
+def test_public_routes_remain_indexable_by_header():
+    r = client.get("/robots.txt")
+    assert "x-robots-tag" not in r.headers
 
 
 def test_protected_area_redirect_is_not_cacheable():
     r = client.get("/admin", follow_redirects=False)
     assert r.headers["cache-control"] == "no-store"
+    assert r.headers["x-robots-tag"] == "noindex, nofollow"

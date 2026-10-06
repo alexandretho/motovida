@@ -64,6 +64,7 @@ def test_common_scanner_paths_are_blocked(path):
 
     assert response.status_code == 404
     assert response.text == "Not Found"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
 def test_legitimate_public_route_is_preserved():

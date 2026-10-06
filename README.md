@@ -133,6 +133,7 @@ docker exec -it motovida-mysql mysql -u motovida -pgere-uma-senha-forte-para-o-b
 - Aceite LGPD obrigatório no cadastro, com **versão da política e data/hora registradas** em `lgpd_consents`
 - Política de privacidade pública em `/privacidade`
 - Rotas `/admin/*` e `/afiliado/*` protegidas por sessão assinada, com perfis separados (admin × afiliado)
+- Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
 - Validação de CPF (algoritmo oficial dos dígitos verificadores), e-mail e UF
 - Sanitização de entradas (remoção de caracteres de controle + limite de tamanho) e escape automático nos templates (Jinja2)
 
