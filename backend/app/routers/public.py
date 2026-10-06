@@ -15,6 +15,10 @@ from ..validators import (clean_cpf, is_valid_cpf, is_valid_email, is_valid_uf, 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+REGISTER_RATE_LIMIT = 5
+REGISTER_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
+REGISTER_RATE_LIMIT_MESSAGE = "Muitas tentativas de cadastro em pouco tempo. Aguarde alguns minutos e tente novamente."
+
 PUBLIC_SITEMAP_PATHS = [
     ("/", "daily", "1.0"),
     ("/eventos", "weekly", "0.8"),
@@ -252,8 +256,8 @@ def register(
     support_needs: str = Form(""), password: str = Form(...),
     lgpd_accept: str = Form(None), db: Session = Depends(get_db),
 ):
-    if ratelimit.hit("cadastro", ratelimit.client_ip(request), 10, 600):
-        flash(request, "Muitas tentativas de cadastro em pouco tempo. Aguarde alguns minutos e tente novamente.", "error")
+    if ratelimit.hit("cadastro", ratelimit.client_ip(request), REGISTER_RATE_LIMIT, REGISTER_RATE_LIMIT_WINDOW_SECONDS):
+        flash(request, REGISTER_RATE_LIMIT_MESSAGE, "error")
         return RedirectResponse("/cadastro", status_code=303)
     form = {k: sanitize(v, 300) for k, v in {
         "full_name": full_name, "cpf": cpf, "phone": phone, "whatsapp": whatsapp,
