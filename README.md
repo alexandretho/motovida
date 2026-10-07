@@ -65,6 +65,7 @@ Checks executados com sucesso:
 - Página institucional, lista de benefícios, parceiros em destaque
 - `/cadastro` — cadastro de afiliado com validação de CPF, e-mail, UF e aceite LGPD obrigatório (data/hora registradas)
 - `/parceiros`, `/contato`, `/privacidade`, `/login`
+- `/recuperar-senha` — solicitação pública de recuperação assistida, sem revelar se o e-mail existe
 
 **Área do afiliado** (`/afiliado` — requer login de afiliado)
 - Dashboard com resumo dos atendimentos

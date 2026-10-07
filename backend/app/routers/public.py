@@ -18,6 +18,9 @@ templates = Jinja2Templates(directory="app/templates")
 REGISTER_RATE_LIMIT = 5
 REGISTER_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
 REGISTER_RATE_LIMIT_MESSAGE = "Muitas tentativas de cadastro em pouco tempo. Aguarde alguns minutos e tente novamente."
+PASSWORD_RECOVERY_RATE_LIMIT = 5
+PASSWORD_RECOVERY_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
+PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE = "Muitas solicitações em pouco tempo. Aguarde alguns minutos e tente novamente."
 
 PUBLIC_SITEMAP_PATHS = [
     ("/", "daily", "1.0"),
@@ -36,6 +39,7 @@ def robots_txt():
         "Disallow: /afiliado/",
         "Disallow: /login",
         "Disallow: /logout",
+        "Disallow: /recuperar-senha",
         "Disallow: /cadastro",
         "Allow: /",
         f"Sitemap: {SITE_URL}/sitemap.xml",
@@ -136,6 +140,47 @@ def contact_template(request: Request, user, form=None, errors=None, status_code
     )
 
 
+def password_recovery_template(request: Request, user, form=None, errors=None, status_code: int = 200):
+    return templates.TemplateResponse(
+        request, "public/recuperar_senha.html",
+        base_ctx(request, user, form=form or {}, errors=errors or []),
+        status_code=status_code,
+    )
+
+
+def create_password_recovery_request(db: Session, email: str, phone: str = "") -> bool:
+    """Cria solicitação administrativa se o e-mail pertence a afiliado; não revela existência da conta."""
+    user = db.query(models.User).filter_by(email=email).first()
+    affiliate = getattr(user, "affiliate", None)
+    if user is None or getattr(user, "role", None) != "affiliate" or affiliate is None:
+        return False
+
+    phone_line = phone or "Não informado"
+    description = (
+        "Origem: recuperação de senha self-service\n"
+        f"Afiliado: {affiliate.full_name}\n"
+        f"E-mail informado: {email}\n"
+        f"Telefone/WhatsApp informado: {phone_line}\n\n"
+        "Ação sugerida: validar identidade do afiliado por canal seguro e usar a redefinição assistida no painel admin."
+    )
+    support_request = models.SupportRequest(
+        affiliate_id=affiliate.id,
+        type="administrativo",
+        priority="alta",
+        description=description,
+    )
+    db.add(support_request)
+    db.flush()
+    db.add(models.RequestHistory(
+        request_id=support_request.id,
+        new_status="aberta",
+        note="Solicitação criada pelo formulário público de recuperação de senha.",
+        author="recuperacao-senha",
+    ))
+    db.commit()
+    return True
+
+
 @router.get("/")
 def index(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
@@ -162,6 +207,46 @@ def events_page(request: Request, db: Session = Depends(get_db)):
 @router.get("/contato")
 def contact(request: Request, db: Session = Depends(get_db)):
     return contact_template(request, get_current_user(request, db))
+
+
+@router.get("/recuperar-senha")
+def password_recovery(request: Request, db: Session = Depends(get_db)):
+    return password_recovery_template(request, get_current_user(request, db))
+
+
+@router.post("/recuperar-senha")
+def password_recovery_create(
+    request: Request,
+    email: str = Form(...),
+    phone: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    user = get_current_user(request, db)
+    if ratelimit.hit(
+        "recuperar_senha",
+        ratelimit.client_ip(request),
+        PASSWORD_RECOVERY_RATE_LIMIT,
+        PASSWORD_RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+    ):
+        flash(request, PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE, "error")
+        return RedirectResponse("/recuperar-senha", status_code=303)
+
+    form = {
+        "email": sanitize(email, 180).lower(),
+        "phone": sanitize(phone, 30),
+    }
+    errors = []
+    if not is_valid_email(form["email"]):
+        errors.append("Informe um e-mail válido.")
+    if form["phone"] and len(form["phone"]) < 8:
+        errors.append("Informe um telefone/WhatsApp válido ou deixe o campo em branco.")
+
+    if errors:
+        return password_recovery_template(request, user, form=form, errors=errors, status_code=400)
+
+    create_password_recovery_request(db, form["email"], form["phone"])
+    flash(request, "Se o e-mail estiver cadastrado, nossa equipe irá orientar a recuperação por um canal seguro.")
+    return RedirectResponse("/login", status_code=303)
 
 
 @router.post("/contato")

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Recuperar senha – Instituto MotoVida{% endblock %}
+{% block robots_meta %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <h1>Recuperar senha</h1>
+    <p class="section-sub">Informe o e-mail do cadastro. Se a conta existir, a equipe MotoVida abrirá uma solicitação interna e orientará a recuperação por um canal seguro.</p>
+
+    {% if errors %}
+      <div class="alert alert-error">
+        <strong>Revise os dados:</strong>
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+
+    <form class="card form" method="post" action="/recuperar-senha" autocomplete="off" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>E-mail do cadastro *
+        <input type="email" name="email" required maxlength="180" autocomplete="email" value="{{ form.email or '' }}">
+      </label>
+      <label>Telefone/WhatsApp para conferência (opcional)
+        <input type="tel" name="phone" maxlength="30" autocomplete="tel" value="{{ form.phone or '' }}">
+      </label>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Solicitar recuperação</button>
+        <a class="btn btn-ghost" href="/login">Voltar para o login</a>
+      </div>
+      <p class="muted">Por segurança, não informamos na tela se o e-mail está cadastrado.</p>
+    </form>
+  </div>
+</section>
+{% endblock %}

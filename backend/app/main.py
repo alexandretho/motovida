@@ -27,7 +27,7 @@ SECURITY_HEADERS = {
     "Strict-Transport-Security": "max-age=31536000",
 }
 
-NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout")
+NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-senha")
 NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
 
 
