@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} – Evento MotoVida{% endblock %}
+{% block meta_description %}Detalhes do evento {{ event.title }} do Instituto MotoVida.{% endblock %}
+{% block canonical_path %}/eventos/{{ event.id }}{% endblock %}
+{% block og_title %}{{ event.title }} – Evento MotoVida{% endblock %}
+{% block og_description %}{% if event.description %}{{ event.description|truncate(150) }}{% else %}Evento público do Instituto MotoVida para motociclistas, entregadores e familiares.{% endif %}{% endblock %}
+{% block og_path %}/eventos/{{ event.id }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <p><a href="/eventos">← Voltar para eventos</a></p>
+    <article class="card detail-card">
+      <span class="tag">Evento</span>
+      <h1>{{ event.title }}</h1>
+      {% if event.event_date %}<p class="discount"><strong>{{ event.event_date.strftime('%d/%m/%Y às %H:%M') }}</strong></p>{% endif %}
+      {% if event.location %}<p class="muted">📍 {{ event.location }}</p>{% endif %}
+      {% if event.description %}
+      <p>{{ event.description }}</p>
+      {% else %}
+      <p>Detalhes adicionais serão divulgados em breve pela equipe MotoVida.</p>
+      {% endif %}
+    </article>
+    <p style="margin-top:1.5rem"><a class="btn btn-primary" href="/cadastro">Quero me afiliar</a> <a class="btn btn-ghost" href="/contato">Falar com a equipe</a></p>
+  </div>
+</section>
+{% endblock %}

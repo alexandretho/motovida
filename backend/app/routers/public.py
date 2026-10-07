@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from secrets import token_urlsafe
 from sqlalchemy.orm import Session
+from xml.sax.saxutils import escape as xml_escape
 
 from .. import models
 from ..config import POLICY_VERSION
@@ -54,10 +55,18 @@ def robots_txt_head():
 
 
 @router.get("/sitemap.xml", include_in_schema=False)
-def sitemap_xml():
+def sitemap_xml(db: Session = Depends(get_db)):
+    event_entries = []
+    active_events = db.query(models.Event).filter_by(active=True)\
+        .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc(), models.Event.id.asc()).all()
+    for event in active_events:
+        event_date = getattr(event, "event_date", None)
+        lastmod = event_date.date().isoformat() if event_date else None
+        event_entries.append((f"/eventos/{event.id}", "weekly", "0.7", lastmod))
+
     items = "\n".join(
-        f"  <url><loc>{SITE_URL}{path}</loc><changefreq>{freq}</changefreq><priority>{priority}</priority></url>"
-        for path, freq, priority in PUBLIC_SITEMAP_PATHS
+        sitemap_url(path, freq, priority, lastmod)
+        for path, freq, priority, lastmod in [(*entry, None) for entry in PUBLIC_SITEMAP_PATHS] + event_entries
     )
     content = f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
@@ -65,6 +74,12 @@ def sitemap_xml():
 </urlset>
 """
     return Response(content, media_type="application/xml")
+
+
+def sitemap_url(path: str, freq: str, priority: str, lastmod: str | None = None) -> str:
+    lastmod_xml = f"<lastmod>{xml_escape(lastmod)}</lastmod>" if lastmod else ""
+    loc = xml_escape(f"{SITE_URL}{path}")
+    return f"  <url><loc>{loc}</loc>{lastmod_xml}<changefreq>{freq}</changefreq><priority>{priority}</priority></url>"
 
 
 @router.head("/sitemap.xml", include_in_schema=False)
@@ -202,6 +217,18 @@ def events_page(request: Request, db: Session = Depends(get_db)):
     events = db.query(models.Event).filter_by(active=True)\
         .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
     return templates.TemplateResponse(request, "public/eventos.html", base_ctx(request, user, events=events))
+
+
+@router.get("/eventos/{event_id}")
+def event_detail(event_id: int, request: Request, db: Session = Depends(get_db)):
+    event = db.query(models.Event).filter_by(id=event_id, active=True).first()
+    if event is None:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+    return templates.TemplateResponse(
+        request,
+        "public/evento_detalhe.html",
+        base_ctx(request, get_current_user(request, db), event=event),
+    )
 
 
 @router.get("/contato")

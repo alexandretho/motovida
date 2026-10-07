@@ -16,6 +16,7 @@
         {% if e.event_date %}<p class="discount"><strong>{{ e.event_date.strftime('%d/%m/%Y às %H:%M') }}</strong></p>{% endif %}
         {% if e.location %}<p class="muted">📍 {{ e.location }}</p>{% endif %}
         {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+        <p><a class="btn btn-secondary" href="/eventos/{{ e.id }}">Ver detalhes</a></p>
       </article>
       {% else %}
       <p>Nenhum evento ativo cadastrado no momento.</p>
