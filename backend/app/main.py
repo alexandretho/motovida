@@ -1,4 +1,8 @@
+import json
+import logging
+import sys
 from secrets import token_urlsafe
+from time import perf_counter
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, Request
@@ -7,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
+from . import ratelimit
 from .config import SECRET_KEY, SESSION_COOKIE_SECURE
 from .database import Base, SessionLocal, engine, wait_for_db
 from .deps import is_valid_csrf_token
@@ -16,6 +21,12 @@ from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
 app = FastAPI(title="Sistema Nacional de Cadastro e Atendimento – Instituto MotoVida Guilherme França")
+http_logger = logging.getLogger("app.http")
+http_logger.setLevel(logging.INFO)
+if not http_logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    http_logger.addHandler(handler)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -29,6 +40,34 @@ SECURITY_HEADERS = {
 
 NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-senha")
 NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
+
+
+@app.middleware("http")
+async def log_http_requests(request: Request, call_next):
+    if request.url.path == "/healthz":
+        return await call_next(request)
+
+    started_at = perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        duration_ms = round((perf_counter() - started_at) * 1000, 2)
+        http_logger.info(
+            json.dumps(
+                {
+                    "event": "http_request",
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": status_code,
+                    "duration_ms": duration_ms,
+                    "client_ip": ratelimit.client_ip(request),
+                },
+                separators=(",", ":"),
+            )
+        )
 
 
 def build_content_security_policy(nonce: str) -> str:
