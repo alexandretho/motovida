@@ -34,6 +34,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-0}
+      SITE_URL: ${SITE_URL:-https://motovida.syntratech.com.br}
+      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-G-VHCJDB0QNS}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.invalid}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-dev-only-change-me}
     expose:

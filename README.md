@@ -135,6 +135,7 @@ docker exec -it motovida-mysql mysql -u motovida -pgere-uma-senha-forte-para-o-b
 - Política de privacidade pública em `/privacidade`
 - Rotas `/admin/*` e `/afiliado/*` protegidas por sessão assinada, com perfis separados (admin × afiliado)
 - Cookie de sessão pode receber atributo `Secure` com `SESSION_COOKIE_SECURE=1` em produção HTTPS atrás do NPM/Cloudflare
+- URL pública (`SITE_URL`) e Google Analytics 4 (`GA_MEASUREMENT_ID`) são configuráveis por ambiente para manter sitemap, robots e templates alinhados ao domínio real
 - Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
 - Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)
 - Logs HTTP estruturados em JSON no app (`event`, método, path sem query string, status, duração e IP); o access log padrão do Uvicorn fica desativado no container para evitar vazamento de query strings sensíveis

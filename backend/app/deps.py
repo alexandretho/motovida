@@ -3,10 +3,8 @@ from typing import Optional
 from fastapi import Request
 from sqlalchemy.orm import Session
 from . import models
+from .config import GA_MEASUREMENT_ID, SITE_URL
 from .validators import UFS
-
-SITE_URL = "https://motovida.syntratech.com.br"
-GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
 
 LABELS = {
     "ufs": tuple(sorted(UFS)),
