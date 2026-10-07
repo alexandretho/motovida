@@ -9,8 +9,23 @@ _lock = Lock()
 
 
 def client_ip(request) -> str:
-    """IP do cliente. Só confia em CF-Connecting-IP/X-Forwarded-For com TRUST_PROXY_HEADERS=1."""
+    """IP do cliente. Confia em headers de proxy só quando habilitado e permitido."""
+    remote_ip = request.client.host if request.client else "unknown"
     if os.getenv("TRUST_PROXY_HEADERS") == "1":
+        trusted_proxy_cidrs = os.getenv("TRUSTED_PROXY_CIDRS", "").strip()
+        if trusted_proxy_cidrs:
+            try:
+                remote_addr = ipaddress.ip_address(remote_ip)
+                trusted = any(
+                    remote_addr in ipaddress.ip_network(cidr.strip(), strict=False)
+                    for cidr in trusted_proxy_cidrs.split(",")
+                    if cidr.strip()
+                )
+            except ValueError:
+                trusted = False
+            if not trusted:
+                return remote_ip
+
         raw = request.headers.get("cf-connecting-ip") or (
             request.headers.get("x-forwarded-for", "").split(",")[0]
         )
@@ -18,7 +33,7 @@ def client_ip(request) -> str:
             return str(ipaddress.ip_address(raw.strip()))
         except ValueError:
             pass
-    return request.client.host if request.client else "unknown"
+    return remote_ip
 
 
 def hit(scope: str, ip: str, limit: int, window: float, now: float | None = None) -> bool:
