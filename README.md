@@ -135,6 +135,7 @@ docker exec -it motovida-mysql mysql -u motovida -pgere-uma-senha-forte-para-o-b
 - Rotas `/admin/*` e `/afiliado/*` protegidas por sessão assinada, com perfis separados (admin × afiliado)
 - Cookie de sessão pode receber atributo `Secure` com `SESSION_COOKIE_SECURE=1` em produção HTTPS atrás do NPM/Cloudflare
 - Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
+- Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)
 - Validação de CPF (algoritmo oficial dos dígitos verificadores), e-mail e UF
 - Sanitização de entradas (remoção de caracteres de controle + limite de tamanho) e escape automático nos templates (Jinja2)
 

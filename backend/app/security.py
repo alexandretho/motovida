@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import os
+from urllib.parse import unquote
 
 ITERATIONS = 260_000
 
@@ -23,12 +24,15 @@ SENSITIVE_SCANNER_PREFIXES = frozenset({
     "/.hg",
     "/.ssh",
     "/.svn",
+    "/.idea",
+    "/.vscode",
     "/actuator",
     "/cgi-bin",
     "/phpmyadmin",
     "/pma",
     "/server-info",
     "/server-status",
+    "/telescope",
     "/vendor",
     "/wp-admin",
     "/wp-content",
@@ -44,23 +48,46 @@ SENSITIVE_SCANNER_SEGMENTS = frozenset({
 })
 
 SENSITIVE_SCANNER_FILENAMES = frozenset({
+    ".dockercfg",
     ".ds_store",
+    ".npmrc",
     "adminer.php",
     "backup.zip",
+    "composer.json",
+    "composer.lock",
     "config.json",
     "config.php",
     "config.yaml",
     "config.yml",
     "database.sql",
     "db.sql",
+    "docker-compose.yaml",
+    "docker-compose.yml",
     "dump.sql",
+    "id_rsa",
+    "package-lock.json",
+    "package.json",
     "wp-config.php",
+    "yarn.lock",
 })
 
 
+def normalize_scanner_path(path: str) -> str:
+    """Normaliza variações comuns usadas por scanners antes do bloqueio."""
+    normalized = f"/{path.lstrip('/')}".replace("\\", "/")
+    for _ in range(2):
+        decoded = unquote(normalized)
+        if decoded == normalized:
+            break
+        normalized = decoded
+    while "//" in normalized:
+        normalized = normalized.replace("//", "/")
+    return normalized.lower()
+
+
 def is_sensitive_scanner_path(path: str) -> bool:
-    normalized_path = f"/{path.lstrip('/')}".lower()
-    segments = [segment for segment in normalized_path.split("/") if segment]
+    normalized_path = normalize_scanner_path(path)
+    segments = [segment.split(";", 1)[0] for segment in normalized_path.split("/") if segment]
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
