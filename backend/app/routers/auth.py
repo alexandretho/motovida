@@ -73,6 +73,11 @@ def reset_login_rate_limit(key: tuple[str, str]):
         _login_failures.pop(key, None)
 
 
+def rotate_session_for_login(request: Request, user_id: int):
+    request.session.clear()
+    request.session["user_id"] = user_id
+
+
 @router.get("/login")
 def login_form(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
@@ -96,7 +101,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
         flash(request, message, "error")
         return RedirectResponse("/login", status_code=303)
     reset_login_rate_limit(rate_limit_key)
-    request.session["user_id"] = user.id
+    rotate_session_for_login(request, user.id)
     return RedirectResponse("/admin" if user.role == "admin" else "/afiliado", status_code=303)
 
 
