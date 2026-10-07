@@ -3,6 +3,7 @@
 *.env
 .env.*
 !.env.example
+ROTATED_ADMIN_PASSWORD.txt
 
 # Chaves SSH e certificados
 *.key

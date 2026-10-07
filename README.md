@@ -52,12 +52,12 @@ Checks executados com sucesso:
 
 ## Usuários de teste
 
-| Perfil | E-mail | Senha |
+| Perfil | Origem | Observação |
 |---|---|---|
-| Administrador | `admin@example.invalid` | `dev-only-change-me` |
-| Afiliado demo | `afiliado@teste.com` | `teste123` |
+| Administrador | `ADMIN_EMAIL` / `ADMIN_PASSWORD` no `.env` | Defina uma senha forte antes do primeiro boot. |
+| Afiliado demo | seed de desenvolvimento | Não use credenciais de demonstração em produção. |
 
-(Os valores podem ser alterados no `.env` antes do primeiro boot.)
+Copie `.env.example` para `.env` e preencha os segredos reais localmente. O arquivo `.env` não deve ser versionado.
 
 ## Mapa do sistema
 
@@ -125,7 +125,7 @@ Tabelas criadas automaticamente: `users`, `affiliates`, `support_requests`, `req
 Para inspecionar o banco:
 
 ```bash
-docker exec -it motovida-mysql mysql -u motovida -pgere-uma-senha-forte-para-o-banco motovida
+docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
 ```
 
 ## Segurança e LGPD

@@ -4,15 +4,15 @@ services:
     container_name: motovida-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-gere-uma-senha-forte-para-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-motovida}
       MYSQL_USER: ${MYSQL_USER:-motovida}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gere-uma-senha-forte-para-o-banco}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-gere-uma-senha-forte-para-root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -30,15 +30,15 @@ services:
       MYSQL_PORT: "3306"
       MYSQL_DATABASE: ${MYSQL_DATABASE:-motovida}
       MYSQL_USER: ${MYSQL_USER:-motovida}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gere-uma-senha-forte-para-o-banco}
-      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
+      SECRET_KEY: ${SECRET_KEY:?defina SECRET_KEY no .env}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-0}
       TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-}
       SITE_URL: ${SITE_URL:-https://motovida.syntratech.com.br}
       GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-G-VHCJDB0QNS}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.invalid}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-dev-only-change-me}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?defina ADMIN_EMAIL no .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?defina ADMIN_PASSWORD no .env}
     expose:
       - "8000"
     ports:

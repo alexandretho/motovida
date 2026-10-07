@@ -11,10 +11,10 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 
 ## Como rodar e testar
 
-- Admin: `admin@example.invalid` / `dev-only-change-me`
-- Afiliado demo: `afiliado@teste.com` / `teste123`
+- Admin: definido por `ADMIN_EMAIL` / `ADMIN_PASSWORD` no `.env` local; nunca versionar credenciais reais
+- Afiliado demo: seed apenas para desenvolvimento; não usar credenciais de demonstração em produção
 - Tabelas criadas no startup (`Base.metadata.create_all`); seeds em `backend/app/seeds.py` rodam só se o banco estiver vazio
-- Inspecionar banco: `docker exec -it motovida-mysql mysql -u motovida -pgere-uma-senha-forte-para-o-banco motovida`
+- Inspecionar banco: `docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"`
 
 ## Estrutura
 

@@ -25,7 +25,7 @@ def normalize_site_url(value: str) -> str:
 
 
 DB_USER = os.getenv("MYSQL_USER", "motovida")
-DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "gere-uma-senha-forte-para-o-banco")
+DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 DB_HOST = os.getenv("MYSQL_HOST", "mysql")
 DB_PORT = os.getenv("MYSQL_PORT", "3306")
 DB_NAME = os.getenv("MYSQL_DATABASE", "motovida")
