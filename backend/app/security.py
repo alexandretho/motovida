@@ -115,6 +115,11 @@ def hash_password(password: str) -> str:
     return f"pbkdf2_sha256${ITERATIONS}${salt.hex()}${digest.hex()}"
 
 
+# Hash sentinela para manter custo similar quando o e-mail de login não existe.
+# Isso reduz enumeração de usuários por diferença de tempo na validação da senha.
+DUMMY_PASSWORD_HASH = hash_password("_motovida_dummy_login_password_")
+
+
 def verify_password(password: str, stored: str) -> bool:
     try:
         _, iterations, salt_hex, digest_hex = stored.split("$")

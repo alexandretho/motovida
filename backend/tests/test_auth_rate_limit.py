@@ -13,7 +13,7 @@ from app.database import get_db  # noqa: E402
 from app.main import app  # noqa: E402
 from app import models  # noqa: E402
 from app.routers import auth  # noqa: E402
-from app.security import hash_password  # noqa: E402
+from app.security import DUMMY_PASSWORD_HASH, hash_password  # noqa: E402
 
 
 def setup_function():
@@ -132,6 +132,37 @@ def test_login_route_limits_failures_with_flash_and_valid_csrf():
         assert response.status_code == 200
         assert auth.LOGIN_RATE_LIMIT_MESSAGE in response.text
         assert "Token CSRF inválido" not in response.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_login_with_unknown_email_still_verifies_dummy_password_hash(monkeypatch):
+    app.dependency_overrides[get_db] = empty_db
+    client = TestClient(app)
+    seen_hashes = []
+
+    def fake_verify_password(password, stored):
+        seen_hashes.append(stored)
+        return False
+
+    monkeypatch.setattr(auth, "verify_password", fake_verify_password)
+
+    try:
+        response = client.get("/login")
+        csrf_token = csrf_token_from(response)
+        response = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf_token,
+                "email": "nao-existe@example.com",
+                "password": "qualquer-senha",
+            },
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 303
+        assert response.headers["location"] == "/login"
+        assert seen_hashes == [DUMMY_PASSWORD_HASH]
     finally:
         app.dependency_overrides.clear()
 

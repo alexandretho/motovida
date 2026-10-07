@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
-from ..security import verify_password
+from ..security import DUMMY_PASSWORD_HASH, verify_password
 from ..validators import sanitize
 
 router = APIRouter()
@@ -96,7 +96,9 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
         return RedirectResponse("/login", status_code=303)
 
     user = db.query(models.User).filter_by(email=email).first()
-    if not user or not verify_password(password, user.password_hash):
+    password_hash = str(user.password_hash) if user else DUMMY_PASSWORD_HASH
+    password_matches = verify_password(password, password_hash)
+    if not user or not password_matches:
         message = LOGIN_RATE_LIMIT_MESSAGE if record_failed_login(rate_limit_key) else "E-mail ou senha incorretos."
         flash(request, message, "error")
         return RedirectResponse("/login", status_code=303)
