@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import config  # noqa: E402
-from app.config import env_flag, normalize_site_url  # noqa: E402
+from app.config import env_flag, env_int, normalize_site_url  # noqa: E402
 
 
 def test_env_flag_defaults_to_false(monkeypatch):
@@ -29,13 +29,29 @@ def test_normalize_site_url_removes_trailing_slash():
     assert normalize_site_url(" https://motovida.example.com.br/ ") == "https://motovida.example.com.br"
 
 
+def test_env_int_accepts_bounded_integer(monkeypatch):
+    monkeypatch.setenv("MAX_FORM_BODY_BYTES", "32768")
+    assert env_int("MAX_FORM_BODY_BYTES", 1024, minimum=1024, maximum=65536) == 32768
+
+
+def test_env_int_falls_back_for_invalid_or_out_of_bounds(monkeypatch):
+    for value in ("abc", "0", "999999"):
+        monkeypatch.setenv("MAX_FORM_BODY_BYTES", value)
+        assert env_int("MAX_FORM_BODY_BYTES", 4096, minimum=1024, maximum=65536) == 4096
+
+
 def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SITE_URL", "https://instituto.example.org/")
     monkeypatch.setenv("GA_MEASUREMENT_ID", "G-TESTE123")
+    monkeypatch.setenv("MAX_FORM_BODY_BYTES", "32768")
 
     reloaded = importlib.reload(config)
 
     assert reloaded.SITE_URL == "https://instituto.example.org"
     assert reloaded.GA_MEASUREMENT_ID == "G-TESTE123"
+    assert reloaded.MAX_FORM_BODY_BYTES == 32768
 
+    monkeypatch.delenv("SITE_URL", raising=False)
+    monkeypatch.delenv("GA_MEASUREMENT_ID", raising=False)
+    monkeypatch.delenv("MAX_FORM_BODY_BYTES", raising=False)
     importlib.reload(config)

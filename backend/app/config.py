@@ -3,6 +3,7 @@ import os
 
 DEFAULT_SITE_URL = "https://motovida.syntratech.com.br"
 DEFAULT_GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
+DEFAULT_MAX_FORM_BODY_BYTES = 64 * 1024
 
 
 def env_flag(name: str, default: str = "0") -> bool:
@@ -24,6 +25,19 @@ def normalize_site_url(value: str) -> str:
     return value.strip().rstrip("/") or DEFAULT_SITE_URL
 
 
+def env_int(name: str, default: int, minimum: int | None = None, maximum: int | None = None) -> int:
+    """Lê inteiro de ambiente com fallback seguro para valores inválidos."""
+    try:
+        value = int(os.getenv(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
+    if minimum is not None and value < minimum:
+        return default
+    if maximum is not None and value > maximum:
+        return default
+    return value
+
+
 DB_USER = os.getenv("MYSQL_USER", "motovida")
 DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 DB_HOST = os.getenv("MYSQL_HOST", "mysql")
@@ -40,5 +54,6 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "dev-only-change-me")
 
 SITE_URL = normalize_site_url(env_text("SITE_URL", DEFAULT_SITE_URL))
 GA_MEASUREMENT_ID = env_text("GA_MEASUREMENT_ID", DEFAULT_GA_MEASUREMENT_ID)
+MAX_FORM_BODY_BYTES = env_int("MAX_FORM_BODY_BYTES", DEFAULT_MAX_FORM_BODY_BYTES, minimum=1024, maximum=1024 * 1024)
 
 POLICY_VERSION = "1.0"

@@ -12,7 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
 from . import ratelimit
-from .config import SECRET_KEY, SESSION_COOKIE_SECURE
+from .config import MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
 from .database import Base, SessionLocal, engine, wait_for_db
 from .deps import is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
@@ -36,6 +36,8 @@ SECURITY_HEADERS = {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
     "Strict-Transport-Security": "max-age=31536000",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "X-Permitted-Cross-Domain-Policies": "none",
 }
 
 NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-senha")
@@ -96,6 +98,17 @@ def apply_security_headers(response, path: str = ""):
     return response
 
 
+def request_body_too_large(request: Request, body: bytes | None = None) -> bool:
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_FORM_BODY_BYTES:
+                return True
+        except ValueError:
+            return True
+    return body is not None and len(body) > MAX_FORM_BODY_BYTES
+
+
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     csp_nonce = token_urlsafe(16)
@@ -107,7 +120,17 @@ async def add_security_headers(request: Request, call_next):
         return apply_security_headers(response, request.url.path)
 
     if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+        if request_body_too_large(request):
+            response = PlainTextResponse("Payload muito grande.", status_code=413)
+            response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+            return apply_security_headers(response, request.url.path)
+
         body = await request.body()
+        if request_body_too_large(request, body):
+            response = PlainTextResponse("Payload muito grande.", status_code=413)
+            response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+            return apply_security_headers(response, request.url.path)
+
         parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
