@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -31,6 +33,34 @@ PUBLIC_SITEMAP_PATHS = [
     ("/privacidade", "yearly", "0.3"),
 ]
 
+SECURITY_TXT_MAX_AGE_DAYS = 180
+SECURITY_TXT_HEADERS = {
+    "Cache-Control": "no-store",
+    "Pragma": "no-cache",
+    "X-Robots-Tag": "noindex, nofollow",
+}
+
+
+def security_txt_content() -> str:
+    expires_at = datetime.now(timezone.utc) + timedelta(days=SECURITY_TXT_MAX_AGE_DAYS)
+    expires = expires_at.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return "\n".join([
+        f"Contact: {SITE_URL}/contato",
+        f"Policy: {SITE_URL}/privacidade",
+        f"Canonical: {SITE_URL}/.well-known/security.txt",
+        "Preferred-Languages: pt-BR",
+        f"Expires: {expires}",
+        "",
+    ])
+
+
+def security_txt_response(content: str = "") -> Response:
+    return PlainTextResponse(
+        content,
+        media_type="text/plain; charset=utf-8",
+        headers=SECURITY_TXT_HEADERS.copy(),
+    )
+
 
 @router.get("/robots.txt", include_in_schema=False)
 def robots_txt():
@@ -52,6 +82,26 @@ def robots_txt():
 @router.head("/robots.txt", include_in_schema=False)
 def robots_txt_head():
     return Response(media_type="text/plain")
+
+
+@router.get("/.well-known/security.txt", include_in_schema=False)
+def well_known_security_txt():
+    return security_txt_response(security_txt_content())
+
+
+@router.head("/.well-known/security.txt", include_in_schema=False)
+def well_known_security_txt_head():
+    return security_txt_response()
+
+
+@router.get("/security.txt", include_in_schema=False)
+def security_txt():
+    return security_txt_response(security_txt_content())
+
+
+@router.head("/security.txt", include_in_schema=False)
+def security_txt_head():
+    return security_txt_response()
 
 
 @router.get("/sitemap.xml", include_in_schema=False)

@@ -139,6 +139,7 @@ docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQ
 - URL pública (`SITE_URL`) e Google Analytics 4 (`GA_MEASUREMENT_ID`) são configuráveis por ambiente para manter sitemap, robots e templates alinhados ao domínio real
 - Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
 - Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)
+- `/.well-known/security.txt` e `/security.txt` publicados para divulgação responsável de vulnerabilidades, apontando para `/contato` e `/privacidade`
 - Logs HTTP estruturados em JSON no app (`event`, método, path sem query string, status, duração e IP); o access log padrão do Uvicorn fica desativado no container para evitar vazamento de query strings sensíveis
 - Validação de CPF (algoritmo oficial dos dígitos verificadores), e-mail e UF
 - Sanitização de entradas (remoção de caracteres de controle + limite de tamanho) e escape automático nos templates (Jinja2)
