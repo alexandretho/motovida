@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Instituto MotoVida Guilherme França{% endblock %}</title>
 <meta name="description" content="{% block meta_description %}Instituto MotoVida Guilherme França: apoio jurídico, psicológico e social, cursos, auxílio MEI e rede de parceiros para motoboys, motociclistas, entregadores e familiares no Brasil.{% endblock %}">
-<meta name="robots" content="{% block robots_meta %}{% if user or request.url.path.startswith('/admin') or request.url.path.startswith('/afiliado') or request.url.path in ['/login', '/logout'] %}noindex, nofollow{% else %}index, follow{% endif %}{% endblock %}">
+<meta name="robots" content="{% block robots_meta %}{% if user or request.url.path.startswith('/admin') or request.url.path.startswith('/afiliado') or request.url.path in ['/login', '/logout', '/cadastro', '/recuperar-senha'] %}noindex, nofollow{% else %}index, follow{% endif %}{% endblock %}">
 <link rel="canonical" href="{{ site_url }}{% block canonical_path %}{{ request.url.path }}{% endblock %}">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:type" content="website">

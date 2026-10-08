@@ -29,7 +29,14 @@ def test_login_is_not_cacheable():
 def test_public_registration_is_noindex_but_cacheable():
     r = client.get("/cadastro")
     assert r.headers["x-robots-tag"] == "noindex, nofollow"
+    assert '<meta name="robots" content="noindex, nofollow">' in r.text
     assert "no-store" not in r.headers.get("cache-control", "")
+
+
+def test_password_recovery_is_noindex_in_headers_and_html():
+    r = client.get("/recuperar-senha")
+    assert r.headers["x-robots-tag"] == "noindex, nofollow"
+    assert '<meta name="robots" content="noindex, nofollow">' in r.text
 
 
 def test_public_routes_remain_indexable_by_header():
