@@ -2,6 +2,7 @@ import csv
 import os
 import re
 import sys
+from datetime import datetime
 from io import StringIO
 from pathlib import Path
 
@@ -42,6 +43,13 @@ def _make_affiliate(db, n, *, name, city, state, profession):
         support_needs=f"Necessidade {n}",
     )
     db.add(affiliate)
+    db.flush()
+    db.add(models.LgpdConsent(
+        affiliate_id=affiliate.id,
+        accepted=True,
+        policy_version=f"v{n}",
+        accepted_at=datetime(2026, 1, n, 12, 0, 0),
+    ))
     return affiliate
 
 
@@ -114,6 +122,9 @@ def test_affiliates_csv_uses_filters_headers_and_safe_content():
         assert parsed[0]["cidade"] == "Sao Paulo"
         assert parsed[0]["profissao"] == "entregador"
         assert parsed[0]["email"] == "afiliado1@teste.com"
+        assert parsed[0]["lgpd_aceite"] == "sim"
+        assert parsed[0]["lgpd_versao"] == "v1"
+        assert parsed[0]["lgpd_aceito_em"] == "2026-01-01T12:00:00"
         assert "Bruno Lima" not in raw
         assert "Carla Souza" not in raw
         assert "password" not in raw.lower()

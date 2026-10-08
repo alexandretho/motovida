@@ -2,7 +2,7 @@ from datetime import datetime
 import csv
 from io import StringIO
 from math import ceil
-from typing import Optional
+from typing import Optional, cast
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -71,6 +71,21 @@ def filter_affiliates_query(query, estado: str = "", cidade: str = "", profissao
     if profissao in models.PROFESSIONS:
         query = query.filter(models.Affiliate.profession == profissao)
     return query
+
+
+def latest_lgpd_consents_by_affiliate(db: Session, affiliate_ids: list[int]) -> dict[int, models.LgpdConsent]:
+    """Retorna o aceite LGPD mais recente por afiliado para relatórios administrativos."""
+    if not affiliate_ids:
+        return {}
+
+    consents = db.query(models.LgpdConsent)\
+        .filter(models.LgpdConsent.affiliate_id.in_(affiliate_ids))\
+        .order_by(models.LgpdConsent.affiliate_id.asc(), models.LgpdConsent.accepted_at.desc())\
+        .all()
+    latest: dict[int, models.LgpdConsent] = {}
+    for consent in consents:
+        latest.setdefault(cast(int, consent.affiliate_id), consent)
+    return latest
 
 
 def filtered_url(path: str, **params) -> str:
@@ -212,9 +227,12 @@ def affiliates_csv(request: Request, estado: str = "", cidade: str = "", profiss
     writer = csv.writer(output)
     writer.writerow([
         "id", "nome", "cpf", "email", "telefone", "whatsapp", "cidade", "estado",
-        "profissao", "mei", "necessidades_apoio", "cadastrado_em",
+        "profissao", "mei", "necessidades_apoio", "lgpd_aceite", "lgpd_versao", "lgpd_aceito_em",
+        "cadastrado_em",
     ])
+    consent_by_affiliate = latest_lgpd_consents_by_affiliate(db, [cast(int, affiliate.id) for affiliate in rows])
     for affiliate in rows:
+        consent = consent_by_affiliate.get(cast(int, affiliate.id))
         writer.writerow([
             affiliate.id,
             affiliate.full_name,
@@ -227,6 +245,9 @@ def affiliates_csv(request: Request, estado: str = "", cidade: str = "", profiss
             affiliate.profession,
             affiliate.mei_status,
             affiliate.support_needs or "",
+            "sim" if consent is not None and bool(consent.accepted) else "nao",
+            consent.policy_version if consent else "",
+            consent.accepted_at.isoformat() if consent else "",
             affiliate.created_at.isoformat(),
         ])
     return Response(
