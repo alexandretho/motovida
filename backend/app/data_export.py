@@ -40,6 +40,7 @@ def build_affiliate_export(db, user) -> dict:
         "apoio_psicologico": _rows(db, models.PsychologicalSupport, affiliate_id=aff.id),
         "apoio_mei": _rows(db, models.MeiSupport, affiliate_id=aff.id),
         "inscricoes_cursos": _rows(db, models.CourseEnrollment, affiliate_id=aff.id),
+        "atendimentos_admin": _rows(db, models.Attendance, affiliate_id=aff.id),
     }
 
 

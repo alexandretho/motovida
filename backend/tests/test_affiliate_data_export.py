@@ -23,6 +23,10 @@ def _make(db, n):
     db.add(a)
     db.flush()
     db.add(models.SupportRequest(affiliate_id=a.id, type="juridico", description=f"Pedido {n}"))
+    admin = models.User(email=f"admin{n}@t.com", password_hash=f"ADMINHASH{n}", role="admin")
+    db.add(admin)
+    db.flush()
+    db.add(models.Attendance(affiliate_id=a.id, admin_id=admin.id, notes=f"Atendimento administrativo {n}"))
     db.commit()
     return u
 
@@ -38,6 +42,8 @@ def test_export_has_own_data_without_hash_or_other_users():
     assert "SECRETHASH" not in raw and "password_hash" not in raw
     assert "u2@t.com" not in raw and "Pessoa 2" not in raw and "Pedido 2" not in raw
     assert len(data["solicitacoes"]) == 1
+    assert data["atendimentos_admin"][0]["notes"] == "Atendimento administrativo 1"
+    assert "Atendimento administrativo 2" not in raw
 
 
 def test_anonymous_redirected_to_login():
