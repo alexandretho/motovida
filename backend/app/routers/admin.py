@@ -1,10 +1,12 @@
 from datetime import datetime
+import csv
+from io import StringIO
 from math import ceil
 from typing import Optional
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -59,6 +61,22 @@ def with_page_urls(pagination: dict, path: str, **params) -> dict:
     pagination["prev_url"] = page_url(pagination["prev_page"])
     pagination["next_url"] = page_url(pagination["next_page"])
     return pagination
+
+
+def filter_affiliates_query(query, estado: str = "", cidade: str = "", profissao: str = ""):
+    if estado:
+        query = query.filter(models.Affiliate.state == estado.upper())
+    if cidade:
+        query = query.filter(models.Affiliate.city.ilike(f"%{sanitize(cidade, 120)}%"))
+    if profissao in models.PROFESSIONS:
+        query = query.filter(models.Affiliate.profession == profissao)
+    return query
+
+
+def filtered_url(path: str, **params) -> str:
+    clean_params = {key: value for key, value in params.items() if value not in (None, "")}
+    query = urlencode(clean_params)
+    return f"{path}?{query}" if query else path
 
 
 def require_admin(request: Request, db: Session):
@@ -169,20 +187,53 @@ def affiliates(request: Request, estado: str = "", cidade: str = "", profissao: 
     user = require_admin(request, db)
     if (r := guard(user)):
         return r
-    q = db.query(models.Affiliate)
-    if estado:
-        q = q.filter(models.Affiliate.state == estado.upper())
-    if cidade:
-        q = q.filter(models.Affiliate.city.ilike(f"%{sanitize(cidade, 120)}%"))
-    if profissao in models.PROFESSIONS:
-        q = q.filter(models.Affiliate.profession == profissao)
+    q = filter_affiliates_query(db.query(models.Affiliate), estado, cidade, profissao)
     items, pagination = paginate_query(q.order_by(models.Affiliate.created_at.desc()), page)
     pagination = with_page_urls(pagination, "/admin/afiliados", estado=estado.upper(), cidade=cidade,
                                 profissao=profissao)
     states = [s[0] for s in db.query(models.Affiliate.state).distinct().order_by(models.Affiliate.state)]
+    export_url = filtered_url("/admin/afiliados.csv", estado=estado.upper(), cidade=cidade, profissao=profissao)
     return templates.TemplateResponse(request, "admin/afiliados.html", base_ctx(
         request, user, items=items, states=states,
-        f_estado=estado.upper(), f_cidade=cidade, f_profissao=profissao, pagination=pagination))
+        f_estado=estado.upper(), f_cidade=cidade, f_profissao=profissao, pagination=pagination,
+        export_url=export_url))
+
+
+@router.get("/afiliados.csv")
+def affiliates_csv(request: Request, estado: str = "", cidade: str = "", profissao: str = "",
+                   db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    rows = filter_affiliates_query(db.query(models.Affiliate), estado, cidade, profissao)\
+        .order_by(models.Affiliate.created_at.desc()).all()
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "id", "nome", "cpf", "email", "telefone", "whatsapp", "cidade", "estado",
+        "profissao", "mei", "necessidades_apoio", "cadastrado_em",
+    ])
+    for affiliate in rows:
+        writer.writerow([
+            affiliate.id,
+            affiliate.full_name,
+            affiliate.cpf,
+            affiliate.email,
+            affiliate.phone,
+            affiliate.whatsapp,
+            affiliate.city,
+            affiliate.state,
+            affiliate.profession,
+            affiliate.mei_status,
+            affiliate.support_needs or "",
+            affiliate.created_at.isoformat(),
+        ])
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="afiliados.csv"'},
+    )
 
 
 @router.get("/afiliados/{aff_id}")
