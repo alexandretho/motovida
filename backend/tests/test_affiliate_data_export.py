@@ -23,6 +23,17 @@ def _make(db, n):
     db.add(a)
     db.flush()
     db.add(models.SupportRequest(affiliate_id=a.id, type="juridico", description=f"Pedido {n}"))
+    legal = models.LegalSupport(affiliate_id=a.id, category="acidente_transito", description=f"Jurídico {n}")
+    db.add(legal)
+    db.flush()
+    db.add(models.SpecializedSupportHistory(
+        kind="juridico",
+        item_id=legal.id,
+        old_status="aberta",
+        new_status="em_analise",
+        note=f"Histórico especializado {n}",
+        author="admin",
+    ))
     admin = models.User(email=f"admin{n}@t.com", password_hash=f"ADMINHASH{n}", role="admin")
     db.add(admin)
     db.flush()
@@ -42,6 +53,9 @@ def test_export_has_own_data_without_hash_or_other_users():
     assert "SECRETHASH" not in raw and "password_hash" not in raw
     assert "u2@t.com" not in raw and "Pessoa 2" not in raw and "Pedido 2" not in raw
     assert len(data["solicitacoes"]) == 1
+    assert len(data["apoio_juridico"]) == 1
+    assert data["historico_atendimentos_especializados"][0]["note"] == "Histórico especializado 1"
+    assert "Histórico especializado 2" not in raw
     assert data["atendimentos_admin"][0]["notes"] == "Atendimento administrativo 1"
     assert "Atendimento administrativo 2" not in raw
 

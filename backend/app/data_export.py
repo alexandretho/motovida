@@ -23,6 +23,24 @@ def _rows(db, model, **flt):
     return [row_to_dict(r) for r in db.query(model).filter_by(**flt).all()]
 
 
+def _specialized_history_for_affiliate(db, aff) -> list[dict]:
+    """Coleta todo histórico de atendimentos especializados do afiliado."""
+    result = []
+    for model, kind in [
+        (models.LegalSupport, "juridico"),
+        (models.PsychologicalSupport, "psicologico"),
+        (models.MeiSupport, "mei"),
+    ]:
+        ids = [r.id for r in db.query(model).filter_by(affiliate_id=aff.id).all()]
+        if ids:
+            rows = db.query(models.SpecializedSupportHistory).filter(
+                models.SpecializedSupportHistory.kind == kind,
+                models.SpecializedSupportHistory.item_id.in_(ids),
+            ).all()
+            result.extend(row_to_dict(r) for r in rows)
+    return result
+
+
 def build_affiliate_export(db, user) -> dict:
     aff = user.affiliate
     reqs = db.query(models.SupportRequest).filter_by(affiliate_id=aff.id).all()
@@ -39,6 +57,7 @@ def build_affiliate_export(db, user) -> dict:
         "apoio_juridico": _rows(db, models.LegalSupport, affiliate_id=aff.id),
         "apoio_psicologico": _rows(db, models.PsychologicalSupport, affiliate_id=aff.id),
         "apoio_mei": _rows(db, models.MeiSupport, affiliate_id=aff.id),
+        "historico_atendimentos_especializados": _specialized_history_for_affiliate(db, aff),
         "inscricoes_cursos": _rows(db, models.CourseEnrollment, affiliate_id=aff.id),
         "atendimentos_admin": _rows(db, models.Attendance, affiliate_id=aff.id),
     }
