@@ -73,6 +73,25 @@ def filter_affiliates_query(query, estado: str = "", cidade: str = "", profissao
     return query
 
 
+def filter_support_requests_query(query, tipo: str = "", status: str = ""):
+    if tipo in models.REQUEST_TYPES:
+        query = query.filter(models.SupportRequest.type == tipo)
+    if status in models.STATUSES:
+        query = query.filter(models.SupportRequest.status == status)
+    return query
+
+
+def short_description(value: str, max_len: int = 120) -> str:
+    normalized = " ".join(sanitize(value, max_len * 2).split())
+    return normalized if len(normalized) <= max_len else f"{normalized[:max_len - 3]}..."
+
+
+def csv_safe(value) -> str:
+    """Evita interpretação como fórmula ao abrir o CSV em planilhas."""
+    text = str(value or "")
+    return f"'{text}" if text[:1] in {"=", "+", "-", "@"} else text
+
+
 def latest_lgpd_consents_by_affiliate(db: Session, affiliate_ids: list[int]) -> dict[int, models.LgpdConsent]:
     """Retorna o aceite LGPD mais recente por afiliado para relatórios administrativos."""
     if not affiliate_ids:
@@ -324,15 +343,42 @@ def requests_list(request: Request, tipo: str = "", status: str = "", page: int 
     user = require_admin(request, db)
     if (r := guard(user)):
         return r
-    q = db.query(models.SupportRequest)
-    if tipo in models.REQUEST_TYPES:
-        q = q.filter(models.SupportRequest.type == tipo)
-    if status in models.STATUSES:
-        q = q.filter(models.SupportRequest.status == status)
+    q = filter_support_requests_query(db.query(models.SupportRequest), tipo, status)
     items, pagination = paginate_query(q.order_by(models.SupportRequest.created_at.desc()), page)
     pagination = with_page_urls(pagination, "/admin/solicitacoes", tipo=tipo, status=status)
+    export_url = filtered_url("/admin/solicitacoes.csv", tipo=tipo, status=status)
     return templates.TemplateResponse(request, "admin/solicitacoes.html", base_ctx(
-        request, user, items=items, f_tipo=tipo, f_status=status, pagination=pagination))
+        request, user, items=items, f_tipo=tipo, f_status=status, pagination=pagination,
+        export_url=export_url))
+
+
+@router.get("/solicitacoes.csv")
+def requests_csv(request: Request, tipo: str = "", status: str = "", db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    rows = filter_support_requests_query(db.query(models.SupportRequest), tipo, status)\
+        .order_by(models.SupportRequest.created_at.desc()).all()
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["id", "afiliado", "email", "tipo", "prioridade", "status", "criado_em", "descricao_curta"])
+    for item in rows:
+        writer.writerow([
+            item.id,
+            csv_safe(item.affiliate.full_name),
+            csv_safe(item.affiliate.email),
+            item.type,
+            item.priority,
+            item.status,
+            item.created_at.isoformat(),
+            csv_safe(short_description(str(item.description or ""))),
+        ])
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="solicitacoes.csv"'},
+    )
 
 
 @router.get("/solicitacoes/{req_id}")
