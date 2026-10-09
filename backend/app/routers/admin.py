@@ -381,6 +381,65 @@ def requests_csv(request: Request, tipo: str = "", status: str = "", db: Session
     )
 
 
+def specialized_csv_rows(db: Session) -> list[tuple]:
+    rows = []
+    for item in db.query(models.LegalSupport).all():
+        rows.append((
+            item.created_at,
+            [
+                "juridico",
+                item.id,
+                item.affiliate_id,
+                csv_safe(item.affiliate.full_name),
+                csv_safe(item.affiliate.email),
+                csv_safe(item.affiliate.city),
+                item.affiliate.state,
+                item.status,
+                csv_safe(f"categoria={item.category}; descricao={short_description(str(item.description or ''))}"),
+                "",
+                item.created_at.isoformat(),
+            ],
+        ))
+    for item in db.query(models.PsychologicalSupport).all():
+        rows.append((
+            item.created_at,
+            [
+                "psicologico",
+                item.id,
+                item.affiliate_id,
+                csv_safe(item.affiliate.full_name),
+                csv_safe(item.affiliate.email),
+                csv_safe(item.affiliate.city),
+                item.affiliate.state,
+                item.status,
+                csv_safe(
+                    f"situacao={item.relation}; preferencia={item.preferred_date or ''}; "
+                    f"descricao={short_description(str(item.description or ''))}"
+                ),
+                csv_safe(item.scheduled_at),
+                item.created_at.isoformat(),
+            ],
+        ))
+    for item in db.query(models.MeiSupport).all():
+        rows.append((
+            item.created_at,
+            [
+                "mei",
+                item.id,
+                item.affiliate_id,
+                csv_safe(item.affiliate.full_name),
+                csv_safe(item.affiliate.email),
+                csv_safe(item.affiliate.city),
+                item.affiliate.state,
+                item.status,
+                csv_safe(f"assunto={item.topic}; descricao={short_description(str(item.description or ''))}"),
+                "",
+                item.created_at.isoformat(),
+            ],
+        ))
+    return [row for _, row in sorted(rows, key=lambda entry: entry[0], reverse=True)]
+
+
 @router.get("/solicitacoes/{req_id}")
 def request_detail(request: Request, req_id: int, db: Session = Depends(get_db)):
     user = require_admin(request, db)
@@ -427,6 +486,26 @@ def specialized(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(request, "admin/atendimentos.html",
         base_ctx(request, user, legal=legal, psy=psy, mei=mei,
                  histories_for=histories_for))
+
+
+@router.get("/atendimentos.csv")
+def specialized_csv(request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "tipo", "id", "afiliado_id", "nome", "email", "cidade", "estado", "status",
+        "campos_especificos", "scheduled_at", "criado_em",
+    ])
+    writer.writerows(specialized_csv_rows(db))
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="atendimentos.csv"'},
+    )
 
 
 @router.post("/atendimentos/{kind}/{item_id}/status")
