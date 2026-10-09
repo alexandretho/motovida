@@ -8,13 +8,15 @@ from urllib.parse import parse_qs
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
 from . import ratelimit
 from .config import MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
 from .database import Base, SessionLocal, engine, wait_for_db
-from .deps import is_valid_csrf_token
+from .deps import base_ctx, is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
 from .scheduling import ensure_scheduled_at_column
 from .seeds import run_seeds
@@ -27,6 +29,16 @@ if not http_logger.handlers:
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("%(message)s"))
     http_logger.addHandler(handler)
+
+_error_templates = Jinja2Templates(directory="app/templates")
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404 and "text/html" in request.headers.get("accept", ""):
+        return _error_templates.TemplateResponse(request, "public/404.html", base_ctx(request, None), status_code=404)
+    return PlainTextResponse(str(exc.detail), status_code=exc.status_code, headers=getattr(exc, "headers", None))
+
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
