@@ -19,7 +19,8 @@
   <details class="card">
     <summary><strong>{{ c.title }}</strong> · {{ c.category }} · {{ c.enrollments|length }} inscrito(s)
       {% if not c.active %}<span class="badge badge-cancelada">Inativo</span>{% endif %}
-      — <a href="/admin/cursos/{{ c.id }}/inscritos">ver inscritos</a></summary>
+      — <a href="/admin/cursos/{{ c.id }}/inscritos">ver inscritos</a>
+      · <a href="/admin/cursos/{{ c.id }}/inscritos.csv">exportar CSV</a></summary>
     <form class="form" method="post" action="/admin/cursos/{{ c.id }}/editar">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="form-row">

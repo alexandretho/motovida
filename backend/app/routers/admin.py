@@ -520,6 +520,49 @@ def course_enrollees(request: Request, course_id: int, db: Session = Depends(get
     return templates.TemplateResponse(request, "admin/inscritos.html", base_ctx(request, user, course=course))
 
 
+@router.get("/cursos/{course_id}/inscritos.csv")
+def course_enrollees_csv(request: Request, course_id: int, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    course = db.query(models.Course).filter_by(id=course_id).first()
+    if not course:
+        return RedirectResponse("/admin/cursos", status_code=303)
+
+    rows = db.query(models.CourseEnrollment)\
+        .filter_by(course_id=course.id)\
+        .join(models.Affiliate)\
+        .order_by(models.CourseEnrollment.created_at.desc())\
+        .all()
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "curso_id", "curso", "inscricao_id", "afiliado_id", "nome", "email", "cidade", "estado",
+        "profissao", "whatsapp", "inscrito_em",
+    ])
+    for enrollment in rows:
+        affiliate = enrollment.affiliate
+        writer.writerow([
+            course.id,
+            csv_safe(course.title),
+            enrollment.id,
+            affiliate.id,
+            csv_safe(affiliate.full_name),
+            csv_safe(affiliate.email),
+            csv_safe(affiliate.city),
+            affiliate.state,
+            affiliate.profession,
+            csv_safe(affiliate.whatsapp),
+            enrollment.created_at.isoformat(),
+        ])
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="curso-{course.id}-inscritos.csv"'},
+    )
+
+
 @router.get("/eventos")
 def events(request: Request, db: Session = Depends(get_db)):
     user = require_admin(request, db)

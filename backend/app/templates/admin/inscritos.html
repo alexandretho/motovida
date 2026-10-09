@@ -4,7 +4,7 @@
 <section class="section"><div class="container">
   <p><a href="/admin/cursos">← Voltar aos cursos</a></p>
   <h1>Inscritos: {{ course.title }}</h1>
-  <p class="muted">{{ course.enrollments|length }} inscrito(s)</p>
+  <p class="muted">{{ course.enrollments|length }} inscrito(s) · <a href="/admin/cursos/{{ course.id }}/inscritos.csv">Exportar CSV</a></p>
   <div class="table-wrap"><table>
     <thead><tr><th>Nome</th><th>Cidade</th><th>UF</th><th>WhatsApp</th><th>Inscrição</th></tr></thead>
     <tbody>{% for e in course.enrollments %}
