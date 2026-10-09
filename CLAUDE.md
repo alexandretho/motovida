@@ -38,9 +38,9 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 1. Eventos: página pública `/eventos`, edição e ativar/desativar no admin já implementados
 2. Agendamento psicológico: admin confirma data/hora em `/admin/atendimentos` (`scheduled_at`, coluna adicionada no startup via `app/scheduling.py`); afiliado vê a confirmação. Falta notificação por e-mail (sem SMTP)
 3. Histórico de status de atendimentos especializados implementado (testes em `test_specialized_support_history.py`)
-4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); falta recuperação de senha por e-mail (sem SMTP)
+4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); recuperação de senha self-service em `/recuperar-senha` gera solicitação para o admin redefinir (sem SMTP, sem envio de e-mail)
 5. Formulário de contato funcional (`/contato`, com rate limit; gera solicitação no Canal de Ajuda)
-6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); cria novos admins em `/admin/admins`; falta recuperação self-service por e-mail (sem SMTP)
+6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); cria novos admins em `/admin/admins`; recuperação via `/recuperar-senha` abre solicitação no Canal de Ajuda; envio automático por e-mail depende de SMTP
 7. CSRF implementado (token em sessão + middleware, testes em `backend/tests/test_csrf.py`)
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
 9. Paginação admin implementada
