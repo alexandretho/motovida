@@ -48,6 +48,8 @@ a:hover, a:focus { text-decoration: underline; }
 .nav.open { display: flex; }
 .nav a { color: #e7edf6; padding: .5rem .4rem; border-radius: 8px; }
 .nav a:hover { background: #223043; text-decoration: none; }
+.nav-logout { margin: 0; }
+.nav-logout .btn { width: 100%; text-align: left; }
 .road-divider {
   height: 8px; background: var(--blue-deep);
   background-image: repeating-linear-gradient(90deg, var(--accent) 0 26px, transparent 26px 58px);

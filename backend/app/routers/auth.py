@@ -107,7 +107,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
     return RedirectResponse("/admin" if user.role == "admin" else "/afiliado", status_code=303)
 
 
-@router.get("/logout")
+@router.post("/logout")
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/", status_code=303)

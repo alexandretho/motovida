@@ -39,12 +39,20 @@
         <a href="/admin">Painel</a><a href="/admin/afiliados">Afiliados</a>
         <a href="/admin/solicitacoes">Solicitações</a><a href="/admin/atendimentos">Atendimentos</a>
         <a href="/admin/cursos">Cursos</a><a href="/admin/eventos">Eventos</a>
-        <a href="/admin/parceiros">Parceiros</a><a href="/admin/admins">Admins</a><a href="/admin/senha">Senha</a><a class="btn btn-ghost" href="/logout">Sair</a>
+        <a href="/admin/parceiros">Parceiros</a><a href="/admin/admins">Admins</a><a href="/admin/senha">Senha</a>
+        <form class="nav-logout" method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn-ghost" type="submit">Sair</button>
+        </form>
       {% elif user and user.role == 'affiliate' %}
         <a href="/afiliado">Início</a><a href="/afiliado/juridico">Jurídico</a>
         <a href="/afiliado/psicologico">Psicológico</a><a href="/afiliado/cursos">Cursos</a>
         <a href="/afiliado/eventos">Eventos</a><a href="/afiliado/mei">MEI</a><a href="/afiliado/ajuda">Ajuda</a>
-        <a href="/afiliado/perfil">Perfil</a><a class="btn btn-ghost" href="/logout">Sair</a>
+        <a href="/afiliado/perfil">Perfil</a>
+        <form class="nav-logout" method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn-ghost" type="submit">Sair</button>
+        </form>
       {% else %}
         <a href="/">Início</a><a href="/eventos">Eventos</a><a href="/parceiros">Parceiros</a><a href="/contato">Contato</a>
         <a href="/login">Entrar</a><a class="btn btn-primary" href="/cadastro">Quero me afiliar</a>
