@@ -78,7 +78,7 @@ def robots_txt():
         f"Sitemap: {SITE_URL}/sitemap.xml",
         "",
     ])
-    return PlainTextResponse(content)
+    return PlainTextResponse(content, headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.head("/robots.txt", include_in_schema=False)
@@ -141,7 +141,7 @@ def sitemap_xml_head():
 
 @router.get("/favicon.ico", include_in_schema=False)
 def favicon():
-    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
+    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.head("/favicon.ico", include_in_schema=False)
@@ -151,7 +151,7 @@ def favicon_head():
 
 @router.get("/favicon.svg", include_in_schema=False)
 def favicon_svg():
-    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
+    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
 
 BENEFITS = [
     ("⚖️", "Apoio Jurídico", "Orientação em acidentes de trânsito, dúvidas trabalhistas e previdenciárias."),
