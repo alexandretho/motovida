@@ -82,6 +82,45 @@ def test_password_recovery_helper_creates_admin_request_for_existing_affiliate()
     assert history.new_status == "aberta"
 
 
+def test_password_recovery_helper_reuses_active_self_service_request_statuses():
+    for status in public.PASSWORD_RECOVERY_OPEN_STATUSES:
+        Session = make_db()
+        db = Session()
+
+        assert public.create_password_recovery_request(db, "afiliado@teste.com", "41988887777") is True
+        req = db.query(models.SupportRequest).one()
+        req.status = status
+        db.commit()
+
+        assert public.create_password_recovery_request(db, "afiliado@teste.com", "41977776666") is True
+
+        req = db.query(models.SupportRequest).one()
+        assert req.status == status
+        assert "41988887777" in req.description
+        assert "41977776666" not in req.description
+        assert db.query(models.RequestHistory).count() == 1
+        db.close()
+
+
+def test_password_recovery_helper_creates_new_request_when_previous_is_closed():
+    Session = make_db()
+    db = Session()
+
+    assert public.create_password_recovery_request(db, "afiliado@teste.com", "41988887777") is True
+    req = db.query(models.SupportRequest).one()
+    req.status = "concluida"
+    db.commit()
+
+    assert public.create_password_recovery_request(db, "afiliado@teste.com", "41977776666") is True
+
+    requests = db.query(models.SupportRequest).order_by(models.SupportRequest.id).all()
+    assert len(requests) == 2
+    assert requests[0].status == "concluida"
+    assert requests[1].status == "aberta"
+    assert "41977776666" in requests[1].description
+    assert db.query(models.RequestHistory).count() == 2
+
+
 def test_password_recovery_helper_is_silent_for_unknown_email():
     Session = make_db()
     db = Session()

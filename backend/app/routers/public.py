@@ -24,6 +24,8 @@ REGISTER_RATE_LIMIT_MESSAGE = "Muitas tentativas de cadastro em pouco tempo. Agu
 PASSWORD_RECOVERY_RATE_LIMIT = 5
 PASSWORD_RECOVERY_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
 PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE = "Muitas solicitações em pouco tempo. Aguarde alguns minutos e tente novamente."
+PASSWORD_RECOVERY_OPEN_STATUSES = ("aberta", "em_analise", "em_atendimento")
+PASSWORD_RECOVERY_DESCRIPTION_MARKER = "Origem: recuperação de senha self-service"
 
 PUBLIC_SITEMAP_PATHS = [
     ("/", "daily", "1.0"),
@@ -213,16 +215,28 @@ def password_recovery_template(request: Request, user, form=None, errors=None, s
     )
 
 
+def has_open_password_recovery_request(db: Session, affiliate_id: int) -> bool:
+    return db.query(models.SupportRequest).filter(
+        models.SupportRequest.affiliate_id == affiliate_id,
+        models.SupportRequest.type == "administrativo",
+        models.SupportRequest.status.in_(PASSWORD_RECOVERY_OPEN_STATUSES),
+        models.SupportRequest.description.ilike(f"%{PASSWORD_RECOVERY_DESCRIPTION_MARKER}%"),
+    ).first() is not None
+
+
 def create_password_recovery_request(db: Session, email: str, phone: str = "") -> bool:
-    """Cria solicitação administrativa se o e-mail pertence a afiliado; não revela existência da conta."""
+    """Cria ou reaproveita solicitação administrativa; não revela existência da conta."""
     user = db.query(models.User).filter_by(email=email).first()
     affiliate = getattr(user, "affiliate", None)
     if user is None or getattr(user, "role", None) != "affiliate" or affiliate is None:
         return False
 
+    if has_open_password_recovery_request(db, affiliate.id):
+        return True
+
     phone_line = phone or "Não informado"
     description = (
-        "Origem: recuperação de senha self-service\n"
+        f"{PASSWORD_RECOVERY_DESCRIPTION_MARKER}\n"
         f"Afiliado: {affiliate.full_name}\n"
         f"E-mail informado: {email}\n"
         f"Telefone/WhatsApp informado: {phone_line}\n\n"
