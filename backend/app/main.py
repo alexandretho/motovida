@@ -55,6 +55,7 @@ SECURITY_HEADERS = {
 NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-senha")
 NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
 SESSION_VARY_PREFIXES = (*NO_INDEX_PREFIXES, "/contato")
+BLOCKED_HTTP_METHODS = {"TRACE", "TRACK", "CONNECT"}
 
 
 @app.middleware("http")
@@ -130,6 +131,11 @@ def request_body_too_large(request: Request, body: bytes | None = None) -> bool:
 async def add_security_headers(request: Request, call_next):
     csp_nonce = token_urlsafe(16)
     request.state.csp_nonce = csp_nonce
+
+    if request.method.upper() in BLOCKED_HTTP_METHODS:
+        response = PlainTextResponse("", status_code=405)
+        response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+        return apply_security_headers(response, request.url.path)
 
     if is_sensitive_scanner_path(request.url.path):
         response = PlainTextResponse("Not Found", status_code=404)

@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -60,3 +61,15 @@ def test_public_contact_varies_by_cookie_for_csrf_session():
     r = client.get("/contato")
     assert "Cookie" in r.headers["vary"]
     assert "no-store" not in r.headers.get("cache-control", "")
+
+
+@pytest.mark.parametrize("method", ["TRACE", "TRACK", "CONNECT"])
+def test_unsafe_diagnostic_methods_are_blocked_without_details(method):
+    r = client.request(method, "/healthz")
+
+    assert r.status_code == 405
+    assert r.text == ""
+    assert "allow" not in r.headers
+    assert r.headers["strict-transport-security"] == "max-age=31536000"
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert "default-src 'self'" in r.headers["content-security-policy"]
