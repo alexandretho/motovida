@@ -54,6 +54,7 @@ SECURITY_HEADERS = {
 
 NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-senha")
 NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
+SESSION_VARY_PREFIXES = (*NO_INDEX_PREFIXES, "/contato")
 
 
 @app.middleware("http")
@@ -105,6 +106,10 @@ def apply_security_headers(response, path: str = ""):
     if path.startswith(NO_STORE_PREFIXES):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
+    if path.startswith(SESSION_VARY_PREFIXES):
+        vary = {value.strip() for value in response.headers.get("Vary", "").split(",") if value.strip()}
+        vary.add("Cookie")
+        response.headers["Vary"] = ", ".join(sorted(vary))
     if path.startswith(NO_INDEX_PREFIXES) or is_sensitive_scanner_path(path):
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
