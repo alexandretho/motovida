@@ -52,6 +52,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     ".ds_store",
     ".htaccess",
     ".htpasswd",
+    ".envrc",
     ".npmrc",
     ".user.ini",
     "adminer.php",
@@ -63,6 +64,8 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "config.php",
     "config.yaml",
     "config.yml",
+    "credentials",
+    "credentials.json",
     "database.sql",
     "db.sql",
     "docker-compose.yaml",
@@ -70,14 +73,30 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "dump.sql",
     "dump.sql.gz",
     "id_rsa",
+    "local_settings.py",
     "package-lock.json",
     "package.json",
+    "php_info.php",
+    "phpinfo.php",
+    "secrets.json",
+    "settings.py",
     "web.config",
     "wp-config.php",
+    "wp-login.php",
+    "xmlrpc.php",
     "yarn.lock",
 })
 
-SENSITIVE_SCANNER_BACKUP_SUFFIXES = (".bak", ".old", ".orig", ".save", ".swp")
+SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
+    "~",
+    ".bak",
+    ".old",
+    ".orig",
+    ".save",
+    ".swp",
+    ".tmp",
+    ".backup",
+)
 
 
 def normalize_scanner_path(path: str) -> str:
@@ -104,6 +123,24 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     )
 
 
+def is_sensitive_scanner_segment(segment: str) -> bool:
+    if any(
+        segment == sensitive or segment.startswith(f"{sensitive}.")
+        for sensitive in SENSITIVE_SCANNER_SEGMENTS
+    ):
+        return True
+
+    return any(
+        segment.endswith(suffix)
+        and any(
+            segment[: -len(suffix)] == sensitive
+            or segment[: -len(suffix)].startswith(f"{sensitive}.")
+            for sensitive in SENSITIVE_SCANNER_SEGMENTS
+        )
+        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
+    )
+
+
 def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = normalize_scanner_path(path)
     segments = [segment.split(";", 1)[0] for segment in normalized_path.split("/") if segment]
@@ -111,11 +148,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
 
-    if any(
-        segment == sensitive or segment.startswith(f"{sensitive}.")
-        for segment in segments
-        for sensitive in SENSITIVE_SCANNER_SEGMENTS
-    ):
+    if any(is_sensitive_scanner_segment(segment) for segment in segments):
         return True
 
     if any(is_sensitive_scanner_filename(segment) for segment in segments):
