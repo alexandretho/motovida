@@ -5,8 +5,8 @@ from secrets import token_urlsafe
 from time import perf_counter
 from urllib.parse import parse_qs
 
-from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -15,7 +15,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import models  # noqa: F401  (registra os modelos no metadata)
 from . import ratelimit
 from .config import MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
-from .database import Base, SessionLocal, engine, wait_for_db
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from .database import Base, SessionLocal, engine, get_db, wait_for_db
 from .deps import base_ctx, is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
 from .scheduling import ensure_scheduled_at_column
@@ -60,7 +63,7 @@ BLOCKED_HTTP_METHODS = {"TRACE", "TRACK", "CONNECT"}
 
 @app.middleware("http")
 async def log_http_requests(request: Request, call_next):
-    if request.url.path == "/healthz":
+    if request.url.path in ("/healthz", "/readyz"):
         return await call_next(request)
 
     started_at = perf_counter()
@@ -194,6 +197,16 @@ def healthz():
 @app.head("/healthz", include_in_schema=False)
 def healthz_head():
     return PlainTextResponse("")
+
+
+@app.get("/readyz", include_in_schema=False)
+def readyz(db: Session = Depends(get_db)):
+    headers = {"Cache-Control": "no-store"}
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse({"status": "unavailable"}, status_code=503, headers=headers)
+    return JSONResponse({"status": "ready"}, headers=headers)
 
 
 @app.on_event("startup")
