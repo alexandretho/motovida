@@ -3,6 +3,7 @@
 {% block content %}
 <section class="section"><div class="container">
   <h1>Eventos e Palestras</h1>
+  <p class="muted"><a href="/admin/eventos.csv">Exportar CSV</a></p>
 
   <details class="card"{% if editing %} open{% endif %}>
     <summary><strong>{% if editing %}Editar evento: {{ editing.title }}{% else %}+ Cadastrar novo evento{% endif %}</strong></summary>

@@ -651,6 +651,33 @@ def events(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(request, "admin/eventos.html", base_ctx(request, user, items=items))
 
 
+@router.get("/eventos.csv")
+def events_csv(request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    rows = db.query(models.Event).order_by(models.Event.event_date.desc()).all()
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["id", "titulo", "data", "local", "descricao_curta", "status", "criado_em"])
+    for event in rows:
+        writer.writerow([
+            event.id,
+            csv_safe(event.title),
+            event.event_date.isoformat() if event.event_date else "",
+            csv_safe(event.location),
+            csv_safe(short_description(str(event.description or ""))),
+            "ativo" if event.active else "inativo",
+            event.created_at.isoformat(),
+        ])
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="eventos.csv"'},
+    )
+
+
 @router.post("/eventos")
 def event_create(request: Request, title: str = Form(...), description: str = Form(""),
                  event_date: str = Form(""), location: str = Form(""),
@@ -735,6 +762,35 @@ def partners(request: Request, db: Session = Depends(get_db)):
         return r
     items = db.query(models.Partner).order_by(models.Partner.category, models.Partner.name).all()
     return templates.TemplateResponse(request, "admin/parceiros.html", base_ctx(request, user, items=items))
+
+
+@router.get("/parceiros.csv")
+def partners_csv(request: Request, db: Session = Depends(get_db)):
+    user = require_admin(request, db)
+    if (r := guard(user)):
+        return r
+
+    rows = db.query(models.Partner).order_by(models.Partner.category, models.Partner.name).all()
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["id", "nome", "categoria", "desconto", "cidade", "estado", "contato", "status", "criado_em"])
+    for partner in rows:
+        writer.writerow([
+            partner.id,
+            csv_safe(partner.name),
+            csv_safe(partner.category),
+            csv_safe(partner.discount),
+            csv_safe(partner.city),
+            partner.state or "",
+            csv_safe(partner.contact),
+            "ativo" if partner.active else "inativo",
+            partner.created_at.isoformat(),
+        ])
+    return Response(
+        output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="parceiros.csv"'},
+    )
 
 
 @router.post("/parceiros")

@@ -3,6 +3,7 @@
 {% block content %}
 <section class="section"><div class="container">
   <h1>Rede de Parceiros</h1>
+  <p class="muted"><a href="/admin/parceiros.csv">Exportar CSV</a></p>
   <details class="card"><summary><strong>+ Cadastrar novo parceiro</strong></summary>
     <form class="form" method="post" action="/admin/parceiros">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
