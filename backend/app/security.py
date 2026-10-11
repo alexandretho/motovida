@@ -50,8 +50,12 @@ SENSITIVE_SCANNER_SEGMENTS = frozenset({
 SENSITIVE_SCANNER_FILENAMES = frozenset({
     ".dockercfg",
     ".ds_store",
+    ".htaccess",
+    ".htpasswd",
     ".npmrc",
+    ".user.ini",
     "adminer.php",
+    "backup.tar.gz",
     "backup.zip",
     "composer.json",
     "composer.lock",
@@ -64,12 +68,16 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "docker-compose.yaml",
     "docker-compose.yml",
     "dump.sql",
+    "dump.sql.gz",
     "id_rsa",
     "package-lock.json",
     "package.json",
+    "web.config",
     "wp-config.php",
     "yarn.lock",
 })
+
+SENSITIVE_SCANNER_BACKUP_SUFFIXES = (".bak", ".old", ".orig", ".save", ".swp")
 
 
 def normalize_scanner_path(path: str) -> str:
@@ -83,6 +91,17 @@ def normalize_scanner_path(path: str) -> str:
     while "//" in normalized:
         normalized = normalized.replace("//", "/")
     return normalized.lower()
+
+
+def is_sensitive_scanner_filename(filename: str) -> bool:
+    if filename in SENSITIVE_SCANNER_FILENAMES:
+        return True
+
+    return any(
+        filename.endswith(suffix)
+        and filename[: -len(suffix)] in SENSITIVE_SCANNER_FILENAMES
+        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
+    )
 
 
 def is_sensitive_scanner_path(path: str) -> bool:
@@ -99,7 +118,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
     ):
         return True
 
-    if any(segment in SENSITIVE_SCANNER_FILENAMES for segment in segments):
+    if any(is_sensitive_scanner_filename(segment) for segment in segments):
         return True
 
     return any(

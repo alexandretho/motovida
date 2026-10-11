@@ -37,6 +37,9 @@ client = TestClient(app)
         "/id_rsa",
         "/.npmrc",
         "/.dockercfg",
+        "/.htaccess",
+        "/.htpasswd",
+        "/.user.ini",
         "/docker-compose.yml",
         "/docker-compose.yaml",
         "/package.json",
@@ -61,15 +64,19 @@ client = TestClient(app)
         "/actuator/env",
         "/composer.json",
         "/backup.zip",
+        "/backup.tar.gz",
         "/db.sql",
         "/dump.sql",
+        "/dump.sql.gz",
         "/database.sql",
         "/config.php",
         "/config.json",
         "/config.yaml",
         "/config.yml",
+        "/web.config",
         "/foo%5c.env",
         "/tmp/backup.zip",
+        "/tmp/dump.sql.gz",
         "/private/config.php",
         "/debug/default/view",
     ],
@@ -91,7 +98,39 @@ def test_legitimate_public_route_is_preserved():
 
 @pytest.mark.parametrize(
     "path",
-    ["/", "/parceiros", "/eventos", "/contato", "/privacidade", "/cadastro"],
+    [
+        "/.htaccess.bak",
+        "/.htpasswd.old",
+        "/.user.ini.orig",
+        "/web.config.save",
+        "/backup.tar.gz.swp",
+        "/dump.sql.gz.bak",
+        "/private/config.php.old",
+        "/docker-compose.yml.orig",
+    ],
+)
+def test_sensitive_scanner_backup_variants_are_blocked(path):
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/",
+        "/parceiros",
+        "/eventos",
+        "/contato",
+        "/privacidade",
+        "/cadastro",
+        "/eventos.old",
+        "/parceiros.bak",
+        "/contato.orig",
+        "/privacidade.save",
+    ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
     assert is_sensitive_scanner_path(path) is False
