@@ -30,6 +30,16 @@ def test_login_is_not_cacheable():
     assert r.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+def test_session_cookie_keeps_lgpd_area_session_attributes():
+    r = client.get("/login")
+    cookie = r.headers["set-cookie"].lower()
+
+    assert "session=" in cookie
+    assert "httponly" in cookie
+    assert "samesite=lax" in cookie
+    assert "max-age=28800" in cookie
+
+
 def test_public_registration_is_noindex_but_cacheable():
     r = client.get("/cadastro")
     assert r.headers["x-robots-tag"] == "noindex, nofollow"

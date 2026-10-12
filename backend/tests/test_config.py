@@ -5,7 +5,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import config  # noqa: E402
-from app.config import allowed_hosts_from_env, env_flag, env_int, normalize_allowed_host, normalize_site_url  # noqa: E402
+from app.config import (  # noqa: E402
+    allowed_hosts_from_env,
+    env_flag,
+    env_int,
+    normalize_allowed_host,
+    normalize_session_same_site,
+    normalize_site_url,
+)
 
 
 def test_env_flag_defaults_to_false(monkeypatch):
@@ -63,10 +70,25 @@ def test_env_int_falls_back_for_invalid_or_out_of_bounds(monkeypatch):
         assert env_int("MAX_FORM_BODY_BYTES", 4096, minimum=1024, maximum=65536) == 4096
 
 
+def test_normalize_session_same_site_accepts_safe_values():
+    assert normalize_session_same_site("Strict", secure_cookie=False) == "strict"
+    assert normalize_session_same_site("lax", secure_cookie=False) == "lax"
+    assert normalize_session_same_site("none", secure_cookie=True) == "none"
+
+
+def test_normalize_session_same_site_falls_back_for_invalid_or_insecure_none():
+    assert normalize_session_same_site("qualquer", secure_cookie=True) == "lax"
+    assert normalize_session_same_site("none", secure_cookie=False) == "lax"
+    assert normalize_session_same_site("", secure_cookie=True) == "lax"
+
+
 def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SITE_URL", "https://instituto.example.org/")
     monkeypatch.setenv("GA_MEASUREMENT_ID", "G-TESTE123")
     monkeypatch.setenv("MAX_FORM_BODY_BYTES", "32768")
+    monkeypatch.setenv("SESSION_COOKIE_SECURE", "1")
+    monkeypatch.setenv("SESSION_COOKIE_SAME_SITE", "strict")
+    monkeypatch.setenv("SESSION_COOKIE_MAX_AGE_SECONDS", "3600")
 
     reloaded = importlib.reload(config)
 
@@ -74,9 +96,15 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     assert "instituto.example.org" in reloaded.ALLOWED_HOSTS
     assert reloaded.GA_MEASUREMENT_ID == "G-TESTE123"
     assert reloaded.MAX_FORM_BODY_BYTES == 32768
+    assert reloaded.SESSION_COOKIE_SECURE is True
+    assert reloaded.SESSION_COOKIE_SAME_SITE == "strict"
+    assert reloaded.SESSION_COOKIE_MAX_AGE_SECONDS == 3600
 
     monkeypatch.delenv("SITE_URL", raising=False)
     monkeypatch.delenv("ALLOWED_HOSTS", raising=False)
     monkeypatch.delenv("GA_MEASUREMENT_ID", raising=False)
     monkeypatch.delenv("MAX_FORM_BODY_BYTES", raising=False)
+    monkeypatch.delenv("SESSION_COOKIE_SECURE", raising=False)
+    monkeypatch.delenv("SESSION_COOKIE_SAME_SITE", raising=False)
+    monkeypatch.delenv("SESSION_COOKIE_MAX_AGE_SECONDS", raising=False)
     importlib.reload(config)

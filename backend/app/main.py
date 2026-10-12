@@ -16,7 +16,14 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
 from . import ratelimit
-from .config import ALLOWED_HOSTS, MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
+from .config import (
+    ALLOWED_HOSTS,
+    MAX_FORM_BODY_BYTES,
+    SECRET_KEY,
+    SESSION_COOKIE_MAX_AGE_SECONDS,
+    SESSION_COOKIE_SAME_SITE,
+    SESSION_COOKIE_SECURE,
+)
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -209,8 +216,8 @@ async def add_security_headers(request: Request, call_next):
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
-    max_age=60 * 60 * 8,
-    same_site="lax",
+    max_age=SESSION_COOKIE_MAX_AGE_SECONDS,
+    same_site=SESSION_COOKIE_SAME_SITE,
     https_only=SESSION_COOKIE_SECURE,
 )
 
