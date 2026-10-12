@@ -137,6 +137,7 @@ docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQ
 - Cookie de sessão pode receber atributo `Secure` com `SESSION_COOKIE_SECURE=1` em produção HTTPS atrás do NPM/Cloudflare
 - Headers de proxy para IP real (`CF-Connecting-IP`/`X-Forwarded-For`) só são usados com `TRUST_PROXY_HEADERS=1`; opcionalmente restrinja os proxies aceitos com `TRUSTED_PROXY_CIDRS` (IPs/CIDRs separados por vírgula). Valor vazio mantém a compatibilidade anterior.
 - URL pública (`SITE_URL`) e Google Analytics 4 (`GA_MEASUREMENT_ID`) são configuráveis por ambiente para manter sitemap, robots e templates alinhados ao domínio real
+- `ALLOWED_HOSTS` permite restringir o header `Host` aceito pela aplicação; `SITE_URL`, `testserver`, `localhost` e `127.0.0.1` são preservados para produção, testes e desenvolvimento local
 - Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
 - Limite configurável de corpo em formulários sensíveis (`MAX_FORM_BODY_BYTES`, padrão 64 KiB) rejeita payloads abusivos com 413 antes do processamento/CSRF
 - Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)

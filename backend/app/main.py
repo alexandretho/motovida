@@ -12,10 +12,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import models  # noqa: F401  (registra os modelos no metadata)
 from . import ratelimit
-from .config import MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
+from .config import ALLOWED_HOSTS, MAX_FORM_BODY_BYTES, SECRET_KEY, SESSION_COOKIE_SECURE
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -27,6 +28,7 @@ from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
 app = FastAPI(title="Sistema Nacional de Cadastro e Atendimento – Instituto MotoVida Guilherme França")
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS, www_redirect=False)
 http_logger = logging.getLogger("app.http")
 http_logger.setLevel(logging.INFO)
 if not http_logger.handlers:
