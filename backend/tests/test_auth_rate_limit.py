@@ -9,6 +9,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
+from app import ratelimit  # noqa: E402
 from app.database import get_db  # noqa: E402
 from app.main import app  # noqa: E402
 from app import models  # noqa: E402
@@ -18,6 +19,7 @@ from app.security import DUMMY_PASSWORD_HASH, hash_password  # noqa: E402
 
 def setup_function():
     auth._login_failures.clear()
+    ratelimit.clear()
 
 
 def test_failed_logins_are_limited_within_window():
@@ -131,6 +133,44 @@ def test_login_route_limits_failures_with_flash_and_valid_csrf():
 
         assert response.status_code == 200
         assert auth.LOGIN_RATE_LIMIT_MESSAGE in response.text
+        assert "Token CSRF inválido" not in response.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_login_route_limits_post_volume_with_flash_and_valid_csrf():
+    app.dependency_overrides[get_db] = empty_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/login")
+        csrf_token = csrf_token_from(response)
+
+        for index in range(auth.LOGIN_POST_RATE_LIMIT):
+            response = client.post(
+                "/login",
+                data={
+                    "csrf_token": csrf_token,
+                    "email": f"user-{index}@example.com",
+                    "password": "senha-incorreta",
+                },
+                follow_redirects=False,
+            )
+            assert response.status_code == 303
+            assert response.headers["location"] == "/login"
+
+        response = client.post(
+            "/login",
+            data={
+                "csrf_token": csrf_token,
+                "email": "user-final@example.com",
+                "password": "senha-incorreta",
+            },
+            follow_redirects=True,
+        )
+
+        assert response.status_code == 200
+        assert auth.LOGIN_POST_RATE_LIMIT_MESSAGE in response.text
         assert "Token CSRF inválido" not in response.text
     finally:
         app.dependency_overrides.clear()

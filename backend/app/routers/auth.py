@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from .. import models
+from .. import models, ratelimit
 from ..database import get_db
 from ..deps import base_ctx, flash, get_current_user
 from ..security import DUMMY_PASSWORD_HASH, verify_password
@@ -16,9 +16,11 @@ from ..validators import sanitize
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+LOGIN_POST_RATE_LIMIT = 20
+LOGIN_POST_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
+LOGIN_POST_RATE_LIMIT_MESSAGE = "Muitas tentativas de login em pouco tempo. Aguarde alguns minutos e tente novamente."
 LOGIN_FAILURE_LIMIT = 5
 LOGIN_FAILURE_WINDOW_SECONDS = 5 * 60
-from app.ratelimit import client_ip  # noqa: E402
 
 LOGIN_RATE_LIMIT_MESSAGE = "Muitas tentativas inválidas. Aguarde alguns minutos antes de tentar novamente."
 
@@ -34,7 +36,7 @@ _login_failures_lock = Lock()
 
 
 def _login_rate_limit_key(request: Request, email: str) -> tuple[str, str]:
-    ip = client_ip(request)
+    ip = ratelimit.client_ip(request)
     return ip, email.strip().lower()
 
 
@@ -90,6 +92,15 @@ def login_form(request: Request, db: Session = Depends(get_db)):
 def login(request: Request, email: str = Form(...), password: str = Form(...),
           db: Session = Depends(get_db)):
     email = sanitize(email, 180)
+    if ratelimit.hit(
+        "login",
+        ratelimit.client_ip(request),
+        LOGIN_POST_RATE_LIMIT,
+        LOGIN_POST_RATE_LIMIT_WINDOW_SECONDS,
+    ):
+        flash(request, LOGIN_POST_RATE_LIMIT_MESSAGE, "error")
+        return RedirectResponse("/login", status_code=303)
+
     rate_limit_key = _login_rate_limit_key(request, email)
     if is_login_rate_limited(rate_limit_key):
         flash(request, LOGIN_RATE_LIMIT_MESSAGE, "error")
