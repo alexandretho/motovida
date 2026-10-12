@@ -24,10 +24,11 @@ def test_http_log_uses_trusted_cf_ip_and_omits_query(monkeypatch, caplog):
     client = TestClient(app)
     response = client.get(
         "/robots.txt?token=segredo&password=123",
-        headers={"CF-Connecting-IP": "203.0.113.8"},
+        headers={"CF-Connecting-IP": "203.0.113.8", "X-Request-ID": "req-203_ok.8"},
     )
 
     assert response.status_code == 200
+    assert response.headers["x-request-id"] == "req-203_ok.8"
     records = http_log_records(caplog)
     assert len(records) == 1
     message = records[0].getMessage()
@@ -37,10 +38,34 @@ def test_http_log_uses_trusted_cf_ip_and_omits_query(monkeypatch, caplog):
     assert data["path"] == "/robots.txt"
     assert data["status_code"] == 200
     assert data["client_ip"] == "203.0.113.8"
+    assert data["request_id"] == "req-203_ok.8"
     assert isinstance(data["duration_ms"], float)
     assert "?" not in message
     assert "segredo" not in message
     assert "password" not in message
+
+
+def test_request_id_is_generated_when_missing(caplog):
+    caplog.set_level(logging.INFO, logger="app.http")
+
+    response = TestClient(app).get("/robots.txt")
+
+    assert response.status_code == 200
+    request_id = response.headers["x-request-id"]
+    assert len(request_id) == 32
+    assert request_id.isalnum()
+
+    records = http_log_records(caplog)
+    assert len(records) == 1
+    assert json.loads(records[0].getMessage())["request_id"] == request_id
+
+
+def test_invalid_request_id_is_not_reflected():
+    response = TestClient(app).get("/robots.txt", headers={"X-Request-ID": "id com espaco"})
+
+    assert response.status_code == 200
+    assert response.headers["x-request-id"] != "id com espaco"
+    assert len(response.headers["x-request-id"]) == 32
 
 
 def test_healthz_is_not_logged(caplog):

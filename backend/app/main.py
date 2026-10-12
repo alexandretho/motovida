@@ -4,6 +4,7 @@ import sys
 from secrets import token_urlsafe
 from time import perf_counter
 from urllib.parse import parse_qs
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -59,10 +60,31 @@ NO_STORE_PREFIXES = ("/admin", "/afiliado", "/login", "/logout", "/recuperar-sen
 NO_INDEX_PREFIXES = (*NO_STORE_PREFIXES, "/cadastro")
 SESSION_VARY_PREFIXES = (*NO_INDEX_PREFIXES, "/contato")
 BLOCKED_HTTP_METHODS = {"TRACE", "TRACK", "CONNECT"}
+REQUEST_ID_HEADER = "X-Request-ID"
+REQUEST_ID_MAX_LENGTH = 64
+REQUEST_ID_ALLOWED_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")
+
+
+def get_request_id(request: Request) -> str:
+    request_id = getattr(request.state, "request_id", None)
+    if request_id:
+        return request_id
+
+    candidate = request.headers.get(REQUEST_ID_HEADER, "").strip()
+    if (
+        candidate
+        and len(candidate) <= REQUEST_ID_MAX_LENGTH
+        and all(char in REQUEST_ID_ALLOWED_CHARS for char in candidate)
+    ):
+        request.state.request_id = candidate
+    else:
+        request.state.request_id = uuid4().hex
+    return request.state.request_id
 
 
 @app.middleware("http")
 async def log_http_requests(request: Request, call_next):
+    request_id = get_request_id(request)
     if request.url.path in ("/healthz", "/readyz"):
         return await call_next(request)
 
@@ -83,6 +105,7 @@ async def log_http_requests(request: Request, call_next):
                     "status_code": status_code,
                     "duration_ms": duration_ms,
                     "client_ip": ratelimit.client_ip(request),
+                    "request_id": request_id,
                 },
                 separators=(",", ":"),
             )
@@ -132,28 +155,33 @@ def request_body_too_large(request: Request, body: bytes | None = None) -> bool:
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
+    request_id = get_request_id(request)
     csp_nonce = token_urlsafe(16)
     request.state.csp_nonce = csp_nonce
 
     if request.method.upper() in BLOCKED_HTTP_METHODS:
         response = PlainTextResponse("", status_code=405)
+        response.headers[REQUEST_ID_HEADER] = request_id
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
         return apply_security_headers(response, request.url.path)
 
     if is_sensitive_scanner_path(request.url.path):
         response = PlainTextResponse("Not Found", status_code=404)
+        response.headers[REQUEST_ID_HEADER] = request_id
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
         return apply_security_headers(response, request.url.path)
 
     if request.method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
         if request_body_too_large(request):
             response = PlainTextResponse("Payload muito grande.", status_code=413)
+            response.headers[REQUEST_ID_HEADER] = request_id
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
             return apply_security_headers(response, request.url.path)
 
         body = await request.body()
         if request_body_too_large(request, body):
             response = PlainTextResponse("Payload muito grande.", status_code=413)
+            response.headers[REQUEST_ID_HEADER] = request_id
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
             return apply_security_headers(response, request.url.path)
 
@@ -161,6 +189,7 @@ async def add_security_headers(request: Request, call_next):
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
             response = PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
+            response.headers[REQUEST_ID_HEADER] = request_id
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
             return apply_security_headers(response, request.url.path)
 
@@ -170,6 +199,7 @@ async def add_security_headers(request: Request, call_next):
         request._receive = receive
 
     response = await call_next(request)
+    response.headers[REQUEST_ID_HEADER] = request_id
     response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
     return apply_security_headers(response, request.url.path)
 
