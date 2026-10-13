@@ -7,6 +7,34 @@ from time import monotonic
 _hits: dict[tuple[str, str], list[float]] = {}
 _lock = Lock()
 
+TRUSTED_PROXY_CIDR_PRESETS = {
+    "private": (
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "127.0.0.0/8",
+        "::1/128",
+        "fc00::/7",
+        "fe80::/10",
+    ),
+}
+
+
+def trusted_proxy_networks(value: str):
+    """Expande CIDRs/presets de proxies confiáveis em redes IP válidas."""
+    networks = []
+    for raw_entry in value.split(","):
+        entry = raw_entry.strip().lower()
+        if not entry:
+            continue
+        entries = TRUSTED_PROXY_CIDR_PRESETS.get(entry, (entry,))
+        for cidr in entries:
+            try:
+                networks.append(ipaddress.ip_network(cidr, strict=False))
+            except ValueError:
+                continue
+    return networks
+
 
 def client_ip(request) -> str:
     """IP do cliente. Confia em headers de proxy só quando habilitado e permitido."""
@@ -17,9 +45,8 @@ def client_ip(request) -> str:
             try:
                 remote_addr = ipaddress.ip_address(remote_ip)
                 trusted = any(
-                    remote_addr in ipaddress.ip_network(cidr.strip(), strict=False)
-                    for cidr in trusted_proxy_cidrs.split(",")
-                    if cidr.strip()
+                    remote_addr in network
+                    for network in trusted_proxy_networks(trusted_proxy_cidrs)
                 )
             except ValueError:
                 trusted = False
