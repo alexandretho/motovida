@@ -7,7 +7,7 @@ from urllib.parse import parse_qs
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -248,6 +248,16 @@ def readyz(db: Session = Depends(get_db)):
     except Exception:
         return JSONResponse({"status": "unavailable"}, status_code=503, headers=headers)
     return JSONResponse({"status": "ready"}, headers=headers)
+
+
+@app.head("/readyz", include_in_schema=False)
+def readyz_head(db: Session = Depends(get_db)):
+    headers = {"Cache-Control": "no-store"}
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return Response(status_code=503, headers=headers)
+    return Response(headers=headers)
 
 
 @app.on_event("startup")

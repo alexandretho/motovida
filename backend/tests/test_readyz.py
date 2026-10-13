@@ -33,6 +33,14 @@ def _get(db):
         app.dependency_overrides.clear()
 
 
+def _head(db):
+    app.dependency_overrides[get_db] = lambda: db
+    try:
+        return TestClient(app).head("/readyz")
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_readyz_ok():
     r = _get(OkDb())
     assert r.status_code == 200
@@ -45,4 +53,18 @@ def test_readyz_unavailable_without_leaking():
     assert r.status_code == 503
     assert r.json() == {"status": "unavailable"}
     assert "secret" not in r.text
+    assert r.headers["cache-control"] == "no-store"
+
+
+def test_readyz_head_ok_without_body():
+    r = _head(OkDb())
+    assert r.status_code == 200
+    assert r.text == ""
+    assert r.headers["cache-control"] == "no-store"
+
+
+def test_readyz_head_unavailable_without_body_or_leak():
+    r = _head(BrokenDb())
+    assert r.status_code == 503
+    assert r.text == ""
     assert r.headers["cache-control"] == "no-store"
