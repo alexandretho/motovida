@@ -7,6 +7,8 @@ DEFAULT_GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
 DEFAULT_MAX_FORM_BODY_BYTES = 64 * 1024
 DEFAULT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8
 LOCAL_ALLOWED_HOSTS = ("testserver", "localhost", "127.0.0.1")
+DEFAULT_SECRET_KEY = "dev-only-change-me"
+DEFAULT_ADMIN_PASSWORD = "dev-only-change-me"
 
 
 def env_flag(name: str, default: str = "0") -> bool:
@@ -75,6 +77,27 @@ def normalize_session_same_site(value: str | None, secure_cookie: bool) -> str:
     return normalized
 
 
+def runtime_config_warnings(
+    *,
+    secret_key: str,
+    admin_password: str,
+    session_cookie_secure: bool,
+    site_url: str,
+    allowed_hosts: list[str],
+) -> list[str]:
+    """Retorna alertas não bloqueantes para configurações inseguras em produção."""
+    warnings = []
+    if secret_key == DEFAULT_SECRET_KEY or len(secret_key.strip()) < 32:
+        warnings.append("SECRET_KEY deve ser trocado por um valor aleatório com pelo menos 32 caracteres.")
+    if admin_password == DEFAULT_ADMIN_PASSWORD or len(admin_password) < 12:
+        warnings.append("ADMIN_PASSWORD deve ser trocada por uma senha forte antes de usar em produção.")
+    if site_url.startswith("https://") and not session_cookie_secure:
+        warnings.append("SESSION_COOKIE_SECURE=1 é recomendado quando SITE_URL usa HTTPS.")
+    if "*" in allowed_hosts:
+        warnings.append("ALLOWED_HOSTS=* desativa a validação do header Host; restrinja em produção.")
+    return warnings
+
+
 DB_USER = os.getenv("MYSQL_USER", "motovida")
 DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 DB_HOST = os.getenv("MYSQL_HOST", "mysql")
@@ -83,7 +106,7 @@ DB_NAME = os.getenv("MYSQL_DATABASE", "motovida")
 
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-change-me")
+SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_SECRET_KEY)
 SESSION_COOKIE_SECURE = env_flag("SESSION_COOKIE_SECURE")
 SESSION_COOKIE_SAME_SITE = normalize_session_same_site(
     os.getenv("SESSION_COOKIE_SAME_SITE"),
@@ -97,7 +120,7 @@ SESSION_COOKIE_MAX_AGE_SECONDS = env_int(
 )
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.invalid")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "dev-only-change-me")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
 
 SITE_URL = normalize_site_url(env_text("SITE_URL", DEFAULT_SITE_URL))
 ALLOWED_HOSTS = allowed_hosts_from_env(os.getenv("ALLOWED_HOSTS"), SITE_URL)
@@ -105,3 +128,10 @@ GA_MEASUREMENT_ID = env_text("GA_MEASUREMENT_ID", DEFAULT_GA_MEASUREMENT_ID)
 MAX_FORM_BODY_BYTES = env_int("MAX_FORM_BODY_BYTES", DEFAULT_MAX_FORM_BODY_BYTES, minimum=1024, maximum=1024 * 1024)
 
 POLICY_VERSION = "1.0"
+RUNTIME_CONFIG_WARNINGS = runtime_config_warnings(
+    secret_key=SECRET_KEY,
+    admin_password=ADMIN_PASSWORD,
+    session_cookie_secure=SESSION_COOKIE_SECURE,
+    site_url=SITE_URL,
+    allowed_hosts=ALLOWED_HOSTS,
+)

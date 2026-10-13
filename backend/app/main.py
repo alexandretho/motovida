@@ -19,6 +19,7 @@ from . import ratelimit
 from .config import (
     ALLOWED_HOSTS,
     MAX_FORM_BODY_BYTES,
+    RUNTIME_CONFIG_WARNINGS,
     SECRET_KEY,
     SESSION_COOKIE_MAX_AGE_SECONDS,
     SESSION_COOKIE_SAME_SITE,
@@ -42,6 +43,7 @@ if not http_logger.handlers:
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("%(message)s"))
     http_logger.addHandler(handler)
+config_logger = logging.getLogger("app.config")
 
 _error_templates = Jinja2Templates(directory="app/templates")
 
@@ -250,6 +252,8 @@ def readyz(db: Session = Depends(get_db)):
 
 @app.on_event("startup")
 def startup():
+    for warning in RUNTIME_CONFIG_WARNINGS:
+        config_logger.warning("runtime_config_warning: %s", warning)
     wait_for_db()
     Base.metadata.create_all(bind=engine)
     ensure_scheduled_at_column(engine)

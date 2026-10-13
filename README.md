@@ -144,6 +144,7 @@ docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQ
 - Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)
 - `/.well-known/security.txt` e `/security.txt` publicados para divulgação responsável de vulnerabilidades, apontando para `/contato` e `/privacidade`
 - Logs HTTP estruturados em JSON no app (`event`, método, path sem query string, status, duração e IP); o access log padrão do Uvicorn fica desativado no container para evitar vazamento de query strings sensíveis
+- Alertas não bloqueantes no startup quando a configuração usa segredos padrão/fracos, cookie de sessão sem `Secure` em HTTPS ou `ALLOWED_HOSTS=*`
 - Validação de CPF (algoritmo oficial dos dígitos verificadores), e-mail e UF
 - Sanitização de entradas (remoção de caracteres de controle + limite de tamanho) e escape automático nos templates (Jinja2)
 

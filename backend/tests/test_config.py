@@ -12,6 +12,7 @@ from app.config import (  # noqa: E402
     normalize_allowed_host,
     normalize_session_same_site,
     normalize_site_url,
+    runtime_config_warnings,
 )
 
 
@@ -82,6 +83,34 @@ def test_normalize_session_same_site_falls_back_for_invalid_or_insecure_none():
     assert normalize_session_same_site("", secure_cookie=True) == "lax"
 
 
+def test_runtime_config_warnings_flags_insecure_operational_defaults():
+    warnings = runtime_config_warnings(
+        secret_key="dev-only-change-me",
+        admin_password="dev-only-change-me",
+        session_cookie_secure=False,
+        site_url="https://motovida.example.com.br",
+        allowed_hosts=["*"],
+    )
+
+    assert len(warnings) == 4
+    assert any("SECRET_KEY" in warning for warning in warnings)
+    assert any("ADMIN_PASSWORD" in warning for warning in warnings)
+    assert any("SESSION_COOKIE_SECURE=1" in warning for warning in warnings)
+    assert any("ALLOWED_HOSTS=*" in warning for warning in warnings)
+
+
+def test_runtime_config_warnings_accepts_hardened_configuration():
+    warnings = runtime_config_warnings(
+        secret_key="uma-chave-aleatoria-com-mais-de-32-caracteres",
+        admin_password="senha-admin-forte-2026",
+        session_cookie_secure=True,
+        site_url="https://motovida.example.com.br",
+        allowed_hosts=["motovida.example.com.br", "localhost"],
+    )
+
+    assert warnings == []
+
+
 def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SITE_URL", "https://instituto.example.org/")
     monkeypatch.setenv("GA_MEASUREMENT_ID", "G-TESTE123")
@@ -89,6 +118,8 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SESSION_COOKIE_SECURE", "1")
     monkeypatch.setenv("SESSION_COOKIE_SAME_SITE", "strict")
     monkeypatch.setenv("SESSION_COOKIE_MAX_AGE_SECONDS", "3600")
+    monkeypatch.setenv("SECRET_KEY", "uma-chave-aleatoria-com-mais-de-32-caracteres")
+    monkeypatch.setenv("ADMIN_PASSWORD", "senha-admin-forte-2026")
 
     reloaded = importlib.reload(config)
 
@@ -99,6 +130,7 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     assert reloaded.SESSION_COOKIE_SECURE is True
     assert reloaded.SESSION_COOKIE_SAME_SITE == "strict"
     assert reloaded.SESSION_COOKIE_MAX_AGE_SECONDS == 3600
+    assert reloaded.RUNTIME_CONFIG_WARNINGS == []
 
     monkeypatch.delenv("SITE_URL", raising=False)
     monkeypatch.delenv("ALLOWED_HOSTS", raising=False)
@@ -107,4 +139,6 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.delenv("SESSION_COOKIE_SECURE", raising=False)
     monkeypatch.delenv("SESSION_COOKIE_SAME_SITE", raising=False)
     monkeypatch.delenv("SESSION_COOKIE_MAX_AGE_SECONDS", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     importlib.reload(config)
