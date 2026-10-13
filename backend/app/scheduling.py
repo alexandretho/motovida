@@ -24,3 +24,15 @@ def ensure_scheduled_at_column(engine) -> bool:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE psychological_support ADD COLUMN scheduled_at VARCHAR(60) NULL"))
     return True
+
+
+def ensure_lgpd_consent_ip_column(engine) -> bool:
+    """Adiciona lgpd_consents.ip_address em bancos existentes (sem Alembic)."""
+    insp = inspect(engine)
+    if "lgpd_consents" not in insp.get_table_names():
+        return False
+    if "ip_address" in {c["name"] for c in insp.get_columns("lgpd_consents")}:
+        return False
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE lgpd_consents ADD COLUMN ip_address VARCHAR(45) NULL"))
+    return True

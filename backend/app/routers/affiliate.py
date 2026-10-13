@@ -130,6 +130,16 @@ def my_data(request: Request, db: Session = Depends(get_db)):
         "Cache-Control": "no-store"})
 
 
+@router.get("/consentimentos")
+def consents(request: Request, db: Session = Depends(get_db)):
+    user = require_affiliate(request, db)
+    if (r := guard(user)):
+        return r
+    items = db.query(models.LgpdConsent).filter_by(affiliate_id=user.affiliate.id)\
+        .order_by(models.LgpdConsent.accepted_at.desc()).all()
+    return templates.TemplateResponse(request, "affiliate/consentimentos.html", base_ctx(request, user, items=items))
+
+
 @router.get("/senha")
 def password_form(request: Request, db: Session = Depends(get_db)):
     user = require_affiliate(request, db)

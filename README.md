@@ -74,6 +74,7 @@ Copie `.env.example` para `.env` e preencha os segredos reais localmente. O arqu
 - `/afiliado/cursos` — listagem e inscrição em cursos
 - `/afiliado/mei` — passo a passo + solicitação de suporte especializado
 - `/afiliado/ajuda` — abertura de solicitações (tipo, prioridade, status, histórico completo)
+- `/afiliado/consentimentos` — histórico dos aceites LGPD da própria conta (versão, data/hora e IP registrado)
 
 **Painel administrativo** (`/admin` — requer login de admin)
 - Dashboard com relatórios: total de afiliados, por estado, por cidade, por profissão, solicitações por tipo/status, cursos com mais inscritos e principais demandas

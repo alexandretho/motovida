@@ -480,7 +480,12 @@ def register(
     )
     db.add(affiliate)
     db.flush()
-    db.add(models.LgpdConsent(affiliate_id=affiliate.id, accepted=True, policy_version=POLICY_VERSION))
+    db.add(models.LgpdConsent(
+        affiliate_id=affiliate.id,
+        accepted=True,
+        policy_version=POLICY_VERSION,
+        ip_address=ratelimit.client_ip(request),
+    ))
     db.commit()
 
     flash(request, "Cadastro realizado com sucesso! Entre com seu e-mail e senha.")

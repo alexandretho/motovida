@@ -54,6 +54,7 @@ class LgpdConsent(Base):
     affiliate_id = Column(Integer, ForeignKey("affiliates.id"), nullable=False)
     accepted = Column(Boolean, nullable=False, default=True)
     policy_version = Column(String(10), nullable=False)
+    ip_address = Column(String(45))
     accepted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     affiliate = relationship("Affiliate", back_populates="consents")

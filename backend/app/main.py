@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine, get_db, wait_for_db
 from .deps import base_ctx, is_valid_csrf_token
 from .routers import admin, affiliate, auth, public
-from .scheduling import ensure_scheduled_at_column
+from .scheduling import ensure_lgpd_consent_ip_column, ensure_scheduled_at_column
 from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
@@ -253,6 +253,7 @@ def startup():
     wait_for_db()
     Base.metadata.create_all(bind=engine)
     ensure_scheduled_at_column(engine)
+    ensure_lgpd_consent_ip_column(engine)
     db = SessionLocal()
     try:
         run_seeds(db)
