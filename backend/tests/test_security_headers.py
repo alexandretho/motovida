@@ -10,6 +10,7 @@ os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.main import app  # noqa: E402
+from app.config import SESSION_COOKIE_NAME  # noqa: E402
 
 client = TestClient(app)
 
@@ -34,7 +35,8 @@ def test_session_cookie_keeps_lgpd_area_session_attributes():
     r = client.get("/login")
     cookie = r.headers["set-cookie"].lower()
 
-    assert "session=" in cookie
+    assert f"{SESSION_COOKIE_NAME}=" in r.headers["set-cookie"]
+    assert not cookie.startswith("session=")
     assert "httponly" in cookie
     assert "samesite=lax" in cookie
     assert "max-age=28800" in cookie

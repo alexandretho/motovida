@@ -23,6 +23,7 @@ from .config import (
     RUNTIME_CONFIG_WARNINGS,
     SECRET_KEY,
     SESSION_COOKIE_MAX_AGE_SECONDS,
+    SESSION_COOKIE_NAME,
     SESSION_COOKIE_SAME_SITE,
     SESSION_COOKIE_SECURE,
 )
@@ -229,6 +230,7 @@ async def add_security_headers(request: Request, call_next):
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
+    session_cookie=SESSION_COOKIE_NAME,
     max_age=SESSION_COOKIE_MAX_AGE_SECONDS,
     same_site=SESSION_COOKIE_SAME_SITE,
     https_only=SESSION_COOKIE_SECURE,

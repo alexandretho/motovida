@@ -135,7 +135,7 @@ docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQ
 - Aceite LGPD obrigatório no cadastro, com **versão da política e data/hora registradas** em `lgpd_consents`
 - Política de privacidade pública em `/privacidade`
 - Rotas `/admin/*` e `/afiliado/*` protegidas por sessão assinada, com perfis separados (admin × afiliado)
-- Cookie de sessão com `HttpOnly`, `SameSite` configurável (`SESSION_COOKIE_SAME_SITE`) e duração máxima configurável (`SESSION_COOKIE_MAX_AGE_SECONDS`); em produção HTTPS use `SESSION_COOKIE_SECURE=1`
+- Cookie de sessão com nome explícito/configurável (`SESSION_COOKIE_NAME`), `HttpOnly`, `SameSite` configurável (`SESSION_COOKIE_SAME_SITE`) e duração máxima configurável (`SESSION_COOKIE_MAX_AGE_SECONDS`); em produção HTTPS use `SESSION_COOKIE_SECURE=1`
 - Headers de proxy para IP real (`CF-Connecting-IP`/`X-Forwarded-For`) só são usados com `TRUST_PROXY_HEADERS=1`; restrinja os proxies aceitos com `TRUSTED_PROXY_CIDRS` (IPs/CIDRs ou presets `private`/`cloudflare`, separados por vírgula). Para NPM/Docker, use `TRUSTED_PROXY_CIDRS=private` para aceitar apenas proxies em redes privadas/loopback. Valor vazio mantém a compatibilidade anterior.
 - URL pública (`SITE_URL`) e Google Analytics 4 (`GA_MEASUREMENT_ID`) são configuráveis por ambiente para manter sitemap, robots e templates alinhados ao domínio real
 - `ALLOWED_HOSTS` permite restringir o header `Host` aceito pela aplicação; `SITE_URL`, `testserver`, `localhost` e `127.0.0.1` são preservados para produção, testes e desenvolvimento local

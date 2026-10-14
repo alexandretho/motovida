@@ -10,6 +10,7 @@ os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.main import app  # noqa: E402
+from app.config import SESSION_COOKIE_NAME  # noqa: E402
 
 
 def csrf_token_from(response) -> str:
@@ -40,10 +41,10 @@ def test_logout_post_requires_valid_csrf_token():
 def test_logout_post_with_csrf_clears_session():
     client = TestClient(app)
     token = csrf_token_from(client.get("/login"))
-    assert client.cookies.get("session")
+    assert client.cookies.get(SESSION_COOKIE_NAME)
 
     response = client.post("/logout", data={"csrf_token": token}, follow_redirects=False)
 
     assert response.status_code == 303
     assert response.headers["location"] == "/"
-    assert client.cookies.get("session") is None
+    assert client.cookies.get(SESSION_COOKIE_NAME) is None

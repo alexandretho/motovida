@@ -6,6 +6,7 @@ DEFAULT_SITE_URL = "https://motovida.syntratech.com.br"
 DEFAULT_GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
 DEFAULT_MAX_FORM_BODY_BYTES = 64 * 1024
 DEFAULT_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8
+DEFAULT_SESSION_COOKIE_NAME = "motovida_session"
 LOCAL_ALLOWED_HOSTS = ("testserver", "localhost", "127.0.0.1")
 DEFAULT_SECRET_KEY = "dev-only-change-me"
 DEFAULT_ADMIN_PASSWORD = "dev-only-change-me"
@@ -77,6 +78,16 @@ def normalize_session_same_site(value: str | None, secure_cookie: bool) -> str:
     return normalized
 
 
+def normalize_session_cookie_name(value: str | None) -> str:
+    """Mantém o cookie de sessão com nome explícito e seguro para headers."""
+    normalized = (value or DEFAULT_SESSION_COOKIE_NAME).strip()
+    if not normalized:
+        return DEFAULT_SESSION_COOKIE_NAME
+    if not all(char.isalnum() or char in {"_", "-"} for char in normalized):
+        return DEFAULT_SESSION_COOKIE_NAME
+    return normalized
+
+
 def runtime_config_warnings(
     *,
     secret_key: str,
@@ -118,6 +129,7 @@ SESSION_COOKIE_MAX_AGE_SECONDS = env_int(
     minimum=15 * 60,
     maximum=60 * 60 * 24,
 )
+SESSION_COOKIE_NAME = normalize_session_cookie_name(os.getenv("SESSION_COOKIE_NAME"))
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.invalid")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)

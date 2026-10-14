@@ -10,6 +10,7 @@ from app.config import (  # noqa: E402
     env_flag,
     env_int,
     normalize_allowed_host,
+    normalize_session_cookie_name,
     normalize_session_same_site,
     normalize_site_url,
     runtime_config_warnings,
@@ -83,6 +84,16 @@ def test_normalize_session_same_site_falls_back_for_invalid_or_insecure_none():
     assert normalize_session_same_site("", secure_cookie=True) == "lax"
 
 
+def test_normalize_session_cookie_name_keeps_safe_explicit_name():
+    assert normalize_session_cookie_name(" minha_sessao-2026 ") == "minha_sessao-2026"
+
+
+def test_normalize_session_cookie_name_falls_back_for_header_unsafe_names():
+    assert normalize_session_cookie_name("") == "motovida_session"
+    assert normalize_session_cookie_name("sessao com espaco") == "motovida_session"
+    assert normalize_session_cookie_name("sessao; Path=/") == "motovida_session"
+
+
 def test_runtime_config_warnings_flags_insecure_operational_defaults():
     warnings = runtime_config_warnings(
         secret_key="dev-only-change-me",
@@ -118,6 +129,7 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SESSION_COOKIE_SECURE", "1")
     monkeypatch.setenv("SESSION_COOKIE_SAME_SITE", "strict")
     monkeypatch.setenv("SESSION_COOKIE_MAX_AGE_SECONDS", "3600")
+    monkeypatch.setenv("SESSION_COOKIE_NAME", "sessao_motovida")
     monkeypatch.setenv("SECRET_KEY", "uma-chave-aleatoria-com-mais-de-32-caracteres")
     monkeypatch.setenv("ADMIN_PASSWORD", "senha-admin-forte-2026")
 
@@ -130,6 +142,7 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     assert reloaded.SESSION_COOKIE_SECURE is True
     assert reloaded.SESSION_COOKIE_SAME_SITE == "strict"
     assert reloaded.SESSION_COOKIE_MAX_AGE_SECONDS == 3600
+    assert reloaded.SESSION_COOKIE_NAME == "sessao_motovida"
     assert reloaded.RUNTIME_CONFIG_WARNINGS == []
 
     monkeypatch.delenv("SITE_URL", raising=False)
@@ -139,6 +152,7 @@ def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.delenv("SESSION_COOKIE_SECURE", raising=False)
     monkeypatch.delenv("SESSION_COOKIE_SAME_SITE", raising=False)
     monkeypatch.delenv("SESSION_COOKIE_MAX_AGE_SECONDS", raising=False)
+    monkeypatch.delenv("SESSION_COOKIE_NAME", raising=False)
     monkeypatch.delenv("SECRET_KEY", raising=False)
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     importlib.reload(config)

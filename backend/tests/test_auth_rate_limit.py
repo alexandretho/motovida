@@ -15,6 +15,7 @@ from app.main import app  # noqa: E402
 from app import models  # noqa: E402
 from app.routers import auth  # noqa: E402
 from app.security import DUMMY_PASSWORD_HASH, hash_password  # noqa: E402
+from app.config import SESSION_COOKIE_NAME  # noqa: E402
 
 
 def setup_function():
@@ -231,7 +232,7 @@ def test_successful_login_invalidates_pre_login_csrf_token():
     try:
         response = client.get("/login")
         csrf_token = csrf_token_from(response)
-        old_session_cookie = client.cookies.get("session")
+        old_session_cookie = client.cookies.get(SESSION_COOKIE_NAME)
 
         response = client.post(
             "/login",
@@ -245,7 +246,7 @@ def test_successful_login_invalidates_pre_login_csrf_token():
 
         assert response.status_code == 303
         assert response.headers["location"] == "/afiliado"
-        assert client.cookies.get("session") != old_session_cookie
+        assert client.cookies.get(SESSION_COOKIE_NAME) != old_session_cookie
 
         response = client.post(
             "/contato",
