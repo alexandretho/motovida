@@ -46,6 +46,30 @@ def test_preset_private_inclui_loopback_e_redes_privadas():
     assert any(ipaddress.ip_address("fc00::1") in network for network in networks)
 
 
+def test_preset_cloudflare_inclui_cidrs_oficiais_ipv4_e_ipv6():
+    networks = trusted_proxy_networks("cloudflare")
+
+    assert len(networks) == 22
+    assert any(ipaddress.ip_address("173.245.48.1") in network for network in networks)
+    assert any(ipaddress.ip_address("104.16.0.1") in network for network in networks)
+    assert any(ipaddress.ip_address("172.64.0.1") in network for network in networks)
+    assert any(ipaddress.ip_address("2400:cb00::1") in network for network in networks)
+    assert any(ipaddress.ip_address("2a06:98c0::1") in network for network in networks)
+
+
+def test_usa_headers_quando_proxy_remoto_esta_em_preset_cloudflare(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "cloudflare")
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="173.245.48.10")) == "203.0.113.8"
+
+
+def test_presets_private_e_cloudflare_podem_ser_combinados(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "private,cloudflare")
+    assert client_ip(req({"x-forwarded-for": "203.0.113.9"}, host="172.18.0.5")) == "203.0.113.9"
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="2606:4700::1")) == "203.0.113.8"
+
+
 def test_cidrs_invalidos_sao_ignorados_sem_invalidar_lista(monkeypatch):
     monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "cidr-invalido, 10.0.0.0/24")
