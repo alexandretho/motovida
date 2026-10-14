@@ -11,6 +11,7 @@ os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.main import app  # noqa: E402
+from app.main import anonymize_ip_for_log  # noqa: E402
 
 
 def http_log_records(caplog):
@@ -37,12 +38,19 @@ def test_http_log_uses_trusted_cf_ip_and_omits_query(monkeypatch, caplog):
     assert data["method"] == "GET"
     assert data["path"] == "/robots.txt"
     assert data["status_code"] == 200
-    assert data["client_ip"] == "203.0.113.8"
+    assert data["client_ip"] == "203.0.113.0"
     assert data["request_id"] == "req-203_ok.8"
     assert isinstance(data["duration_ms"], float)
     assert "?" not in message
     assert "segredo" not in message
     assert "password" not in message
+    assert "203.0.113.8" not in message
+
+
+def test_anonymize_ip_for_log_masks_ipv4_and_ipv6():
+    assert anonymize_ip_for_log("203.0.113.8") == "203.0.113.0"
+    assert anonymize_ip_for_log("2001:db8:abcd:1234::42") == "2001:db8:abcd::"
+    assert anonymize_ip_for_log("unknown") == "unknown"
 
 
 def test_request_id_is_generated_when_missing(caplog):

@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from ipaddress import ip_address, ip_network
 from secrets import token_urlsafe
 from time import perf_counter
 from urllib.parse import parse_qs
@@ -93,6 +94,16 @@ def get_request_id(request: Request) -> str:
     return request.state.request_id
 
 
+def anonymize_ip_for_log(value: str) -> str:
+    try:
+        ip = ip_address(value)
+    except ValueError:
+        return "unknown"
+
+    prefix = 24 if ip.version == 4 else 48
+    return str(ip_network(f"{ip}/{prefix}", strict=False).network_address)
+
+
 @app.middleware("http")
 async def log_http_requests(request: Request, call_next):
     request_id = get_request_id(request)
@@ -115,7 +126,7 @@ async def log_http_requests(request: Request, call_next):
                     "path": request.url.path,
                     "status_code": status_code,
                     "duration_ms": duration_ms,
-                    "client_ip": ratelimit.client_ip(request),
+                    "client_ip": anonymize_ip_for_log(ratelimit.client_ip(request)),
                     "request_id": request_id,
                 },
                 separators=(",", ":"),
