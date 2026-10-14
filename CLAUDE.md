@@ -45,4 +45,4 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
 9. Paginação admin implementada
 10. LGPD: afiliado baixa seus dados em JSON em `/afiliado/meus-dados` (`app/data_export.py`)
-11. App nunca foi executado de ponta a ponta com Docker — validar o primeiro `docker compose up --build` e corrigir eventuais erros de runtime
+11. App já roda em Docker (container `motovida-app` healthy, porta privada Tailscale 9205); smoke de `/healthz`, `/readyz`, `/robots.txt`, `/favicon.ico`, `/sitemap.xml` e bloqueio de scanners (`/.env`, `/.git/*`, `/wp-*`, `/xmlrpc.php`) validado em 14/10/2026. Atenção: o header Host precisa estar em `ALLOWED_HOSTS`/`SITE_URL` (use `Host: localhost` em smoke local)
