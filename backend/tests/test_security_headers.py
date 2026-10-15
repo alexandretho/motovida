@@ -19,6 +19,7 @@ def test_hsts_present_on_public_route():
     r = client.get("/robots.txt")
     assert r.headers["strict-transport-security"] == "max-age=31536000"
     assert r.headers["cross-origin-opener-policy"] == "same-origin"
+    assert r.headers["cross-origin-resource-policy"] == "same-origin"
     assert r.headers["x-permitted-cross-domain-policies"] == "none"
     assert "no-store" not in r.headers.get("cache-control", "")
 
