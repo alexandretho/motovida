@@ -139,6 +139,8 @@ def test_legitimate_public_route_is_preserved():
         "/private/config.php.old",
         "/docker-compose.yml.orig",
         "/wp-login.php.backup",
+        "/wp-config.php.bak",
+        "/xmlrpc.php.old",
         "/info.php.bak",
         "/test.php.old",
     ],
