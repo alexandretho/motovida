@@ -92,6 +92,8 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "package.json",
     "php_info.php",
     "phpinfo.php",
+    "info.php",
+    "test.php",
     "secrets.json",
     "settings.py",
     "web.config",

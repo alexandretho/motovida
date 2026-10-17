@@ -57,6 +57,9 @@ client = TestClient(app)
         "/xmlrpc.php",
         "/phpinfo.php",
         "/php_info.php",
+        "/info.php",
+        "/test.php",
+        "/nested/info.php",
         "/i.php",
         "/adminer.php",
         "/phpmyadmin/index.php",
@@ -136,6 +139,8 @@ def test_legitimate_public_route_is_preserved():
         "/private/config.php.old",
         "/docker-compose.yml.orig",
         "/wp-login.php.backup",
+        "/info.php.bak",
+        "/test.php.old",
     ],
 )
 def test_sensitive_scanner_backup_variants_are_blocked(path):
@@ -162,6 +167,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/eventos.tmp",
         "/parceiros.backup",
         "/contato~",
+        "/user.php",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
