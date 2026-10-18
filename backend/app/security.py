@@ -118,7 +118,9 @@ SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
 def normalize_scanner_path(path: str) -> str:
     """Normaliza variações comuns usadas por scanners antes do bloqueio."""
     normalized = f"/{path.lstrip('/')}".replace("\\", "/")
-    for _ in range(2):
+    # Repeated encoding is common in scanner evasion probes. Keep decoding
+    # bounded, but continue until stable so triple-encoded paths are covered.
+    for _ in range(5):
         decoded = unquote(normalized)
         if decoded == normalized:
             break
