@@ -51,6 +51,7 @@ SENSITIVE_SCANNER_PREFIXES = frozenset({
     "/wp-admin",
     "/wp-content",
     "/wp-includes",
+    "/wp-json",
 })
 
 SENSITIVE_SCANNER_SEGMENTS = frozenset({
@@ -98,6 +99,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "settings.py",
     "web.config",
     "wp-config.php",
+    "wp-cron.php",
     "wp-login.php",
     "xmlrpc.php",
     "yarn.lock",
