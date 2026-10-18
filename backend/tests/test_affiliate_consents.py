@@ -102,10 +102,10 @@ def test_affiliate_sees_only_own_lgpd_consents():
         response = client.get("/afiliado/consentimentos")
         assert response.status_code == 200
         assert "Consentimentos LGPD" in response.text
-        assert "v1" in response.text
+        assert "<td>v1</td>" in response.text
         assert "01/01/2026 12:30" in response.text
         assert "203.0.113.10" in response.text
-        assert "v2" not in response.text
+        assert "<td>v2</td>" not in response.text
         assert "198.51.100.20" not in response.text
     finally:
         db.close()
