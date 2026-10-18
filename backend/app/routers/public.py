@@ -279,7 +279,7 @@ def partners_page(request: Request, db: Session = Depends(get_db)):
 def events_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     events = db.query(models.Event).filter_by(active=True)\
-        .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc()).all()
+        .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc(), models.Event.id.asc()).all()
     return templates.TemplateResponse(request, "public/eventos.html", base_ctx(request, user, events=events))
 
 

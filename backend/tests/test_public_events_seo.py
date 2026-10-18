@@ -45,6 +45,14 @@ def seeded_client():
             event_date=datetime(2026, 12, 1, 10, 0),
             active=False,
         ),
+        models.Event(
+            id=12,
+            title="Outro mutirão",
+            description="Evento na mesma data para validar desempate estável.",
+            event_date=datetime(2026, 11, 5, 9, 30),
+            location="Londrina/PR",
+            active=True,
+        ),
     ])
     db.commit()
     db.close()
@@ -89,3 +97,11 @@ def test_inactive_event_detail_returns_404(seeded_client):
     response = seeded_client.get("/eventos/11")
 
     assert response.status_code == 404
+
+
+def test_events_page_breaks_equal_date_ties_by_id(seeded_client):
+    response = seeded_client.get("/eventos")
+
+    assert response.status_code == 200
+    assert response.text.index("Mutirão de atendimento") < response.text.index("Outro mutirão")
+    assert "Evento desativado" not in response.text
