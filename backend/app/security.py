@@ -117,6 +117,18 @@ SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
 )
 
 
+def is_sensitive_scanner_prefix(path: str) -> bool:
+    for prefix in SENSITIVE_SCANNER_PREFIXES:
+        if path == prefix or path.startswith(f"{prefix}/"):
+            return True
+        if any(
+            path == f"{prefix}{suffix}" or path.startswith(f"{prefix}{suffix}/")
+            for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
+        ):
+            return True
+    return False
+
+
 def normalize_scanner_path(path: str) -> str:
     """Normaliza variações comuns usadas por scanners antes do bloqueio."""
     normalized = f"/{path.lstrip('/')}".replace("\\", "/")
@@ -174,10 +186,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if any(is_sensitive_scanner_filename(segment) for segment in segments):
         return True
 
-    return any(
-        normalized_path == prefix or normalized_path.startswith(f"{prefix}/")
-        for prefix in SENSITIVE_SCANNER_PREFIXES
-    )
+    return is_sensitive_scanner_prefix(normalized_path)
 
 
 def hash_password(password: str) -> str:

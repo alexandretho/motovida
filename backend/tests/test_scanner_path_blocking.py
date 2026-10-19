@@ -107,6 +107,11 @@ client = TestClient(app)
         "/.kube/config",
         "/.terraform/terraform.tfstate",
         "/storage/logs/laravel.log",
+        "/.git.bak/config",
+        "/%2e%67it%2ebak/config",
+        "/.git\\.bak\\config",
+        "/wp-admin.old/setup-config.php",
+        "/vendor.backup/.env",
     ],
 )
 def test_common_scanner_paths_are_blocked(path):
@@ -179,6 +184,9 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/parceiros.backup",
         "/contato~",
         "/user.php",
+        "/parceiros.bak",
+        "/eventos.old",
+        "/contato.backup",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
