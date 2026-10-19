@@ -35,6 +35,15 @@ def is_valid_email(email: str) -> bool:
     return bool(EMAIL_RE.match(email or ""))
 
 
+def is_valid_phone(phone: str) -> bool:
+    """Aceita telefone nacional ou internacional com 10 a 15 dígitos."""
+    phone = phone or ""
+    if not re.fullmatch(r"[+()\d.\s-]+", phone):
+        return False
+    digits = re.sub(r"\D", "", phone)
+    return 10 <= len(digits) <= 15
+
+
 def is_valid_uf(uf: str) -> bool:
     return (uf or "").upper() in UFS
 

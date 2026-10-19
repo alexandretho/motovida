@@ -11,7 +11,7 @@ from ..data_export import build_affiliate_export, export_json_bytes
 from ..deps import base_ctx, flash, get_current_user
 from ..security import hash_password, verify_password
 from ..support_history import add_specialized_history
-from ..validators import format_cpf, is_valid_uf, sanitize
+from ..validators import format_cpf, is_valid_phone, is_valid_uf, sanitize
 
 router = APIRouter(prefix="/afiliado")
 templates = Jinja2Templates(directory="app/templates")
@@ -77,8 +77,12 @@ def profile_update(
     errors = []
     if len(form["full_name"]) < 5:
         errors.append("Informe o nome completo.")
-    if not form["phone"] or not form["whatsapp"] or not form["city"]:
-        errors.append("Preencha telefone, WhatsApp e cidade.")
+    if not form["city"]:
+        errors.append("Preencha a cidade.")
+    if not is_valid_phone(form["phone"]):
+        errors.append("Informe um telefone válido, com 10 a 15 dígitos.")
+    if not is_valid_phone(form["whatsapp"]):
+        errors.append("Informe um WhatsApp válido, com 10 a 15 dígitos.")
     if not is_valid_uf(form["state"]):
         errors.append("Selecione um estado (UF) válido.")
     if form["profession"] not in models.PROFESSIONS:
