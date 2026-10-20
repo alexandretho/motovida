@@ -153,6 +153,9 @@ client = TestClient(app)
         "/.git%2fconfig",
         "/wp-admin%2fsetup-config.php",
         "/foo/../.env",
+        "/public/../.env",
+        "/public/%2e%2e/.git/config",
+        "/public/%252e%252e/wp-admin/setup-config.php",
     ],
 )
 def test_common_scanner_paths_are_blocked(path):
@@ -237,6 +240,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/parceiros.bak",
         "/eventos.old",
         "/contato.backup",
+        "/public/../eventos",
+        "/public/%2e%2e/contato",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):

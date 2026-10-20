@@ -155,6 +155,18 @@ def normalize_scanner_path(path: str) -> str:
         normalized = decoded
     while "//" in normalized:
         normalized = normalized.replace("//", "/")
+    # Collapse dot segments after decoding so traversal probes are checked
+    # against the same path that a typical proxy or web server would resolve.
+    segments = []
+    for segment in normalized.split("/"):
+        if not segment or segment == ".":
+            continue
+        if segment == "..":
+            if segments:
+                segments.pop()
+            continue
+        segments.append(segment)
+    normalized = "/" + "/".join(segments)
     return normalized.lower()
 
 
