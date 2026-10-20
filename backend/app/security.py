@@ -159,6 +159,16 @@ def normalize_scanner_path(path: str) -> str:
 
 
 def is_sensitive_scanner_filename(filename: str) -> bool:
+    # phpinfo is probed with and without a PHP extension, sometimes with a
+    # numeric suffix (for example phpinfo7.php). Keep the match specific to
+    # that probe family so ordinary names such as /info.php stay available.
+    phpinfo_stem = filename.split(".", 1)[0]
+    if phpinfo_stem == "phpinfo" or (
+        phpinfo_stem.startswith("phpinfo")
+        and phpinfo_stem[len("phpinfo"):].isdigit()
+    ):
+        return True
+
     if filename in SENSITIVE_SCANNER_FILENAMES:
         return True
 
