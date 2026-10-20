@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /afiliado/
+Disallow: /recuperar-senha
+Allow: /eventos/
+Allow: /
+Sitemap: https://motovida.syntratech.com.br/sitemap.xml
