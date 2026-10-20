@@ -162,12 +162,20 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     # phpinfo is probed with and without a PHP extension, sometimes with a
     # numeric suffix (for example phpinfo7.php). Keep the match specific to
     # that probe family so ordinary names such as /info.php stay available.
-    phpinfo_stem = filename.split(".", 1)[0]
+    candidate = filename
+    for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES:
+        if candidate.endswith(suffix):
+            candidate = candidate[: -len(suffix)]
+            break
+
+    phpinfo_stem, separator, extension = candidate.partition(".")
     if phpinfo_stem == "phpinfo" or (
         phpinfo_stem.startswith("phpinfo")
         and phpinfo_stem[len("phpinfo"):].isdigit()
     ):
-        return True
+        # Scanners try several executable PHP extensions and occasionally
+        # encode the dot. The path is decoded before this function is called.
+        return not separator or extension in {"php", "php3", "php4", "php5", "php7", "phtml", "phar"}
 
     if filename in SENSITIVE_SCANNER_FILENAMES:
         return True
