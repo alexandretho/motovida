@@ -21,6 +21,9 @@ client = TestClient(app)
     [
         "/.env",
         "/.env.local",
+        "/.env.*",
+        "/.env.production",
+        "/.env.development.local",
         "/.envrc",
         "/vendor/.env",
         "/app/.env.production",
@@ -32,6 +35,8 @@ client = TestClient(app)
         "/.svn/entries",
         "/.hg/store",
         "/.git/config",
+        "/.git/HEAD",
+        "/.git/objects/info/packs",
         "/%2eenv",
         "/%252eenv.production",
         "/%25252eenv",
@@ -52,6 +57,9 @@ client = TestClient(app)
         "/yarn.lock",
         "/telescope/requests",
         "/wp-admin/setup-config.php",
+        "/wp-admin/",
+        "/wp-admin/admin-ajax.php",
+        "/wp-admin/install.php",
         "/wp-content/plugins/revslider/readme.txt",
         "/wp-includes/wlwmanifest.xml",
         "/wp-json",
@@ -60,7 +68,9 @@ client = TestClient(app)
         "/wp-login.php",
         "/wp-config.php",
         "/xmlrpc.php",
+        "/xmlrpc.php?rsd",
         "/phpinfo.php",
+        "/phpinfo.php/",
         "/phpinfo.php3",
         "/phpinfo.phtml",
         "/php-info.php",
@@ -124,6 +134,12 @@ client = TestClient(app)
         "/.git\\.bak\\config",
         "/wp-admin.old/setup-config.php",
         "/vendor.backup/.env",
+        # Common path normalization and traversal probes must reach the same
+        # generic 404 before any route can disclose application content.
+        "/%2eenv.production",
+        "/.git%2fconfig",
+        "/wp-admin%2fsetup-config.php",
+        "/foo/../.env",
     ],
 )
 def test_common_scanner_paths_are_blocked(path):
