@@ -147,8 +147,8 @@ def normalize_scanner_path(path: str) -> str:
     """Normaliza variações comuns usadas por scanners antes do bloqueio."""
     normalized = f"/{path.lstrip('/')}".replace("\\", "/")
     # Repeated encoding is common in scanner evasion probes. Keep decoding
-    # bounded, but continue until stable so triple-encoded paths are covered.
-    for _ in range(5):
+    # bounded, but continue until stable so nested-encoded paths are covered.
+    for _ in range(16):
         decoded = unquote(normalized)
         if decoded == normalized:
             break
@@ -187,7 +187,7 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     ):
         # Scanners try several executable PHP extensions and occasionally
         # encode the dot. The path is decoded before this function is called.
-        return not separator or extension in {"php", "php3", "php4", "php5", "php7", "phtml", "phar"}
+        return not separator or extension in {"php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar"}
 
     if filename in SENSITIVE_SCANNER_FILENAMES:
         return True
@@ -203,6 +203,13 @@ def is_sensitive_scanner_segment(segment: str) -> bool:
     if any(
         segment == sensitive or segment.startswith(f"{sensitive}.")
         for sensitive in SENSITIVE_SCANNER_SEGMENTS
+    ):
+        return True
+
+    if segment in {".gitmodules", ".gitconfig"} or any(
+        segment.endswith(suffix)
+        and segment[: -len(suffix)] in {".gitmodules", ".gitconfig"}
+        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
     ):
         return True
 
