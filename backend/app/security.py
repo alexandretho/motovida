@@ -4,6 +4,7 @@ import os
 from urllib.parse import unquote
 
 ITERATIONS = 260_000
+MAX_SCANNER_PATH_DECODE_PASSES = 16
 
 SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
     "/composer.json",
@@ -163,11 +164,16 @@ def normalize_scanner_path(path: str) -> str:
     normalized = f"/{path.lstrip('/')}".replace("\\", "/")
     # Repeated encoding is common in scanner evasion probes. Keep decoding
     # bounded, but continue until stable so nested-encoded paths are covered.
-    for _ in range(16):
+    for _ in range(MAX_SCANNER_PATH_DECODE_PASSES):
         decoded = unquote(normalized)
         if decoded == normalized:
             break
         normalized = decoded
+    # Do not let the decode limit turn a still-encoded probe into an ordinary
+    # route. The caller blocks these paths; preserving the marker also avoids
+    # accidentally treating arbitrary percent text as a sensitive filename.
+    if "%" in normalized:
+        return normalized + "/__encoded_path_depth_exceeded__"
     while "//" in normalized:
         normalized = normalized.replace("//", "/")
     # Collapse dot segments after decoding so traversal probes are checked
@@ -252,6 +258,8 @@ def is_sensitive_scanner_segment(segment: str) -> bool:
 
 def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = normalize_scanner_path(path)
+    if normalized_path.endswith("/__encoded_path_depth_exceeded__"):
+        return True
     segments = [segment.split(";", 1)[0] for segment in normalized_path.split("/") if segment]
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:

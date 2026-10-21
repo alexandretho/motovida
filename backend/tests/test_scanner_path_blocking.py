@@ -43,6 +43,7 @@ client = TestClient(app)
         "/%252eenv.production",
         "/%25252eenv",
         "/%2525252525252525252eenv",
+        "/" + "%252525" * 17 + "env",
         "/%2e%67it/config",
         "/%252e%2567it/config",
         "/.vscode/sftp.json",
