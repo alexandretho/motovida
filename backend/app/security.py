@@ -21,6 +21,16 @@ SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
     "/phpversion.php",
     "/test.phpinfo",
     "/i.php",
+    "/phpinfo7.php",
+    "/phpinfo8.php",
+    "/phpinfo9.php",
+    "/phpinf.php",
+    "/phpinf.php3",
+    "/phpinf.phtml",
+    "/phpinf-info.php",
+    "/phpinf_info.php",
+    "/phpinfversion.php",
+    "/phpinf.php",
 })
 
 SENSITIVE_SCANNER_PREFIXES = frozenset({
