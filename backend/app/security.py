@@ -196,9 +196,16 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     # numeric suffix (for example phpinfo7.php). Keep the match specific to
     # that probe family so ordinary names such as /info.php stay available.
     candidate = filename
-    for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES:
-        if candidate.endswith(suffix):
-            candidate = candidate[: -len(suffix)]
+    # Backup suffixes are often stacked by scanners or deployment tooling
+    # (for example phpinfo.php.bak.old). Strip the whole chain before checking
+    # the known probe families; this remains filename-specific and does not
+    # match descriptive or unrelated route names.
+    while True:
+        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES:
+            if candidate.endswith(suffix):
+                candidate = candidate[: -len(suffix)]
+                break
+        else:
             break
 
     # These short phpinfo aliases are common scanner probes. Accept the same
