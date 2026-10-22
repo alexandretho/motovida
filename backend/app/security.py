@@ -211,10 +211,10 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     # These short phpinfo aliases are common scanner probes. Accept the same
     # PHP extension variants and numeric suffixes as the phpinfo family above.
     phpinfo_alias, alias_separator, alias_extension = candidate.partition(".")
-    if phpinfo_alias in {"php_info", "i"} or (
-        phpinfo_alias.startswith("php_info")
-        and phpinfo_alias[len("php_info"):].isdigit()
-    ) or (phpinfo_alias.startswith("i") and phpinfo_alias[1:].isdigit()):
+    if phpinfo_alias in {"php_info", "phpinf", "i"} or any(
+        phpinfo_alias.startswith(prefix) and phpinfo_alias[len(prefix):].isdigit()
+        for prefix in ("php_info", "phpinf", "i")
+    ):
         return not alias_separator or alias_extension in {
             "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar"
         }
