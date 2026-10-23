@@ -190,6 +190,17 @@ def test_common_scanner_paths_are_blocked(path):
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+@pytest.mark.parametrize("path", ["/phpinfo.php", "/php_info.php", "/i.php"])
+def test_phpinfo_scanner_aliases_return_generic_not_found(path):
+    response = client.get(path, headers={"accept": "text/html"})
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert "Página não encontrada" not in response.text
+    assert "Traceback" not in response.text
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
 def test_legitimate_public_route_is_preserved():
     response = client.get("/robots.txt")
 
