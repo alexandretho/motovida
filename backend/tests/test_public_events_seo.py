@@ -53,6 +53,14 @@ def seeded_client():
             location="Londrina/PR",
             active=True,
         ),
+        models.Event(
+            id=13,
+            title="Data a confirmar",
+            description="Evento ativo ainda sem data definida.",
+            event_date=None,
+            location="Campinas/SP",
+            active=True,
+        ),
     ])
     db.commit()
     db.close()
@@ -78,6 +86,7 @@ def test_sitemap_includes_active_event_detail_and_lastmod(seeded_client):
     assert response.status_code == 200
     assert "<loc>https://motovida.syntratech.com.br/eventos</loc>" in response.text
     assert "<loc>https://motovida.syntratech.com.br/eventos/10</loc>" in response.text
+    assert "<loc>https://motovida.syntratech.com.br/eventos/13</loc>" in response.text
     assert "<lastmod>2026-11-05</lastmod>" in response.text
     assert "/eventos/11" not in response.text
     assert response.headers["content-type"].startswith("application/xml")
