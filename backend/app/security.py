@@ -270,7 +270,11 @@ def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = normalize_scanner_path(path)
     if normalized_path.endswith("/__encoded_path_depth_exceeded__"):
         return True
-    segments = [segment.split(";", 1)[0] for segment in normalized_path.split("/") if segment]
+    segments = [
+        segment.split(";", 1)[0]
+        for segment in normalized_path.split("/")
+        if segment
+    ]
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True

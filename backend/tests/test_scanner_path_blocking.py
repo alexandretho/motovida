@@ -45,6 +45,12 @@ client = TestClient(app)
         "/.env%3f",
         "/.env%3fanything",
         "/wp-admin%3f/setup-config.php",
+        # Path parameters can be ignored by upstream servers when resolving
+        # sensitive files, so the normalized base filename must still block.
+        "/config.php;anything",
+        "/composer.json;jsessionid=probe",
+        "/wp-login.php;anything",
+        "/backup.zip;download=1",
         "/%2525252525252525252eenv",
         "/" + "%252525" * 17 + "env",
         "/%2e%67it/config",
@@ -293,6 +299,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/contato.backup",
         "/public/../eventos",
         "/public/%2e%2e/contato",
+        "/parceiros;view=compact",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
