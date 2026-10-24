@@ -4,6 +4,8 @@ import os
 from threading import Lock
 from time import monotonic
 
+from .config import env_flag
+
 _hits: dict[tuple[str, str], list[float]] = {}
 _lock = Lock()
 
@@ -63,7 +65,7 @@ def trusted_proxy_networks(value: str):
 def client_ip(request) -> str:
     """IP do cliente. Confia em headers de proxy só quando habilitado e permitido."""
     remote_ip = request.client.host if request.client else "unknown"
-    if os.getenv("TRUST_PROXY_HEADERS") == "1":
+    if env_flag("TRUST_PROXY_HEADERS"):
         trusted_proxy_cidrs = os.getenv("TRUSTED_PROXY_CIDRS", "").strip()
         if trusted_proxy_cidrs:
             try:

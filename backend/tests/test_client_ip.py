@@ -24,6 +24,13 @@ def test_usa_headers_com_flag_sem_cidrs_para_compatibilidade(monkeypatch):
     assert client_ip(req({"x-forwarded-for": "5.6.7.8, 9.9.9.9"})) == "5.6.7.8"
 
 
+def test_flag_proxy_aceita_formatos_booleanos_do_config(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", " true ")
+    monkeypatch.delenv("TRUSTED_PROXY_CIDRS", raising=False)
+
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"})) == "203.0.113.8"
+
+
 def test_usa_cf_quando_proxy_remoto_esta_em_cidr_confiavel(monkeypatch):
     monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/24, 192.0.2.10")
@@ -74,6 +81,13 @@ def test_cidrs_invalidos_sao_ignorados_sem_invalidar_lista(monkeypatch):
     monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "cidr-invalido, 10.0.0.0/24")
     assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="10.0.0.42")) == "203.0.113.8"
+
+
+def test_cidrs_configurados_sem_entradas_validas_nao_habilitam_headers(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "yes")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "cidr-invalido")
+
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="10.0.0.42")) == "10.0.0.42"
 
 
 def test_ignora_spoof_quando_proxy_remoto_fora_dos_cidrs(monkeypatch):
