@@ -169,6 +169,9 @@ def normalize_scanner_path(path: str) -> str:
         if decoded == normalized:
             break
         normalized = decoded
+    # A decoded question mark begins the query string to ASGI servers; ignore
+    # that suffix so scanner probes cannot hide a sensitive path behind it.
+    normalized = normalized.split("?", 1)[0]
     # Do not let the decode limit turn a still-encoded probe into an ordinary
     # route. The caller blocks these paths; preserving the marker also avoids
     # accidentally treating arbitrary percent text as a sensitive filename.
