@@ -275,6 +275,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
         for segment in normalized_path.split("/")
         if segment
     ]
+    path_without_parameters = "/" + "/".join(segments)
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
@@ -285,7 +286,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if any(is_sensitive_scanner_filename(segment) for segment in segments):
         return True
 
-    return is_sensitive_scanner_prefix(normalized_path)
+    return is_sensitive_scanner_prefix(path_without_parameters)
 
 
 def hash_password(password: str) -> str:

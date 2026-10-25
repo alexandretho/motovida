@@ -45,6 +45,7 @@ client = TestClient(app)
         "/.env%3f",
         "/.env%3fanything",
         "/wp-admin%3f/setup-config.php",
+        "/wp-admin;view=compact/setup-config.php",
         # Path parameters can be ignored by upstream servers when resolving
         # sensitive files, so the normalized base filename must still block.
         "/config.php;anything",
