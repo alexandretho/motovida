@@ -166,6 +166,9 @@ def normalize_scanner_path(path: str) -> str:
     # bounded, but continue until stable so nested-encoded paths are covered.
     for _ in range(MAX_SCANNER_PATH_DECODE_PASSES):
         decoded = unquote(normalized)
+        # A percent-encoded backslash can become a path separator only after
+        # decoding (including nested encoding). Normalize it on every pass.
+        decoded = decoded.replace("\\", "/")
         if decoded == normalized:
             break
         normalized = decoded

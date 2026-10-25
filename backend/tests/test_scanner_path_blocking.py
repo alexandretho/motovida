@@ -152,6 +152,11 @@ client = TestClient(app)
         "/local_settings.py",
         "/web.config",
         "/foo%5c.env",
+        # Encoded backslashes can become separators after URL decoding.
+        "/foo/%2e%2e%5c.env",
+        "/foo/%252e%252e%255c.git/config",
+        "/foo/%2e%2e%5cphpinfo.php",
+        "/foo/%252e%252e%255ci.php",
         "/tmp/backup.zip",
         "/tmp/dump.sql.gz",
         "/private/config.php",
@@ -200,7 +205,16 @@ def test_common_scanner_paths_are_blocked(path):
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
-@pytest.mark.parametrize("path", ["/phpinfo.php", "/php_info.php", "/i.php"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/phpinfo.php",
+        "/php_info.php",
+        "/i.php",
+        "/foo/%2e%2e%5cphpinfo.php",
+        "/foo/%252e%252e%255ci.php",
+    ],
+)
 def test_phpinfo_scanner_aliases_return_generic_not_found(path):
     response = client.get(path, headers={"accept": "text/html"})
 
