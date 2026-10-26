@@ -190,6 +190,12 @@ client = TestClient(app)
         "/%2eenv.production",
         "/.git%2fconfig",
         "/wp-admin%2fsetup-config.php",
+        # Mixed literal/encoded dots are accepted by some proxy normalizers
+        # as dot segments and must not bypass the scanner path check.
+        "/public/.%2e/.env",
+        "/public/%2e./.git/config",
+        "/public/.%2e/wp-admin/setup-config.php",
+        "/public/%2e./phpinfo.php",
         "/foo/../.env",
         "/public/../.env",
         "/public/%2e%2e/.git/config",
@@ -314,6 +320,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/contato.backup",
         "/public/../eventos",
         "/public/%2e%2e/contato",
+        "/public/.%2e/contato",
+        "/public/%2e./eventos",
         "/parceiros;view=compact",
     ],
 )
