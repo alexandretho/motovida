@@ -222,7 +222,7 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         for prefix in ("php_info", "phpinf", "i")
     ):
         return not alias_separator or alias_extension in {
-            "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar"
+            "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar", "phps"
         }
 
     phpinfo_stem, separator, extension = candidate.partition(".")
@@ -232,7 +232,9 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     ):
         # Scanners try several executable PHP extensions and occasionally
         # encode the dot. The path is decoded before this function is called.
-        return not separator or extension in {"php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar"}
+        return not separator or extension in {
+            "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar", "phps"
+        }
 
     if filename in SENSITIVE_SCANNER_FILENAMES:
         return True
