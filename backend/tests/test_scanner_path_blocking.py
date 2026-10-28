@@ -98,6 +98,7 @@ client = TestClient(app)
         "/phpinfo9.php8",
         "/phpinfo.php4",
         "/phpinfo.phps",
+        "/phpinfo.php%00",
         "/phpinfo7.phps",
         "/PHPINFO8.PHTML",
         "/%70hpinfo%2ephp",
@@ -263,6 +264,10 @@ def test_legitimate_public_route_is_preserved():
 
     assert response.status_code == 200
     assert "User-agent: *" in response.text
+
+
+def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
+    assert is_sensitive_scanner_path("/phpinfo.php\x00ignored") is True
 
 
 @pytest.mark.parametrize(

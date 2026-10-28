@@ -178,6 +178,9 @@ def normalize_scanner_path(path: str) -> str:
     # A decoded question mark begins the query string to ASGI servers; ignore
     # that suffix so scanner probes cannot hide a sensitive path behind it.
     normalized = normalized.split("?", 1)[0]
+    # NUL bytes are rejected or treated as terminators by common web server
+    # and filesystem stacks. Match the path they may expose before the NUL.
+    normalized = normalized.split("\x00", 1)[0]
     # Do not let the decode limit turn a still-encoded probe into an ordinary
     # route. The caller blocks these paths; preserving the marker also avoids
     # accidentally treating arbitrary percent text as a sensitive filename.
