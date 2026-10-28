@@ -306,6 +306,9 @@ def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
         "/dump.sql.gz.bak",
         "/private/config.php.old",
         "/.git/config.bak",
+        "/.env.production.bak.old",
+        "/.git.bak.old/config",
+        "/nested/.ssh.orig.backup/id_rsa",
         "/.gitmodules.bak",
         "/.ssh/id_rsa.old",
         "/.svn/entries~",
@@ -379,6 +382,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/public/.%2e/contato",
         "/public/%2e./eventos",
         "/parceiros;view=compact",
+        "/.env-file.bak.old",
+        "/.github.bak.old",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):

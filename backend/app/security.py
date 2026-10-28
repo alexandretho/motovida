@@ -261,28 +261,22 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
 
 
 def is_sensitive_scanner_segment(segment: str) -> bool:
+    candidate = segment
+    while True:
+        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES:
+            if candidate.endswith(suffix):
+                candidate = candidate[: -len(suffix)]
+                break
+        else:
+            break
+
     if any(
-        segment == sensitive or segment.startswith(f"{sensitive}.")
+        candidate == sensitive or candidate.startswith(f"{sensitive}.")
         for sensitive in SENSITIVE_SCANNER_SEGMENTS
     ):
         return True
 
-    if segment in {".gitmodules", ".gitconfig"} or any(
-        segment.endswith(suffix)
-        and segment[: -len(suffix)] in {".gitmodules", ".gitconfig"}
-        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
-    ):
-        return True
-
-    return any(
-        segment.endswith(suffix)
-        and any(
-            segment[: -len(suffix)] == sensitive
-            or segment[: -len(suffix)].startswith(f"{sensitive}.")
-            for sensitive in SENSITIVE_SCANNER_SEGMENTS
-        )
-        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
-    )
+    return candidate in {".gitmodules", ".gitconfig"}
 
 
 def is_sensitive_scanner_path(path: str) -> bool:
