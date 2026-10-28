@@ -26,6 +26,8 @@ SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
     "/phpversion.php",
     "/test.phpinfo",
     "/i.php",
+    "/info.php",
+    "/test.php",
     "/phpinfo7.php",
     "/phpinfo8.php",
     "/phpinfo9.php",
@@ -223,9 +225,9 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     # These short phpinfo aliases are common scanner probes. Accept the same
     # PHP extension variants and numeric suffixes as the phpinfo family above.
     phpinfo_alias, alias_separator, alias_extension = candidate.partition(".")
-    if phpinfo_alias in {"php_info", "phpinf", "i"} or any(
+    if phpinfo_alias in {"php_info", "phpinf", "phpinf_info", "php-info", "i"} or any(
         phpinfo_alias.startswith(prefix) and phpinfo_alias[len(prefix):].isdigit()
-        for prefix in ("php_info", "phpinf", "i")
+        for prefix in ("php_info", "phpinf", "php-info", "i")
     ):
         return not alias_separator or alias_extension in {
             "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar", "phps"
@@ -241,6 +243,12 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         return not separator or extension in {
             "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar", "phps"
         }
+
+    # Diagnostic scripts are commonly exposed under these exact filenames.
+    # Keep them exact so ordinary application routes like /test-report.php
+    # and /info-api.php remain routable.
+    if candidate in {"info.php", "test.php"}:
+        return True
 
     if filename in SENSITIVE_SCANNER_FILENAMES:
         return True
