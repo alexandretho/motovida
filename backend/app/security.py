@@ -315,6 +315,9 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if any(is_sensitive_scanner_filename(segment) for segment in segments):
         return True
 
+    # Prefix probes can carry matrix parameters on the directory segment.
+    # Check the parameter-free path so e.g. /wp-admin;v=1/unknown cannot
+    # bypass a prefix rule that applies to /wp-admin.
     return is_sensitive_scanner_prefix(path_without_parameters)
 
 
