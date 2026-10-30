@@ -249,6 +249,10 @@ client = TestClient(app)
         "/public/%2e%2e/.git/config",
         "/public/%252e%252e/wp-admin/setup-config.php",
         "/public/%2525252525252525252e%2525252525252525252e/.git/config",
+        # Traversal markers that remain after the bounded decode passes must
+        # not reach a route that an upstream with a deeper limit may resolve.
+        "/public/.%252525252525252525252e/.env",
+        "/public/%252525252525252525252e./wp-admin/setup-config.php",
     ],
 )
 def test_common_scanner_paths_are_blocked(path):
@@ -425,6 +429,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/public/%2e%2e/contato",
         "/public/.%2e/contato",
         "/public/%2e./eventos",
+        # Deep encoding of ordinary route characters remains routable.
+        "/eventos%252525252525252525252f",
         "/parceiros;view=compact",
         "/.env-file.bak.old",
         "/.github.bak.old",

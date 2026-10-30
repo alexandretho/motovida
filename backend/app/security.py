@@ -193,6 +193,15 @@ def normalize_scanner_path(path: str) -> str:
         if decoded == normalized:
             break
         normalized = decoded
+    # If the bounded decoder stopped while a traversal marker remains, a
+    # proxy/server with a deeper decoding limit could still resolve it. Treat
+    # unresolved dot-segment encodings as traversal and fail closed, while
+    # leaving unrelated encoded route characters alone.
+    if any(
+        segment.lower() in {"%2e", ".%2e", "%2e.", "%2e%2e"}
+        for segment in normalized.replace("\\", "/").split("/")
+    ):
+        return "/__encoded_traversal__"
     # A decoded question mark begins the query string to ASGI servers; ignore
     # that suffix so scanner probes cannot hide a sensitive path behind it.
     normalized = normalized.split("?", 1)[0]
