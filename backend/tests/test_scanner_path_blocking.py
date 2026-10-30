@@ -20,6 +20,10 @@ client = TestClient(app)
     "path",
     [
         "/.env",
+        # Common wildcard probes are represented by concrete requests so the
+        # middleware's HTTP response contract stays covered.
+        "/.env.local.php",
+        "/.env.production",
         "/.env.local",
         "/.env.*",
         "/.env.production",
@@ -39,6 +43,7 @@ client = TestClient(app)
         "/.svn/entries",
         "/.hg/store",
         "/.git/config",
+        "/.git/",
         "/.git/HEAD",
         "/.git/objects/info/packs",
         "/.gitmodules",
@@ -92,6 +97,7 @@ client = TestClient(app)
         "/telescope/requests",
         "/wp-admin/setup-config.php",
         "/wp-admin/",
+        "/wp-admin/options.php",
         "/wp-admin/admin-ajax.php",
         "/wp-admin/install.php",
         "/wp-content/plugins/revslider/readme.txt",
@@ -104,6 +110,8 @@ client = TestClient(app)
         "/xmlrpc.php",
         "/xmlrpc.php?rsd",
         "/phpinfo.php",
+        "/php_info.php",
+        "/i.php",
         "/phpinfo",
         "/phpinfo7.php",
         "/phpinfo7",
