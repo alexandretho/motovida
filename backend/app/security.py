@@ -238,12 +238,14 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         else:
             break
 
-    # These short phpinfo aliases are common scanner probes. Accept the same
-    # PHP extension variants and numeric suffixes as the phpinfo family above.
+    # These phpinfo aliases are common scanner probes. Accept one optional
+    # underscore or hyphen inside the stem, as well as extension/numeric
+    # variants, while keeping matching scoped to the known probe family.
     phpinfo_alias, alias_separator, alias_extension = candidate.partition(".")
-    if phpinfo_alias in {"php_info", "phpinf", "phpinf_info", "php-info", "i"} or any(
-        phpinfo_alias.startswith(prefix) and phpinfo_alias[len(prefix):].isdigit()
-        for prefix in ("php_info", "phpinf", "php-info", "i")
+    alias_stem = phpinfo_alias.replace("_", "").replace("-", "")
+    if alias_stem in {"phpinfo", "phpinf", "i"} or any(
+        alias_stem.startswith(prefix) and alias_stem[len(prefix):].isdigit()
+        for prefix in ("phpinfo", "phpinf", "i")
     ):
         return not alias_separator or alias_extension in {
             "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps"
