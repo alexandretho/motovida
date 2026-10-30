@@ -326,6 +326,8 @@ def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
         "/.htaccess.bak",
         "/.htpasswd.old",
         "/.user.ini.orig",
+        "/package.json.bak.old",
+        "/package-lock.json.backup.tmp",
         "/web.config.save",
         "/backup.tar.gz.swp",
         "/backup.zip~",
@@ -426,6 +428,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/parceiros;view=compact",
         "/.env-file.bak.old",
         "/.github.bak.old",
+        "/package-help.json.bak.old",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):

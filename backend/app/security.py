@@ -268,14 +268,7 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     if candidate in {"info.php", "test.php"}:
         return True
 
-    if filename in SENSITIVE_SCANNER_FILENAMES:
-        return True
-
-    return any(
-        filename.endswith(suffix)
-        and filename[: -len(suffix)] in SENSITIVE_SCANNER_FILENAMES
-        for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES
-    )
+    return candidate in SENSITIVE_SCANNER_FILENAMES
 
 
 def is_sensitive_scanner_segment(segment: str) -> bool:
