@@ -257,6 +257,13 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         alias_stem.startswith(prefix) and alias_stem[len(prefix):].isdigit()
         for prefix in ("phpinfo", "phpinf", "i")
     ):
+        if (
+            alias_stem.startswith("phpinfo")
+            and alias_stem[len("phpinfo"):].isdigit()
+            and alias_separator
+            and alias_extension == "json"
+        ):
+            return True
         return not alias_separator or alias_extension in {
             "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps"
         }
