@@ -61,7 +61,7 @@
   </div>
 </header>
 <div class="road-divider" aria-hidden="true"></div>
-{% if flash %}<div class="container"><div class="flash flash-{{ flash.category }}">{{ flash.message }}</div></div>{% endif %}
+{% if flash %}<div class="container"><div class="flash flash-{{ flash.category }}" role="{{ 'alert' if flash.category == 'error' else 'status' }}" aria-live="{{ 'assertive' if flash.category == 'error' else 'polite' }}">{{ flash.message }}</div></div>{% endif %}
 <main>{% block content %}{% endblock %}</main>
 <footer class="footer">
   <div class="container footer-inner">

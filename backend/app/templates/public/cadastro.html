@@ -6,7 +6,7 @@
   <div class="container narrow">
     <h1>Cadastro de Afiliado</h1>
     <p class="section-sub">Gratuito e aberto a motoboys, motociclistas, entregadores e familiares.</p>
-    {% if errors %}<div class="flash flash-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if errors %}<div class="flash flash-error" role="alert" aria-live="assertive"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
     <form class="card form" method="post" action="/cadastro">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>Nome completo *<input name="full_name" required maxlength="180" value="{{ form.full_name or '' }}"></label>
