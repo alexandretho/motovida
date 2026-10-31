@@ -154,7 +154,7 @@ def build_content_security_policy(nonce: str) -> str:
 def apply_security_headers(response, path: str = ""):
     for header, value in SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
-    if path.startswith(NO_STORE_PREFIXES):
+    if path.startswith(NO_STORE_PREFIXES) or is_sensitive_scanner_path(path):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"
     if path.startswith(SESSION_VARY_PREFIXES):
