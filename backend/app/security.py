@@ -92,6 +92,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     ".env.bak",
     ".dockercfg",
     ".ds_store",
+    ".gitignore",
     ".htaccess",
     ".htpasswd",
     ".envrc",
