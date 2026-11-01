@@ -57,6 +57,16 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code, headers=getattr(exc, "headers", None))
 
 
+@app.exception_handler(Exception)
+async def unexpected_exception_handler(request: Request, exc: Exception):
+    """Do not expose exception details from unexpected server failures."""
+    return PlainTextResponse(
+        "Erro interno do servidor.",
+        status_code=500,
+        headers={REQUEST_ID_HEADER: get_request_id(request)},
+    )
+
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 SECURITY_HEADERS = {
