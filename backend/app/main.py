@@ -212,6 +212,18 @@ async def add_security_headers(request: Request, call_next):
         parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
+            if request.method.upper() == "POST" and request.url.path == "/recuperar-senha":
+                limited = ratelimit.hit(
+                    "recuperar_senha",
+                    ratelimit.client_ip(request),
+                    public.PASSWORD_RECOVERY_RATE_LIMIT,
+                    public.PASSWORD_RECOVERY_RATE_LIMIT_WINDOW_SECONDS,
+                )
+                if limited:
+                    response = PlainTextResponse(public.PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE, status_code=429)
+                    response.headers[REQUEST_ID_HEADER] = request_id
+                    response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+                    return apply_security_headers(response, request.url.path)
             response = PlainTextResponse("Token CSRF inválido ou ausente.", status_code=403)
             response.headers[REQUEST_ID_HEADER] = request_id
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))

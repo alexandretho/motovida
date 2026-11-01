@@ -192,3 +192,24 @@ def test_password_recovery_route_rate_limits():
 
     assert response.status_code == 200
     assert public.PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE in response.text
+
+
+def test_password_recovery_invalid_csrf_attempts_are_rate_limited_before_handler():
+    client = TestClient(app)
+
+    for _ in range(public.PASSWORD_RECOVERY_RATE_LIMIT):
+        response = client.post(
+            "/recuperar-senha",
+            data={"email": "ninguem@example.com", "phone": "", "csrf_token": "invalido"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 403
+
+    response = client.post(
+        "/recuperar-senha",
+        data={"email": "ninguem@example.com", "phone": "", "csrf_token": "invalido"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 429
+    assert public.PASSWORD_RECOVERY_RATE_LIMIT_MESSAGE in response.text
