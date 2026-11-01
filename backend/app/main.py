@@ -4,7 +4,7 @@ import sys
 from ipaddress import ip_address, ip_network
 from secrets import token_urlsafe
 from time import perf_counter
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
@@ -166,6 +166,29 @@ def apply_security_headers(response, path: str = ""):
     return response
 
 
+def is_sensitive_static_target(path: str) -> bool:
+    """Block scanner targets reached after StaticFiles resolves dot segments."""
+    decoded = path
+    for _ in range(16):
+        next_path = unquote(decoded).replace("\\", "/")
+        if next_path == decoded:
+            break
+        decoded = next_path
+    if not decoded.startswith("/static/"):
+        return False
+    segments = []
+    for segment in decoded.split("/")[2:]:
+        if segment in {"", "."}:
+            continue
+        if segment == "..":
+            if segments:
+                segments.pop()
+            continue
+        segments.append(segment)
+    resolved = "/" + "/".join(segments)
+    return is_sensitive_scanner_path(resolved)
+
+
 def request_body_too_large(request: Request, body: bytes | None = None) -> bool:
     content_length = request.headers.get("content-length")
     if content_length:
@@ -189,7 +212,7 @@ async def add_security_headers(request: Request, call_next):
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
         return apply_security_headers(response, request.url.path)
 
-    if is_sensitive_scanner_path(request.url.path):
+    if is_sensitive_scanner_path(request.url.path) or is_sensitive_static_target(request.url.path):
         response = PlainTextResponse("Not Found", status_code=404)
         response.headers[REQUEST_ID_HEADER] = request_id
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))

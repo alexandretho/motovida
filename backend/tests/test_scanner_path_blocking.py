@@ -322,6 +322,27 @@ def test_legitimate_public_route_is_preserved():
     assert "User-agent: *" in response.text
 
 
+@pytest.mark.parametrize("path", [
+    "/static/../.env",
+    "/static/css/../../.git/config",
+    "/static/css/../../wp-admin/setup-config.php",
+    "/static/css/../../phpinfo.php",
+])
+def test_scanner_paths_cannot_escape_static_mount(path):
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+def test_legitimate_static_asset_with_dot_segment_is_preserved():
+    response = client.get("/static/css/./style.css")
+
+    assert response.status_code == 200
+    assert "text/css" in response.headers["content-type"]
+
+
 def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
     assert is_sensitive_scanner_path("/phpinfo.php\x00ignored") is True
 
