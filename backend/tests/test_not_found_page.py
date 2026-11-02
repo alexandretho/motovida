@@ -62,6 +62,28 @@ def test_unexpected_error_response_hides_internal_details():
     assert r.headers["x-request-id"] == "safe-test-id"
 
 
+def test_unexpected_error_does_not_reflect_invalid_request_id():
+    def explode():
+        raise RuntimeError("sensitive database connection details")
+
+    app.add_api_route("/__test_unexpected_error_invalid_id", explode, methods=["GET"])
+    try:
+        r = TestClient(app, raise_server_exceptions=False).get(
+            "/__test_unexpected_error_invalid_id",
+            headers={"X-Request-ID": "attacker id\r\ninjected"},
+        )
+    finally:
+        app.router.routes.pop()
+
+    request_id = r.headers["x-request-id"]
+    assert r.status_code == 500
+    assert r.text == "Erro interno do servidor."
+    assert "sensitive database" not in r.text
+    assert "attacker" not in request_id
+    assert len(request_id) == 32
+    assert request_id.isalnum()
+
+
 def test_public_route_does_not_get_scanner_no_cache_headers():
     r = client.get("/robots.txt")
     assert r.status_code == 200
