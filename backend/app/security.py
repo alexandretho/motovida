@@ -17,6 +17,7 @@ SENSITIVE_SCANNER_EXACT_PATHS = frozenset({
     "/adminer.php",
     "/wp-login.php",
     "/wp-config.php",
+    "/xmlrpc",
     "/xmlrpc.php",
     "/phpinfo.php",
     "/phpinfo.php3",
@@ -232,6 +233,12 @@ def normalize_scanner_path(path: str) -> str:
 
 
 def is_sensitive_scanner_filename(filename: str) -> bool:
+    # Environment files use many deployment-specific names (.env.staging,
+    # .env.production.local, etc.). Treat every file in this family as
+    # sensitive while keeping similarly named application files available.
+    if filename == ".env" or filename.startswith(".env."):
+        return True
+
     # phpinfo is probed with and without a PHP extension, sometimes with a
     # numeric suffix (for example phpinfo7.php). Keep the match specific to
     # that probe family so ordinary names such as /info.php stay available.
