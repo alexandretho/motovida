@@ -159,6 +159,11 @@ client = TestClient(app)
         "/php%2Dinfo.php",
         "/%2570hp%255Finfo%252ephp",
         "/%2570hp%252Dinfo.php",
+        # Encoded aliases and extensions should remain blocked after repeated
+        # decoding, just like the phpinfo variants above.
+        "/php%255Finfo%252ephp",
+        "/%2569%252ephp",
+        "/%2525%2536%2539%252ephp",
         "/php_info",
         "/php_info7.php",
         "/php_info.phps",
@@ -183,6 +188,7 @@ client = TestClient(app)
         "/%70hpinfo.php",
         "/%2570hp_info.php",
         "/%69.php",
+        "/%2569%252ephp",
         "/i",
         "/i.php3",
         "/i.phps",
