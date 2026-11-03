@@ -318,6 +318,15 @@ def is_sensitive_scanner_path(path: str) -> bool:
     normalized_path = normalize_scanner_path(path)
     if normalized_path.endswith("/__encoded_path_depth_exceeded__"):
         return True
+    # A scanner prefix stays sensitive when traversal would normalize it away.
+    # Some proxies resolve the path before routing, while others inspect the
+    # original path, so do not let the normalized target hide the probe.
+    original_path = f"/{path.lstrip('/')}".replace("\\", "/").lower()
+    if any(
+        original_path == prefix or original_path.startswith(f"{prefix}/")
+        for prefix in SENSITIVE_SCANNER_PREFIXES
+    ):
+        return True
     segments = [
         segment.split(";", 1)[0]
         for segment in normalized_path.split("/")

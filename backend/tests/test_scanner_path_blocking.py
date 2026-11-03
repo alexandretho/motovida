@@ -274,6 +274,7 @@ client = TestClient(app)
         "/public/%2e%2e/.git/config",
         "/public/%252e%252e/wp-admin/setup-config.php",
         "/public/%2525252525252525252e%2525252525252525252e/.git/config",
+        "/cgi-bin/%2e%2e/%2e%2e/etc/passwd",
         # Traversal markers that remain after the bounded decode passes must
         # not reach a route that an upstream with a deeper limit may resolve.
         "/public/.%252525252525252525252e/.env",
