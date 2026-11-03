@@ -30,6 +30,7 @@ client = TestClient(app)
         "/.env.development.local",
         "/.env.staging",
         "/.env.production.local",
+        "/.env.production.bak",
         "/.env.preview.eu.local",
         "/config/.env.customer-42",
         "/.envrc",
@@ -49,6 +50,7 @@ client = TestClient(app)
         "/.git/config",
         "/.git/",
         "/.git/HEAD",
+        "/.git/hooks/pre-commit",
         "/.git/objects/info/packs",
         "/.git/refs/heads/main",
         "/.git/index",
@@ -103,6 +105,7 @@ client = TestClient(app)
         "/yarn.lock",
         "/telescope/requests",
         "/wp-admin/setup-config.php",
+        "/wp-admin/admin-post.php",
         "/wp-admin/",
         "/wp-admin/options.php",
         "/wp-admin/admin-ajax.php",
@@ -326,6 +329,33 @@ def test_common_scanner_paths_are_blocked(path):
     ],
 )
 def test_phpinfo_scanner_aliases_return_generic_not_found(path):
+    response = client.get(path, headers={"accept": "text/html"})
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert "Página não encontrada" not in response.text
+    assert "Traceback" not in response.text
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/.env",
+        "/.env.local",
+        "/.env.production",
+        "/.env.production.bak",
+        "/.git/config",
+        "/.git/objects/info/packs",
+        "/wp-admin/",
+        "/wp-admin/setup-config.php",
+        "/xmlrpc.php",
+        "/phpinfo.php",
+        "/php_info.php",
+        "/i.php",
+    ],
+)
+def test_requested_scanner_families_return_detail_free_404(path):
     response = client.get(path, headers={"accept": "text/html"})
 
     assert response.status_code == 404
