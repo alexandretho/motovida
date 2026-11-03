@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -49,6 +50,8 @@ def test_export_has_own_data_without_hash_or_other_users():
     u1, _u2 = _make(db, 1), _make(db, 2)
     raw = export_json_bytes(build_affiliate_export(db, u1)).decode()
     data = json.loads(raw)
+    exported_at = datetime.fromisoformat(data["exportado_em"].replace("Z", "+00:00"))
+    assert exported_at.tzinfo == timezone.utc
     assert data["usuario"]["email"] == "u1@t.com"
     assert "SECRETHASH" not in raw and "password_hash" not in raw
     assert "u2@t.com" not in raw and "Pessoa 2" not in raw and "Pedido 2" not in raw

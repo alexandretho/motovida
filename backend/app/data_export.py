@@ -1,6 +1,6 @@
 """Exportação dos dados pessoais do afiliado (LGPD, art. 18 – portabilidade/acesso)."""
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import inspect as sa_inspect
 
@@ -48,7 +48,7 @@ def build_affiliate_export(db, user) -> dict:
     for r in reqs:
         history += _rows(db, models.RequestHistory, request_id=r.id)
     return {
-        "exportado_em": datetime.utcnow().isoformat() + "Z",
+        "exportado_em": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "usuario": row_to_dict(user),
         "afiliado": row_to_dict(aff),
         "consentimentos_lgpd": _rows(db, models.LgpdConsent, affiliate_id=aff.id),
