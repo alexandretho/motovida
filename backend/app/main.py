@@ -223,6 +223,18 @@ async def add_security_headers(request: Request, call_next):
         return apply_security_headers(response, request.url.path)
 
     if is_sensitive_scanner_path(request.url.path) or is_sensitive_static_target(request.url.path):
+        http_logger.info(
+            json.dumps(
+                {
+                    "event": "scanner_path_blocked",
+                    "method": request.method,
+                    "status_code": 404,
+                    "client_ip": anonymize_ip_for_log(ratelimit.client_ip(request)),
+                    "request_id": request_id,
+                },
+                separators=(",", ":"),
+            )
+        )
         response = PlainTextResponse("Not Found", status_code=404)
         response.headers[REQUEST_ID_HEADER] = request_id
         response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))

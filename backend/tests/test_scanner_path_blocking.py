@@ -1,5 +1,7 @@
 import os
 import sys
+import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -14,6 +16,27 @@ from app.security import is_sensitive_scanner_path  # noqa: E402
 
 
 client = TestClient(app)
+
+
+def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypatch, caplog):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    caplog.set_level(logging.INFO, logger="app.http")
+
+    response = client.get("/.env?token=secret", headers={"CF-Connecting-IP": "203.0.113.8"})
+
+    assert response.status_code == 404
+    records = [record for record in caplog.records if record.name == "app.http"]
+    matching = [json.loads(record.getMessage()) for record in records]
+    event = next(item for item in matching if item["event"] == "scanner_path_blocked")
+    assert event == {
+        "event": "scanner_path_blocked",
+        "method": "GET",
+        "status_code": 404,
+        "client_ip": "203.0.113.0",
+        "request_id": response.headers["x-request-id"],
+    }
+    assert "secret" not in records[-1].getMessage()
+    assert ".env" not in records[-1].getMessage()
 
 
 @pytest.mark.parametrize(
