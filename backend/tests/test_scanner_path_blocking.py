@@ -389,6 +389,24 @@ def test_requested_scanner_families_return_detail_free_404(path):
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+@pytest.mark.parametrize("path", ["/phpinfo.php", "/php_info.php", "/i.php"])
+def test_priority_phpinfo_probes_are_not_cached_or_disclosed(path, caplog):
+    caplog.set_level(logging.INFO, logger="app.http")
+    probe_query = "?token=phpinfo-probe-secret"
+
+    response = client.get(path + probe_query, headers={"accept": "text/html"})
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["pragma"] == "no-cache"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+    assert "phpinfo-probe-secret" not in response.text
+    records = [record for record in caplog.records if record.name == "app.http"]
+    assert all(path not in record.getMessage() for record in records)
+    assert all("phpinfo-probe-secret" not in record.getMessage() for record in records)
+
+
 def test_legitimate_public_route_is_preserved():
     response = client.get("/robots.txt")
 
