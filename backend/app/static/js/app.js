@@ -6,7 +6,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const setMenuOpen = (open) => {
+    nav.classList.toggle("open", open);
+    menuToggle.setAttribute("aria-expanded", String(open));
+    menuToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+  };
+
   menuToggle.addEventListener("click", () => {
-    nav.classList.toggle("open");
+    setMenuOpen(menuToggle.getAttribute("aria-expanded") !== "true");
+  });
+
+  nav.addEventListener("click", (event) => {
+    if (event.target.closest("a")) {
+      setMenuOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+      setMenuOpen(false);
+      menuToggle.focus();
+    }
   });
 });
