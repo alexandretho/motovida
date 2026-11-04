@@ -40,7 +40,7 @@ def test_navigation_toggle_exposes_accessible_state_and_target():
 
     assert response.status_code == 200
     assert 'aria-label="Abrir menu" aria-expanded="false" aria-controls="site-navigation"' in response.text
-    assert '<nav class="nav" id="site-navigation">' in response.text
+    assert '<nav class="nav" id="site-navigation" aria-label="Navegação principal" inert>' in response.text
 
 
 def test_navigation_script_updates_state_and_supports_escape():
@@ -49,5 +49,6 @@ def test_navigation_script_updates_state_and_supports_escape():
 
     assert 'menuToggle.setAttribute("aria-expanded", String(open))' in script
     assert 'menuToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu")' in script
+    assert 'nav.inert = !open' in script
     assert 'event.key === "Escape"' in script
     assert 'event.target.closest("a")' in script

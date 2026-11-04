@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const setMenuOpen = (open) => {
     nav.classList.toggle("open", open);
+    nav.inert = !open;
     menuToggle.setAttribute("aria-expanded", String(open));
     menuToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
   };
