@@ -83,7 +83,12 @@ def client_ip(request) -> str:
 
         cf_connecting_ip = request.headers.get("cf-connecting-ip")
         if cf_connecting_ip:
-            raw = cf_connecting_ip
+            # Cloudflare envia um único endereço. Não interprete uma lista
+            # malformada como IP do cliente nem a passe adiante como identidade.
+            try:
+                return str(ipaddress.ip_address(cf_connecting_ip.strip()))
+            except ValueError:
+                return remote_ip
         else:
             forwarded_for = request.headers.get("x-forwarded-for", "")
             if trusted_networks and forwarded_for:
