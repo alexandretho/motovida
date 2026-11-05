@@ -37,6 +37,30 @@ def test_usa_cf_quando_proxy_remoto_esta_em_cidr_confiavel(monkeypatch):
     assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="10.0.0.42")) == "203.0.113.8"
 
 
+def test_xff_descarta_hops_confiaveis_e_nao_aceita_primeiro_ip_forjado(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+
+    request = req(
+        {"x-forwarded-for": "198.51.100.200, 203.0.113.8, 10.0.0.2"},
+        host="10.0.0.1",
+    )
+
+    assert client_ip(request) == "203.0.113.8"
+
+
+def test_xff_para_no_primeiro_hop_nao_confiavel(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+
+    request = req(
+        {"x-forwarded-for": "198.51.100.200, 203.0.113.8"},
+        host="10.0.0.1",
+    )
+
+    assert client_ip(request) == "203.0.113.8"
+
+
 def test_usa_headers_quando_proxy_remoto_esta_em_preset_private(monkeypatch):
     monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "private")

@@ -67,21 +67,42 @@ def client_ip(request) -> str:
     remote_ip = request.client.host if request.client else "unknown"
     if env_flag("TRUST_PROXY_HEADERS"):
         trusted_proxy_cidrs = os.getenv("TRUSTED_PROXY_CIDRS", "").strip()
+        trusted_networks = []
         if trusted_proxy_cidrs:
+            trusted_networks = trusted_proxy_networks(trusted_proxy_cidrs)
             try:
                 remote_addr = ipaddress.ip_address(remote_ip)
                 trusted = any(
                     remote_addr in network
-                    for network in trusted_proxy_networks(trusted_proxy_cidrs)
+                    for network in trusted_networks
                 )
             except ValueError:
                 trusted = False
             if not trusted:
                 return remote_ip
 
-        raw = request.headers.get("cf-connecting-ip") or (
-            request.headers.get("x-forwarded-for", "").split(",")[0]
-        )
+        cf_connecting_ip = request.headers.get("cf-connecting-ip")
+        if cf_connecting_ip:
+            raw = cf_connecting_ip
+        else:
+            forwarded_for = request.headers.get("x-forwarded-for", "")
+            if trusted_networks and forwarded_for:
+                # XFF is ordered client -> proxies. Walk from the proxy nearest
+                # the app and discard only hops explicitly configured as trusted.
+                chain = [part.strip() for part in forwarded_for.split(",")]
+                chain.append(remote_ip)
+                parsed_chain = []
+                try:
+                    parsed_chain = [ipaddress.ip_address(part) for part in chain]
+                except ValueError:
+                    parsed_chain = []
+                if parsed_chain:
+                    while len(parsed_chain) > 1 and any(
+                        parsed_chain[-1] in network for network in trusted_networks
+                    ):
+                        parsed_chain.pop()
+                    return str(parsed_chain[-1])
+            raw = forwarded_for.split(",")[0]
         try:
             return str(ipaddress.ip_address(raw.strip()))
         except ValueError:
