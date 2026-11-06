@@ -60,11 +60,17 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(Exception)
 async def unexpected_exception_handler(request: Request, exc: Exception):
     """Do not expose exception details from unexpected server failures."""
-    return PlainTextResponse(
+    response = PlainTextResponse(
         "Erro interno do servidor.",
         status_code=500,
-        headers={REQUEST_ID_HEADER: get_request_id(request)},
+        headers={
+            REQUEST_ID_HEADER: get_request_id(request),
+            "Content-Security-Policy": build_content_security_policy(
+                getattr(request.state, "csp_nonce", token_urlsafe(16))
+            ),
+        },
     )
+    return apply_security_headers(response, request.url.path)
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

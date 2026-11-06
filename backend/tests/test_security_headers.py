@@ -86,3 +86,21 @@ def test_unsafe_diagnostic_methods_are_blocked_without_details(method):
     assert r.headers["strict-transport-security"] == "max-age=31536000"
     assert r.headers["x-content-type-options"] == "nosniff"
     assert "default-src 'self'" in r.headers["content-security-policy"]
+
+
+def test_unexpected_server_error_keeps_security_headers():
+    def fail_unexpectedly():
+        raise RuntimeError("internal detail")
+
+    path = "/_test/unexpected-error"
+    app.add_api_route(path, fail_unexpectedly, methods=["GET"], include_in_schema=False)
+    try:
+        response = TestClient(app, raise_server_exceptions=False).get(path)
+    finally:
+        app.router.routes = [route for route in app.router.routes if getattr(route, "path", None) != path]
+
+    assert response.status_code == 500
+    assert response.text == "Erro interno do servidor."
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert "default-src 'self'" in response.headers["content-security-policy"]
