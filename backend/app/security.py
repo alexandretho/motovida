@@ -334,20 +334,23 @@ def is_sensitive_scanner_path(path: str) -> bool:
         for prefix in SENSITIVE_SCANNER_PREFIXES
     ):
         return True
-    segments = [
-        segment.split(";", 1)[0]
-        for segment in normalized_path.split("/")
-        if segment
-    ]
-    path_without_parameters = "/" + "/".join(segments)
+    # Some servers ignore path parameters while resolving a filename. Check
+    # each filename both as requested and with its matrix parameters removed,
+    # so aliases such as /i;v=1.php cannot evade the scanner family match.
+    segments = [segment for segment in normalized_path.split("/") if segment]
+    parameter_free_segments = [segment.split(";", 1)[0] for segment in segments]
+    path_without_parameters = "/" + "/".join(parameter_free_segments)
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
 
-    if any(is_sensitive_scanner_segment(segment) for segment in segments):
+    if any(is_sensitive_scanner_segment(segment) for segment in parameter_free_segments):
         return True
 
-    if any(is_sensitive_scanner_filename(segment) for segment in segments):
+    if any(
+        is_sensitive_scanner_filename(segment)
+        for segment in (*segments, *parameter_free_segments)
+    ):
         return True
 
     # Prefix probes can carry matrix parameters on the directory segment.
