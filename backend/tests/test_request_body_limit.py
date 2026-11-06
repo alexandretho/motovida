@@ -1,5 +1,6 @@
 import os
 import sys
+import asyncio
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -41,3 +42,38 @@ def test_reasonable_form_post_still_reaches_csrf_validation():
 
     assert response.status_code == 403
     assert response.text == "Token CSRF inválido ou ausente."
+
+
+def test_streaming_post_without_content_length_is_stopped_at_body_limit():
+    async def scenario():
+        delivered = []
+        messages = [
+            {"type": "http.request", "body": b"x" * MAX_FORM_BODY_BYTES, "more_body": True},
+            {"type": "http.request", "body": b"x", "more_body": True},
+        ]
+
+        async def receive():
+            message = messages.pop(0)
+            delivered.append(message)
+            return message
+
+        scope = {
+            "type": "http", "asgi": {"version": "3.0"},
+            "http_version": "1.1", "method": "POST", "scheme": "http",
+            "path": "/login", "raw_path": b"/login", "query_string": b"",
+            "root_path": "", "headers": [(b"host", b"testserver")],
+            "client": ("127.0.0.1", 12345), "server": ("testserver", 80),
+        }
+        sent = []
+
+        async def send(message):
+            sent.append(message)
+
+        await app(scope, receive, send)
+        return delivered, sent
+
+    delivered, sent = asyncio.run(scenario())
+
+    response_start = next(message for message in sent if message["type"] == "http.response.start")
+    assert response_start["status"] == 413
+    assert len(delivered) == 2

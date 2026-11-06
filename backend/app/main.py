@@ -247,12 +247,32 @@ async def add_security_headers(request: Request, call_next):
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
             return apply_security_headers(response, request.url.path)
 
-        body = await request.body()
-        if request_body_too_large(request, body):
+        # ASGI bodies may arrive as multiple chunks, including without a
+        # Content-Length header. Stop buffering as soon as the configured
+        # limit is crossed instead of materializing an unbounded request.
+        body_chunks = []
+        body_size = 0
+        too_large = False
+        while True:
+            message = await request.receive()
+            if message["type"] == "http.disconnect":
+                break
+            chunk = message.get("body", b"")
+            body_size += len(chunk)
+            if body_size > MAX_FORM_BODY_BYTES:
+                too_large = True
+                break
+            body_chunks.append(chunk)
+            if not message.get("more_body", False):
+                break
+
+        if too_large:
             response = PlainTextResponse("Payload muito grande.", status_code=413)
             response.headers[REQUEST_ID_HEADER] = request_id
             response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
             return apply_security_headers(response, request.url.path)
+
+        body = b"".join(body_chunks)
 
         parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
         csrf_token = parsed.get("csrf_token", [None])[0]
