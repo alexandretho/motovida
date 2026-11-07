@@ -288,6 +288,8 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/.terraform/terraform.tfstate",
         "/storage/logs/laravel.log",
         "/.git.bak/config",
+        "/.git.bak.old/config",
+        "/.git/config.orig.old/HEAD",
         "/%2e%67it%2ebak/config",
         "/.git\\.bak\\config",
         "/wp-admin.old/setup-config.php",
