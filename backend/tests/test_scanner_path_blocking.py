@@ -87,6 +87,7 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/.env%3fanything",
         "/wp-admin%3f/setup-config.php",
         "/wp-admin;view=compact/setup-config.php",
+        "/wp-admin;v=1/%2e%2e/setup-config.php",
         # Path parameters can be ignored by upstream servers when resolving
         # sensitive files, so the normalized base filename must still block.
         "/config.php;anything",
@@ -452,6 +453,18 @@ def test_legitimate_static_asset_with_dot_segment_is_preserved():
 
 def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
     assert is_sensitive_scanner_path("/phpinfo.php\x00ignored") is True
+
+
+def test_matrix_parameter_scanner_prefix_survives_traversal():
+    path = "/wp-admin;v=1/%2e%2e/setup-config.php"
+
+    assert is_sensitive_scanner_path(path) is True
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
 @pytest.mark.parametrize(

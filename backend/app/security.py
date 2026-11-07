@@ -329,9 +329,13 @@ def is_sensitive_scanner_path(path: str) -> bool:
     # Some proxies resolve the path before routing, while others inspect the
     # original path, so do not let the normalized target hide the probe.
     original_path = f"/{path.lstrip('/')}".replace("\\", "/").lower()
+    original_path_without_parameters = "/".join(
+        segment.split(";", 1)[0] for segment in original_path.split("/")
+    )
     if any(
-        original_path == prefix or original_path.startswith(f"{prefix}/")
+        candidate == prefix or candidate.startswith(f"{prefix}/")
         for prefix in SENSITIVE_SCANNER_PREFIXES
+        for candidate in (original_path, original_path_without_parameters)
     ):
         return True
     # Some servers ignore path parameters while resolving a filename. Check
