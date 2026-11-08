@@ -356,6 +356,14 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if any(is_sensitive_scanner_segment(segment) for segment in parameter_free_segments):
         return True
 
+    # phpinfo diagnostic aliases nested under known scanner endpoints are
+    # common probes too; block them even when the base filename is nested.
+    if (
+        any(is_sensitive_scanner_prefix("/" + segment) for segment in parameter_free_segments[:-1])
+        and any(is_sensitive_scanner_filename(segment) for segment in parameter_free_segments[-1:])
+    ):
+        return True
+
     if any(
         is_sensitive_scanner_filename(segment)
         for segment in (*segments, *parameter_free_segments)
