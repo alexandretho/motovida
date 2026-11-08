@@ -299,6 +299,10 @@ def enroll(request: Request, course_id: int, db: Session = Depends(get_db)):
         db.add(models.CourseEnrollment(course_id=course_id, affiliate_id=user.affiliate.id))
         db.commit()
         flash(request, f"Inscrição confirmada no curso “{course.title}”.")
+    elif exists:
+        flash(request, "Você já está inscrito neste curso.", "info")
+    else:
+        flash(request, "Este curso não está disponível para inscrição.", "error")
     return RedirectResponse("/afiliado/cursos", status_code=303)
 
 
