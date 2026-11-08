@@ -25,6 +25,11 @@ def wait_for_db(retries: int = 30, delay: float = 2.0):
             print("[motovida] Banco de dados disponível.")
             return
         except Exception as exc:
-            print(f"[motovida] Aguardando MySQL ({attempt}/{retries})... {exc}")
+            # Driver exceptions may include the full connection URL, including
+            # credentials. Keep startup diagnostics useful without logging it.
+            print(
+                f"[motovida] Aguardando MySQL ({attempt}/{retries})... "
+                f"erro de conexão ({type(exc).__name__})."
+            )
             time.sleep(delay)
     raise RuntimeError("Não foi possível conectar ao MySQL.")
