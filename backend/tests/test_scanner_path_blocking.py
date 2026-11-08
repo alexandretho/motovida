@@ -475,6 +475,10 @@ def test_matrix_parameter_scanner_prefix_survives_traversal():
     "path",
     [
         "/.htaccess.bak",
+        "/.env.bkp",
+        "/.git.bkp/config",
+        "/wp-config.php.bkp",
+        "/backup.zip.bkp",
         "/.htpasswd.old",
         "/.user.ini.orig",
         "/package.json.bak.old",
@@ -545,6 +549,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/privacidade.save",
         "/eventos.tmp",
         "/parceiros.backup",
+        "/parceiros.bkp",
         "/contato~",
         "/user.php",
         "/myphpinfo.php",

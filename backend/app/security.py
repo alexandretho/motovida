@@ -161,6 +161,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
 SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
     "~",
     ".bak",
+    ".bkp",
     ".old",
     ".orig",
     ".save",
