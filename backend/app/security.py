@@ -356,6 +356,15 @@ def is_sensitive_scanner_path(path: str) -> bool:
     if any(is_sensitive_scanner_segment(segment) for segment in parameter_free_segments):
         return True
 
+    # Sensitive service prefixes can also appear below an application mount
+    # point (for example /tenant/wp-admin/...). Check every directory segment
+    # after decoding so encoded prefix names cannot evade the prefix rule.
+    if any(
+        is_sensitive_scanner_prefix("/" + segment)
+        for segment in parameter_free_segments
+    ):
+        return True
+
     # phpinfo diagnostic aliases nested under known scanner endpoints are
     # common probes too; block them even when the base filename is nested.
     if (

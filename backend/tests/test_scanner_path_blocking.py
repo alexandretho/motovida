@@ -487,6 +487,22 @@ def test_matrix_parameter_scanner_prefix_survives_traversal():
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+@pytest.mark.parametrize("path", [
+    "/tenant/wp-admin/setup-config.php",
+    "/tenant/%77p-admin/setup-config.php",
+    "/tenant/wp-content/plugins/probe/readme.txt",
+    "/tenant/%77p-json/wp/v2/users",
+])
+def test_nested_wordpress_prefixes_are_blocked_after_decoding(path):
+    assert is_sensitive_scanner_path(path) is True
+
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
 @pytest.mark.parametrize(
     "path",
     [
