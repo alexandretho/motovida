@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import config  # noqa: E402
 from app.config import (  # noqa: E402
+    DATABASE_URL,
     allowed_hosts_from_env,
     env_flag,
     env_int,
@@ -15,6 +16,27 @@ from app.config import (  # noqa: E402
     normalize_site_url,
     runtime_config_warnings,
 )
+
+
+def test_database_url_escapes_reserved_credentials_and_parses_mysql_port(monkeypatch):
+    monkeypatch.setenv("MYSQL_USER", "moto@vida")
+    monkeypatch.setenv("MYSQL_PASSWORD", "p@ss:/#?%word")
+    monkeypatch.setenv("MYSQL_HOST", "db.internal")
+    monkeypatch.setenv("MYSQL_PORT", "3307")
+    monkeypatch.setenv("MYSQL_DATABASE", "motovida")
+
+    reloaded = importlib.reload(config)
+
+    assert reloaded.DATABASE_URL.username == "moto@vida"
+    assert reloaded.DATABASE_URL.password == "p@ss:/#?%word"
+    assert reloaded.DATABASE_URL.host == "db.internal"
+    assert reloaded.DATABASE_URL.port == 3307
+    assert reloaded.DATABASE_URL.database == "motovida"
+    assert reloaded.DATABASE_URL.query["charset"] == "utf8mb4"
+
+    for key in ("MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_HOST", "MYSQL_PORT", "MYSQL_DATABASE"):
+        monkeypatch.delenv(key, raising=False)
+    importlib.reload(config)
 
 
 def test_env_flag_defaults_to_false(monkeypatch):

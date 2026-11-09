@@ -1,6 +1,8 @@
 import os
 from urllib.parse import urlparse
 
+from sqlalchemy.engine import URL
+
 
 DEFAULT_SITE_URL = "https://motovida.syntratech.com.br"
 DEFAULT_GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
@@ -115,7 +117,15 @@ DB_HOST = os.getenv("MYSQL_HOST", "mysql")
 DB_PORT = os.getenv("MYSQL_PORT", "3306")
 DB_NAME = os.getenv("MYSQL_DATABASE", "motovida")
 
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
+DATABASE_URL = URL.create(
+    "mysql+pymysql",
+    username=DB_USER,
+    password=DB_PASSWORD,
+    host=DB_HOST,
+    port=env_int("MYSQL_PORT", 3306, minimum=1, maximum=65535),
+    database=DB_NAME,
+    query={"charset": "utf8mb4"},
+)
 
 SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_SECRET_KEY)
 SESSION_COOKIE_SECURE = env_flag("SESSION_COOKIE_SECURE")
