@@ -93,6 +93,7 @@ BLOCKED_HTTP_METHODS = {"TRACE", "TRACK", "CONNECT"}
 REQUEST_ID_HEADER = "X-Request-ID"
 REQUEST_ID_MAX_LENGTH = 64
 REQUEST_ID_ALLOWED_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")
+MAX_FORM_FIELDS = 1000
 
 
 def get_request_id(request: Request) -> str:
@@ -280,7 +281,17 @@ async def add_security_headers(request: Request, call_next):
 
         body = b"".join(body_chunks)
 
-        parsed = parse_qs(body.decode("utf-8", "ignore"), keep_blank_values=True)
+        try:
+            parsed = parse_qs(
+                body.decode("utf-8", "ignore"),
+                keep_blank_values=True,
+                max_num_fields=MAX_FORM_FIELDS,
+            )
+        except ValueError:
+            response = PlainTextResponse("Formulário inválido.", status_code=400)
+            response.headers[REQUEST_ID_HEADER] = request_id
+            response.headers.setdefault("Content-Security-Policy", build_content_security_policy(csp_nonce))
+            return apply_security_headers(response, request.url.path)
         csrf_token = parsed.get("csrf_token", [None])[0]
         if not isinstance(csrf_token, str) or not is_valid_csrf_token(request, csrf_token):
             if request.method.upper() == "POST" and request.url.path == "/recuperar-senha":

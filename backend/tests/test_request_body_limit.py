@@ -10,7 +10,7 @@ os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.config import MAX_FORM_BODY_BYTES  # noqa: E402
-from app.main import app  # noqa: E402
+from app.main import MAX_FORM_FIELDS, app  # noqa: E402
 
 
 def test_large_form_post_is_rejected_before_csrf_validation():
@@ -42,6 +42,21 @@ def test_reasonable_form_post_still_reaches_csrf_validation():
 
     assert response.status_code == 403
     assert response.text == "Token CSRF inválido ou ausente."
+
+
+def test_post_with_too_many_form_fields_is_rejected():
+    client = TestClient(app)
+    body = "&".join("x=1" for _ in range(MAX_FORM_FIELDS + 1))
+
+    response = client.post(
+        "/login",
+        content=body,
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 400
+    assert response.text == "Formulário inválido."
 
 
 def test_streaming_post_without_content_length_is_stopped_at_body_limit():
