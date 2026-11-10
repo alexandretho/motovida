@@ -172,8 +172,8 @@ SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
 
 
 def is_sensitive_scanner_prefix(path: str) -> bool:
+    prefix_segment = path.lstrip("/").partition("/")[0]
     for prefix in SENSITIVE_SCANNER_PREFIXES:
-        prefix_segment, separator, remainder = path.lstrip("/").partition("/")
         candidate = prefix_segment
         while True:
             for suffix in SENSITIVE_SCANNER_BACKUP_SUFFIXES:

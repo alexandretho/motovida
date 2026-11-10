@@ -298,6 +298,8 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/.git\\.bak\\config",
         "/wp-admin.old/setup-config.php",
         "/vendor.backup/.env",
+        "/tenant/wp-admin.old/setup-config.php",
+        "/tenant/.git.backup/config",
         # Common path normalization and traversal probes must reach the same
         # generic 404 before any route can disclose application content.
         "/%2eenv.production",
@@ -620,6 +622,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/.env-file.bak.old",
         "/.github.bak.old",
         "/package-help.json.bak.old",
+        "/tenant/wp-admin-guide/setup-config.php",
+        "/tenant/.github.bak.old/config",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):
