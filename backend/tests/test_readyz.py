@@ -27,6 +27,7 @@ class BrokenDb(OkDb):
 
 def _get(db):
     app.dependency_overrides[get_db] = lambda: db
+    app.state.startup_complete = True
     try:
         return TestClient(app).get("/readyz")
     finally:
@@ -35,6 +36,7 @@ def _get(db):
 
 def _head(db):
     app.dependency_overrides[get_db] = lambda: db
+    app.state.startup_complete = True
     try:
         return TestClient(app).head("/readyz")
     finally:
@@ -68,3 +70,25 @@ def test_readyz_head_unavailable_without_body_or_leak():
     assert r.status_code == 503
     assert r.text == ""
     assert r.headers["cache-control"] == "no-store"
+
+
+def test_readyz_unavailable_until_startup_finishes():
+    app.state.startup_complete = False
+    try:
+        response = TestClient(app).get("/readyz")
+    finally:
+        app.state.startup_complete = True
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "unavailable"}
+
+
+def test_readyz_head_unavailable_until_startup_finishes():
+    app.state.startup_complete = False
+    try:
+        response = TestClient(app).head("/readyz")
+    finally:
+        app.state.startup_complete = True
+
+    assert response.status_code == 503
+    assert response.text == ""

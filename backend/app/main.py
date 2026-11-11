@@ -38,6 +38,7 @@ from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
 app = FastAPI(title="Sistema Nacional de Cadastro e Atendimento – Instituto MotoVida Guilherme França")
+app.state.startup_complete = False
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS, www_redirect=False)
 http_logger = logging.getLogger("app.http")
 http_logger.setLevel(logging.INFO)
@@ -353,6 +354,8 @@ def healthz_head():
 @app.get("/readyz", include_in_schema=False)
 def readyz(db: Session = Depends(get_db)):
     headers = {"Cache-Control": "no-store"}
+    if not app.state.startup_complete:
+        return JSONResponse({"status": "unavailable"}, status_code=503, headers=headers)
     try:
         db.execute(text("SELECT 1"))
     except Exception:
@@ -363,6 +366,8 @@ def readyz(db: Session = Depends(get_db)):
 @app.head("/readyz", include_in_schema=False)
 def readyz_head(db: Session = Depends(get_db)):
     headers = {"Cache-Control": "no-store"}
+    if not app.state.startup_complete:
+        return Response(status_code=503, headers=headers)
     try:
         db.execute(text("SELECT 1"))
     except Exception:
@@ -372,6 +377,7 @@ def readyz_head(db: Session = Depends(get_db)):
 
 @app.on_event("startup")
 def startup():
+    app.state.startup_complete = False
     for warning in RUNTIME_CONFIG_WARNINGS:
         config_logger.warning("runtime_config_warning: %s", warning)
     wait_for_db()
@@ -383,3 +389,4 @@ def startup():
         run_seeds(db)
     finally:
         db.close()
+    app.state.startup_complete = True
