@@ -61,6 +61,18 @@ def test_login_rate_limit_expires_and_resets():
     assert auth.is_login_rate_limited(key, now=auth.LOGIN_FAILURE_WINDOW_SECONDS + 3.0) is False
 
 
+def test_login_failure_tracking_has_a_bounded_number_of_keys(monkeypatch):
+    monkeypatch.setattr(auth, "LOGIN_FAILURE_MAX_KEYS", 2)
+
+    auth.record_failed_login(("192.0.2.1", "a@example.com"), now=1.0)
+    auth.record_failed_login(("192.0.2.2", "b@example.com"), now=2.0)
+    auth.record_failed_login(("192.0.2.3", "c@example.com"), now=3.0)
+
+    assert len(auth._login_failures) == 2
+    assert ("192.0.2.1", "a@example.com") not in auth._login_failures
+    assert ("192.0.2.3", "c@example.com") in auth._login_failures
+
+
 class EmptyQuery:
     def filter_by(self, **kwargs):
         return self

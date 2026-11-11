@@ -21,6 +21,7 @@ LOGIN_POST_RATE_LIMIT_WINDOW_SECONDS = 10 * 60
 LOGIN_POST_RATE_LIMIT_MESSAGE = "Muitas tentativas de login em pouco tempo. Aguarde alguns minutos e tente novamente."
 LOGIN_FAILURE_LIMIT = 5
 LOGIN_FAILURE_WINDOW_SECONDS = 5 * 60
+LOGIN_FAILURE_MAX_KEYS = 10_000
 
 LOGIN_RATE_LIMIT_MESSAGE = "Muitas tentativas inválidas. Aguarde alguns minutos antes de tentar novamente."
 
@@ -65,6 +66,11 @@ def record_failed_login(key: tuple[str, str], now: float | None = None) -> bool:
         if window:
             window.count += 1
         else:
+            # Bound per-process memory when requests use many distinct
+            # IP/email pairs within the failure window.
+            if len(_login_failures) >= LOGIN_FAILURE_MAX_KEYS:
+                oldest_key = min(_login_failures, key=lambda item: _login_failures[item].started_at)
+                _login_failures.pop(oldest_key, None)
             window = LoginFailureWindow(count=1, started_at=now)
             _login_failures[key] = window
         return window.count >= LOGIN_FAILURE_LIMIT
