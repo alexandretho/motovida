@@ -335,6 +335,9 @@ def test_common_scanner_paths_are_blocked(path):
     "path",
     [
         "/phpinfo.php",
+        "/php_info.php",
+        "/i.php",
+        "/phpinfo.php/",
         "/PHPINFO.PHP",
         "/PhP_InFo.PhP",
         "/%50HPINFO%2ePHP",
