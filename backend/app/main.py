@@ -101,7 +101,9 @@ def get_request_id(request: Request) -> str:
     if request_id:
         return request_id
 
-    candidate = request.headers.get(REQUEST_ID_HEADER, "").strip()
+    # Treat the header as an opaque token: trimming can make the value logged
+    # here differ from the value supplied by a proxy or client.
+    candidate = request.headers.get(REQUEST_ID_HEADER, "")
     if (
         candidate
         and len(candidate) <= REQUEST_ID_MAX_LENGTH

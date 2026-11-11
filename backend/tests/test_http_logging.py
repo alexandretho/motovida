@@ -76,6 +76,22 @@ def test_invalid_request_id_is_not_reflected():
     assert len(response.headers["x-request-id"]) == 32
 
 
+def test_request_id_with_surrounding_whitespace_is_replaced_and_not_logged(caplog):
+    caplog.set_level(logging.INFO, logger="app.http")
+
+    response = TestClient(app).get(
+        "/robots.txt", headers={"X-Request-ID": " req-with-space "}
+    )
+
+    assert response.status_code == 200
+    request_id = response.headers["x-request-id"]
+    assert request_id != "req-with-space"
+    assert len(request_id) == 32
+    data = json.loads(http_log_records(caplog)[0].getMessage())
+    assert data["request_id"] == request_id
+    assert "req-with-space" not in http_log_records(caplog)[0].getMessage()
+
+
 def test_healthz_is_not_logged(caplog):
     caplog.set_level(logging.INFO, logger="app.http")
     response = TestClient(app).get("/healthz?token=segredo")
