@@ -5,12 +5,13 @@ import sys
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.main import app  # noqa: E402
+from app.main import app, log_http_requests  # noqa: E402
 from app.main import anonymize_ip_for_log  # noqa: E402
 
 
@@ -98,3 +99,25 @@ def test_healthz_is_not_logged(caplog):
 
     assert response.status_code == 200
     assert http_log_records(caplog) == []
+
+
+def test_http_log_records_unhandled_exception_without_exposing_details(monkeypatch, caplog):
+    caplog.set_level(logging.INFO, logger="app.http")
+
+    test_app = FastAPI()
+    test_app.middleware("http")(log_http_requests)
+
+    @test_app.get("/failure")
+    def fail():
+        raise RuntimeError("sensitive failure detail")
+
+    with TestClient(test_app, raise_server_exceptions=False) as client:
+        response = client.get("/failure")
+
+    assert response.status_code == 500
+    records = http_log_records(caplog)
+    assert len(records) == 1
+    data = json.loads(records[0].getMessage())
+    assert data["status_code"] == 500
+    assert data["outcome"] == "exception"
+    assert "sensitive failure detail" not in records[0].getMessage()

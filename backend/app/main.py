@@ -134,10 +134,14 @@ async def log_http_requests(request: Request, call_next):
 
     started_at = perf_counter()
     status_code = 500
+    outcome = "response"
     try:
         response = await call_next(request)
         status_code = response.status_code
         return response
+    except Exception:
+        outcome = "exception"
+        raise
     finally:
         duration_ms = round((perf_counter() - started_at) * 1000, 2)
         http_logger.info(
@@ -147,6 +151,7 @@ async def log_http_requests(request: Request, call_next):
                     "method": request.method,
                     "path": request.url.path,
                     "status_code": status_code,
+                    "outcome": outcome,
                     "duration_ms": duration_ms,
                     "client_ip": anonymize_ip_for_log(ratelimit.client_ip(request)),
                     "request_id": request_id,
