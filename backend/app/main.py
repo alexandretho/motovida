@@ -218,7 +218,13 @@ def request_body_too_large(request: Request, body: bytes | None = None) -> bool:
     content_length = request.headers.get("content-length")
     if content_length:
         try:
-            if int(content_length) > MAX_FORM_BODY_BYTES:
+            # ASGI exposes duplicate headers as a comma-joined value in some
+            # server/proxy combinations. Accept only one non-negative decimal
+            # length so conflicting values cannot bypass the early size check.
+            normalized_length = content_length.strip()
+            if not normalized_length.isascii() or not normalized_length.isdecimal():
+                return True
+            if int(normalized_length) > MAX_FORM_BODY_BYTES:
                 return True
         except ValueError:
             return True

@@ -3,6 +3,7 @@ import sys
 import asyncio
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -28,6 +29,37 @@ def test_large_form_post_is_rejected_before_csrf_validation():
     assert response.text == "Payload muito grande."
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+@pytest.mark.parametrize("content_length", ["-1", "+1", "1.0", "abc", "1, 1"])
+def test_malformed_or_ambiguous_content_length_is_rejected(content_length):
+    response = TestClient(app).post(
+        "/login",
+        content=b"x",
+        headers={
+            "content-type": "application/x-www-form-urlencoded",
+            "content-length": content_length,
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 413
+    assert response.text == "Payload muito grande."
+
+
+def test_content_length_at_limit_is_still_processed():
+    response = TestClient(app).post(
+        "/login",
+        content=b"x",
+        headers={
+            "content-type": "application/x-www-form-urlencoded",
+            "content-length": str(MAX_FORM_BODY_BYTES),
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 403
+    assert response.text == "Token CSRF inválido ou ausente."
 
 
 def test_reasonable_form_post_still_reaches_csrf_validation():
