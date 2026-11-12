@@ -152,6 +152,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "web.config",
     "wp-config.php",
     "wp-config-sample.php",
+    "wp-admin.php",
     "wp-cron.php",
     "wp-login.php",
     "xmlrpc.php",

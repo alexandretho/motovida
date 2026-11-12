@@ -546,6 +546,7 @@ def test_nested_wordpress_prefixes_are_blocked_after_decoding(path):
         "/.hg/store.orig",
         "/docker-compose.yml.orig",
         "/wp-login.php.backup",
+        "/wp-admin.php",
         "/wp-config.php.bak",
         "/xmlrpc.php.old",
         "/info.php.bak",
