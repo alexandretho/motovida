@@ -28,11 +28,11 @@ PASSWORD_RECOVERY_OPEN_STATUSES = ("aberta", "em_analise", "em_atendimento")
 PASSWORD_RECOVERY_DESCRIPTION_MARKER = "Origem: recuperação de senha self-service"
 
 PUBLIC_SITEMAP_PATHS = [
-    ("/", "daily", "1.0"),
-    ("/eventos", "weekly", "0.8"),
-    ("/parceiros", "weekly", "0.8"),
-    ("/contato", "monthly", "0.6"),
-    ("/privacidade", "yearly", "0.3"),
+    ("/", "daily", "1.0", "2026-10-14"),
+    ("/eventos", "weekly", "0.8", "2026-10-14"),
+    ("/parceiros", "weekly", "0.8", "2026-10-14"),
+    ("/contato", "monthly", "0.6", "2026-10-14"),
+    ("/privacidade", "yearly", "0.3", "2026-10-14"),
 ]
 
 SECURITY_TXT_MAX_AGE_DAYS = 180
@@ -118,7 +118,7 @@ def sitemap_xml(db: Session = Depends(get_db)):
 
     items = "\n".join(
         sitemap_url(path, freq, priority, lastmod)
-        for path, freq, priority, lastmod in [(*entry, None) for entry in PUBLIC_SITEMAP_PATHS] + event_entries
+        for path, freq, priority, lastmod in PUBLIC_SITEMAP_PATHS + event_entries
     )
     content = f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">

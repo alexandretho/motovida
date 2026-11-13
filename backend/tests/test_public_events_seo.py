@@ -85,6 +85,7 @@ def test_sitemap_includes_active_event_detail_and_lastmod(seeded_client):
 
     assert response.status_code == 200
     assert "<loc>https://motovida.syntratech.com.br/eventos</loc>" in response.text
+    assert "<loc>https://motovida.syntratech.com.br/privacidade</loc><lastmod>2026-10-14</lastmod>" in response.text
     assert "<loc>https://motovida.syntratech.com.br/eventos/10</loc>" in response.text
     assert "<loc>https://motovida.syntratech.com.br/eventos/13</loc>" in response.text
     assert "<lastmod>2026-11-05</lastmod>" in response.text
