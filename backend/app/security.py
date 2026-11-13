@@ -274,8 +274,11 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         for prefix in ("phpinfo", "phpinf", "i")
     ):
         if (
-            alias_stem.startswith(("phpinfo", "phpinf"))
-            and alias_stem[len("phpinfo"):].isdigit()
+            (
+                alias_stem.startswith("phpinfo") and alias_stem[len("phpinfo"):].isdigit()
+                or alias_stem.startswith("phpinf") and alias_stem[len("phpinf"):].isdigit()
+                or alias_stem.startswith("i") and alias_stem[1:].isdigit()
+            )
             and alias_separator
             and alias_extension == "json"
         ):
