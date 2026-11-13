@@ -97,6 +97,8 @@ def runtime_config_warnings(
     session_cookie_secure: bool,
     site_url: str,
     allowed_hosts: list[str],
+    trust_proxy_headers: bool = False,
+    trusted_proxy_cidrs: str = "",
 ) -> list[str]:
     """Retorna alertas não bloqueantes para configurações inseguras em produção."""
     warnings = []
@@ -108,6 +110,10 @@ def runtime_config_warnings(
         warnings.append("SESSION_COOKIE_SECURE=1 é recomendado quando SITE_URL usa HTTPS.")
     if "*" in allowed_hosts:
         warnings.append("ALLOWED_HOSTS=* desativa a validação do header Host; restrinja em produção.")
+    if trust_proxy_headers and not trusted_proxy_cidrs.strip():
+        warnings.append(
+            "TRUST_PROXY_HEADERS=1 sem TRUSTED_PROXY_CIDRS confia em headers de IP de qualquer origem; configure proxies confiáveis."
+        )
     return warnings
 
 
@@ -156,4 +162,6 @@ RUNTIME_CONFIG_WARNINGS = runtime_config_warnings(
     session_cookie_secure=SESSION_COOKIE_SECURE,
     site_url=SITE_URL,
     allowed_hosts=ALLOWED_HOSTS,
+    trust_proxy_headers=env_flag("TRUST_PROXY_HEADERS"),
+    trusted_proxy_cidrs=os.getenv("TRUSTED_PROXY_CIDRS", ""),
 )

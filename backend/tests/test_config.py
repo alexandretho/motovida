@@ -144,6 +144,34 @@ def test_runtime_config_warnings_accepts_hardened_configuration():
     assert warnings == []
 
 
+def test_runtime_config_warns_when_proxy_headers_are_trusted_from_any_source():
+    warnings = runtime_config_warnings(
+        secret_key="uma-chave-aleatoria-com-mais-de-32-caracteres",
+        admin_password="senha-admin-forte-2026",
+        session_cookie_secure=True,
+        site_url="https://motovida.example.com.br",
+        allowed_hosts=["motovida.example.com.br", "localhost"],
+        trust_proxy_headers=True,
+    )
+
+    assert len(warnings) == 1
+    assert "TRUSTED_PROXY_CIDRS" in warnings[0]
+
+
+def test_runtime_config_accepts_proxy_headers_with_restricted_proxy_config():
+    warnings = runtime_config_warnings(
+        secret_key="uma-chave-aleatoria-com-mais-de-32-caracteres",
+        admin_password="senha-admin-forte-2026",
+        session_cookie_secure=True,
+        site_url="https://motovida.example.com.br",
+        allowed_hosts=["motovida.example.com.br", "localhost"],
+        trust_proxy_headers=True,
+        trusted_proxy_cidrs="private",
+    )
+
+    assert warnings == []
+
+
 def test_public_site_settings_can_be_configured_by_environment(monkeypatch):
     monkeypatch.setenv("SITE_URL", "https://instituto.example.org/")
     monkeypatch.setenv("GA_MEASUREMENT_ID", "G-TESTE123")
