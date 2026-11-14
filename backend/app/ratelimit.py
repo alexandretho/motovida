@@ -8,6 +8,7 @@ from .config import env_flag
 
 _hits: dict[tuple[str, str], list[float]] = {}
 _lock = Lock()
+MAX_RATE_LIMIT_KEYS = 10_000
 
 TRUSTED_PROXY_CIDR_PRESETS = {
     "cloudflare": (
@@ -126,7 +127,12 @@ def hit(scope: str, ip: str, limit: int, window: float, now: float | None = None
             _hits[(scope, ip)] = times
             return True
         times.append(now)
-        _hits[(scope, ip)] = times
+        key = (scope, ip)
+        if key not in _hits and len(_hits) >= MAX_RATE_LIMIT_KEYS:
+            # Keep this in-memory guard bounded under high-cardinality traffic.
+            oldest_key = min(_hits, key=lambda item: _hits[item][-1])
+            _hits.pop(oldest_key, None)
+        _hits[key] = times
         return False
 
 

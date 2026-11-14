@@ -32,6 +32,22 @@ def test_scoped_by_ip_and_scope():
     assert ratelimit.hit("cadastro", "1.1.1.1", 3, 60, now=4.0) is False
 
 
+def test_rate_limit_key_store_stays_bounded_and_evicts_oldest():
+    original_capacity = ratelimit.MAX_RATE_LIMIT_KEYS
+    ratelimit.MAX_RATE_LIMIT_KEYS = 2
+    try:
+        assert ratelimit.hit("contato", "1.1.1.1", 2, 60, now=1.0) is False
+        assert ratelimit.hit("contato", "2.2.2.2", 2, 60, now=2.0) is False
+        assert ratelimit.hit("contato", "3.3.3.3", 2, 60, now=3.0) is False
+
+        assert len(ratelimit._hits) == 2
+        assert ("contato", "1.1.1.1") not in ratelimit._hits
+        assert ("contato", "2.2.2.2") in ratelimit._hits
+        assert ("contato", "3.3.3.3") in ratelimit._hits
+    finally:
+        ratelimit.MAX_RATE_LIMIT_KEYS = original_capacity
+
+
 def csrf_token_from(response) -> str:
     match = re.search(r'name="csrf_token" value="([^"]+)"', response.text)
     assert match is not None
