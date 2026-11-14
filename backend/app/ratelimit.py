@@ -71,6 +71,10 @@ def client_ip(request) -> str:
         trusted_networks = []
         if trusted_proxy_cidrs:
             trusted_networks = trusted_proxy_networks(trusted_proxy_cidrs)
+            # Uma lista explicitamente configurada, mas sem CIDRs válidos,
+            # não deve equivaler a confiar em qualquer proxy.
+            if not trusted_networks:
+                return remote_ip
             try:
                 remote_addr = ipaddress.ip_address(remote_ip)
                 trusted = any(

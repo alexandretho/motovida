@@ -123,6 +123,14 @@ def test_cidrs_configurados_sem_entradas_validas_nao_habilitam_headers(monkeypat
     assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="10.0.0.42")) == "10.0.0.42"
 
 
+def test_cidrs_mistos_usam_apenas_os_proxies_validos(monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "cidr-invalido, 10.0.0.0/24")
+
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="10.0.0.42")) == "203.0.113.8"
+    assert client_ip(req({"cf-connecting-ip": "203.0.113.8"}, host="192.0.2.10")) == "192.0.2.10"
+
+
 def test_ignora_spoof_quando_proxy_remoto_fora_dos_cidrs(monkeypatch):
     monkeypatch.setenv("TRUST_PROXY_HEADERS", "1")
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "192.0.2.0/24")
