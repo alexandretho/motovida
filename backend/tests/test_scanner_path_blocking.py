@@ -308,6 +308,8 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/%2eenv.production",
         "/.git%2fconfig",
         "/wp-admin%2fsetup-config.php",
+        # Some proxies and servers strip trailing dots from path segments.
+        "/wp-admin%2e/setup-config.php",
         # Mixed literal/encoded dots are accepted by some proxy normalizers
         # as dot segments and must not bypass the scanner path check.
         "/public/.%2e/.env",
@@ -648,6 +650,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/.github.bak.old",
         "/package-help.json.bak.old",
         "/tenant/wp-admin-guide/setup-config.php",
+        "/tenant/wp-admin-guide%2e/setup-config.php",
         "/tenant/.github.bak.old/config",
     ],
 )

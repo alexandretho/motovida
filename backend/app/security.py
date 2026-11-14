@@ -369,6 +369,15 @@ def is_sensitive_scanner_path(path: str) -> bool:
     ):
         return True
 
+    # Some path normalizers strip a trailing dot from a segment. Check that
+    # alias for known scanner prefixes without changing general route matching.
+    if any(
+        is_sensitive_scanner_prefix("/" + segment.rstrip("."))
+        for segment in parameter_free_segments
+        if segment.endswith(".")
+    ):
+        return True
+
     # phpinfo diagnostic aliases nested under known scanner endpoints are
     # common probes too; block them even when the base filename is nested.
     if (
