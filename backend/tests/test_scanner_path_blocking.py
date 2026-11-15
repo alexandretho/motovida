@@ -110,6 +110,8 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/application.yml",
         "/application.yaml",
         "/credentials.xml",
+        "/.gitlab-ci.yml",
+        "/repo/.gitlab-ci.yml",
         "/terraform.tfstate",
         "/terraform.tfstate.backup",
         "/.npmrc",
@@ -468,6 +470,17 @@ def test_priority_phpinfo_probes_are_not_cached_or_disclosed(path, caplog):
     assert all("phpinfo-probe-secret" not in record.getMessage() for record in records)
 
 
+def test_gitlab_ci_configuration_probe_returns_detail_free_no_store_404():
+    response = client.get("/repo/.gitlab-ci.yml", headers={"accept": "text/html"})
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert "Página não encontrada" not in response.text
+    assert "Traceback" not in response.text
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
 def test_legitimate_public_route_is_preserved():
     response = client.get("/robots.txt")
 
@@ -659,6 +672,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/tenant/wp-admin-guide/setup-config.php",
         "/tenant/wp-admin-guide%2e/setup-config.php",
         "/tenant/.github.bak.old/config",
+        "/.gitlab-ci.example.yml",
+        "/docs/gitlab-ci.yml.example",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):

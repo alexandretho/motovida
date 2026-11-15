@@ -133,6 +133,7 @@ SENSITIVE_SCANNER_FILENAMES = frozenset({
     "application.yml",
     "application.yaml",
     "credentials.xml",
+    ".gitlab-ci.yml",
     "terraform.tfstate",
     "terraform.tfstate.backup",
     "local_settings.py",
