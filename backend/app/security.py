@@ -245,9 +245,9 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     if filename == ".env" or filename.startswith(".env."):
         return True
 
-    # phpinfo is probed with and without a PHP extension, sometimes with a
-    # numeric suffix (for example phpinfo7.php). Keep the match specific to
-    # that probe family so ordinary names such as /info.php stay available.
+    # phpinfo and its short /i alias are probed with PHP version extensions
+    # (for example phpinfo7.php and i.php5.6). Keep matching filename-specific
+    # so descriptive application names remain available.
     candidate = filename
     # Backup suffixes are often stacked by scanners or deployment tooling
     # (for example phpinfo.php.bak.old). Strip the whole chain before checking

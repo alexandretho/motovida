@@ -375,6 +375,11 @@ def test_common_scanner_paths_are_blocked(path):
         "/php_info.php7.4",
         "/php-info7.php8.1",
         "/i.php5.6",
+        "/i.php10",
+        "/i.php5.6.bak.old",
+        "/%69%2ephp5%2e6",
+        "/%2569%252ephp5%252e6",
+        "/nested/%2569%252ephp5%252e6",
         # Numbered aliases and alternate spellings also appear with compound
         # PHP versions and JSON responses in scanner probe lists.
         "/php_info8.php5.6",
@@ -626,6 +631,8 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/php_info7-report.json",
         "/i.txt",
         "/i-api.php",
+        "/i.php-api",
+        "/i.php5.6.txt",
         "/i-api.json",
         "/i7-report.json",
         "/info-api.php",
