@@ -312,6 +312,9 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/wp-admin%2fsetup-config.php",
         # Some proxies and servers strip trailing dots from path segments.
         "/wp-admin%2e/setup-config.php",
+        # IIS trims trailing spaces from path segments during resolution.
+        "/wp-admin%20/setup-config.php",
+        "/config.php%20",
         # Mixed literal/encoded dots are accepted by some proxy normalizers
         # as dot segments and must not bypass the scanner path check.
         "/public/.%2e/.env",

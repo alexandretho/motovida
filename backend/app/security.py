@@ -354,11 +354,17 @@ def is_sensitive_scanner_path(path: str) -> bool:
     segments = [segment for segment in normalized_path.split("/") if segment]
     parameter_free_segments = [segment.split(";", 1)[0] for segment in segments]
     path_without_parameters = "/" + "/".join(parameter_free_segments)
+    # Windows/IIS commonly trims trailing dots and spaces from path segments
+    # before resolving them. Check that alias for scanner names and prefixes.
+    windows_trimmed_segments = [segment.rstrip(". ") for segment in parameter_free_segments]
 
     if normalized_path in SENSITIVE_SCANNER_EXACT_PATHS:
         return True
 
     if any(is_sensitive_scanner_segment(segment) for segment in parameter_free_segments):
+        return True
+
+    if any(is_sensitive_scanner_segment(segment) for segment in windows_trimmed_segments):
         return True
 
     # Sensitive service prefixes can also appear below an application mount
@@ -379,6 +385,9 @@ def is_sensitive_scanner_path(path: str) -> bool:
     ):
         return True
 
+    if any(is_sensitive_scanner_prefix("/" + segment) for segment in windows_trimmed_segments):
+        return True
+
     # phpinfo diagnostic aliases nested under known scanner endpoints are
     # common probes too; block them even when the base filename is nested.
     if (
@@ -391,6 +400,9 @@ def is_sensitive_scanner_path(path: str) -> bool:
         is_sensitive_scanner_filename(segment)
         for segment in (*segments, *parameter_free_segments)
     ):
+        return True
+
+    if any(is_sensitive_scanner_filename(segment) for segment in windows_trimmed_segments):
         return True
 
     # Prefix probes can carry matrix parameters on the directory segment.
