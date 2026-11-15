@@ -4,6 +4,11 @@ from urllib.parse import urlparse
 from sqlalchemy.engine import URL
 
 
+def render_alembic_database_url(url: URL) -> str:
+    """Renderiza credenciais reais e escapa percentuais para ConfigParser."""
+    return url.render_as_string(hide_password=False).replace("%", "%%")
+
+
 DEFAULT_SITE_URL = "https://motovida.syntratech.com.br"
 DEFAULT_GA_MEASUREMENT_ID = "G-VHCJDB0QNS"
 DEFAULT_MAX_FORM_BODY_BYTES = 64 * 1024

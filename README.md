@@ -35,7 +35,7 @@ docker compose up --build
 No primeiro boot, automaticamente:
 - o MySQL é criado com volume persistente (`mysql_data`);
 - a aplicação aguarda o banco ficar saudável (healthcheck + retry);
-- **todas as tabelas são criadas** (SQLAlchemy `create_all`);
+- **Alembic aplica as migrações pendentes**; banco legado completo sem histórico é adotado com `stamp`, sem recriar tabelas nem apagar registros;
 - os **seeds** são aplicados: usuário admin, afiliado de demonstração, 5 cursos, 8 parceiros e 1 evento.
 
 ## Validação operacional
@@ -121,13 +121,27 @@ O `docker-compose.yml` inclui o **Nginx Proxy Manager** que gerencia certificado
 
 ## Banco de dados
 
-Tabelas criadas automaticamente: `users`, `affiliates`, `support_requests`, `request_history`, `legal_support`, `psychological_support`, `mei_support`, `specialized_support_history`, `courses`, `course_enrollments`, `events`, `partners`, `attendances`, `lgpd_consents`.
+Tabela e índice são criados/aplicados automaticamente pelas migrações Alembic: `users`, `affiliates`, `support_requests`, `request_history`, `legal_support`, `psychological_support`, `mei_support`, `specialized_support_history`, `courses`, `course_enrollments`, `events`, `partners`, `attendances`, `lgpd_consents`.
 
 Para inspecionar o banco:
 
 ```bash
 docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
 ```
+
+### Migrações de esquema
+
+As migrações são versionadas em `backend/alembic/versions/` e aplicadas automaticamente antes dos seeds no startup. Para conferir o estado ou criar uma nova migração:
+
+```bash
+cd backend
+alembic current
+alembic history
+alembic revision --autogenerate -m "descrever mudança"
+alembic upgrade head
+```
+
+Revise sempre a migração gerada antes de aplicá-la. Bancos sem histórico são adotados somente quando as tabelas e colunas esperadas já existem; esquemas incompletos fazem o startup parar com erro explícito, sem tentativa destrutiva de reparo. A baseline inicial é intencionalmente não reversível por `downgrade`, para impedir que um comando apague o banco inteiro; faça restore explícito de backup quando necessário.
 
 ## Segurança e LGPD
 
@@ -159,7 +173,7 @@ motovida/
     ├── Dockerfile
     ├── requirements.txt
     └── app/
-        ├── main.py            # entrypoint FastAPI (startup: espera DB, cria tabelas, seeds)
+        ├── main.py            # entrypoint FastAPI (startup: aguarda DB, migrações, seeds)
         ├── config.py          # variáveis de ambiente
         ├── database.py        # engine, sessão e espera do MySQL
         ├── models.py          # 14 tabelas (SQLAlchemy)

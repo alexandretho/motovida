@@ -36,13 +36,13 @@ Sistema Nacional de Cadastro e Atendimento para motoboys, motociclistas, entrega
 ## Pendências conhecidas (backlog)
 
 1. Eventos: página pública `/eventos`, edição e ativar/desativar no admin já implementados
-2. Agendamento psicológico: admin confirma data/hora em `/admin/atendimentos` (`scheduled_at`, coluna adicionada no startup via `app/scheduling.py`); afiliado vê a confirmação. Falta notificação por e-mail (sem SMTP)
+2. Agendamento psicológico: admin confirma data/hora em `/admin/atendimentos` (`scheduled_at`, gerenciado pelo Alembic); afiliado vê a confirmação. Falta notificação por e-mail (sem SMTP)
 3. Histórico de status de atendimentos especializados implementado (testes em `test_specialized_support_history.py`)
 4. Afiliado já edita o perfil (`/afiliado/perfil`) e troca a própria senha (`/afiliado/senha`); recuperação de senha self-service em `/recuperar-senha` gera solicitação para o admin redefinir (sem SMTP, sem envio de e-mail)
 5. Formulário de contato funcional (`/contato`, com rate limit; gera solicitação no Canal de Ajuda)
 6. Admin já troca a própria senha e redefine senha de afiliados (`/admin/afiliados/{id}/senha`); cria novos admins em `/admin/admins`; recuperação via `/recuperar-senha` abre solicitação no Canal de Ajuda; envio automático por e-mail depende de SMTP
 7. CSRF implementado (token em sessão + middleware, testes em `backend/tests/test_csrf.py`)
-8. Sem migrações (Alembic) — mudanças de schema exigem cuidado com o volume existente
+8. Alembic implementado: baseline do schema atual, adoção não destrutiva de banco legado completo e migrações pendentes aplicadas no startup. Esquemas incompletos falham em modo seguro.
 9. Paginação admin implementada
 10. LGPD: afiliado baixa seus dados em JSON em `/afiliado/meus-dados` (`app/data_export.py`)
 11. App já roda em Docker (container `motovida-app` healthy, porta privada Tailscale 9205); smoke de `/healthz`, `/readyz`, `/robots.txt`, `/favicon.ico`, `/sitemap.xml` e bloqueio de scanners (`/.env`, `/.git/*`, `/wp-*`, `/xmlrpc.php`) validado em 14/10/2026. Atenção: o header Host precisa estar em `ALLOWED_HOSTS`/`SITE_URL` (use `Host: localhost` em smoke local)

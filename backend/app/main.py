@@ -30,10 +30,10 @@ from .config import (
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from .database import Base, SessionLocal, engine, get_db, wait_for_db
+from .database import SessionLocal, engine, get_db, wait_for_db
 from .deps import base_ctx, is_valid_csrf_token
+from .migrations import migrate_database
 from .routers import admin, affiliate, auth, public
-from .scheduling import ensure_lgpd_consent_ip_column, ensure_scheduled_at_column
 from .seeds import run_seeds
 from .security import is_sensitive_scanner_path
 
@@ -392,9 +392,7 @@ def startup():
     for warning in RUNTIME_CONFIG_WARNINGS:
         config_logger.warning("runtime_config_warning: %s", warning)
     wait_for_db()
-    Base.metadata.create_all(bind=engine)
-    ensure_scheduled_at_column(engine)
-    ensure_lgpd_consent_ip_column(engine)
+    migrate_database(engine)
     db = SessionLocal()
     try:
         run_seeds(db)
