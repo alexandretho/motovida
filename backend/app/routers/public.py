@@ -280,7 +280,11 @@ def events_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     events = db.query(models.Event).filter_by(active=True)\
         .order_by(models.Event.event_date.is_(None), models.Event.event_date.asc(), models.Event.id.asc()).all()
-    return templates.TemplateResponse(request, "public/eventos.html", base_ctx(request, user, events=events))
+    now = datetime.now()
+    upcoming_events = [event for event in events if event.event_date is None or event.event_date >= now]
+    past_events = [event for event in events if event.event_date is not None and event.event_date < now]
+    return templates.TemplateResponse(request, "public/eventos.html", base_ctx(
+        request, user, events=upcoming_events, past_events=past_events))
 
 
 @router.get("/eventos/{event_id}")

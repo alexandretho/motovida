@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -61,6 +61,14 @@ def seeded_client():
             location="Campinas/SP",
             active=True,
         ),
+        models.Event(
+            id=14,
+            title="Evento anterior",
+            description="Ação já realizada.",
+            event_date=datetime.now() - timedelta(days=2),
+            location="Santos/SP",
+            active=True,
+        ),
     ])
     db.commit()
     db.close()
@@ -74,14 +82,15 @@ def seeded_client():
 
     app.dependency_overrides[get_db] = override_get_db
     try:
-        yield TestClient(app)
+        yield TestClient(app), TestingSessionLocal
     finally:
         app.dependency_overrides.clear()
         models.Base.metadata.drop_all(engine)
 
 
 def test_sitemap_includes_active_event_detail_and_lastmod(seeded_client):
-    response = seeded_client.get("/sitemap.xml")
+    client, _ = seeded_client
+    response = client.get("/sitemap.xml")
 
     assert response.status_code == 200
     assert "<loc>https://motovida.syntratech.com.br/eventos</loc>" in response.text
@@ -94,7 +103,8 @@ def test_sitemap_includes_active_event_detail_and_lastmod(seeded_client):
 
 
 def test_event_detail_is_public_indexable_and_has_canonical(seeded_client):
-    response = seeded_client.get("/eventos/10")
+    client, _ = seeded_client
+    response = client.get("/eventos/10")
 
     assert response.status_code == 200
     assert "Mutirão de atendimento" in response.text
@@ -104,14 +114,65 @@ def test_event_detail_is_public_indexable_and_has_canonical(seeded_client):
 
 
 def test_inactive_event_detail_returns_404(seeded_client):
-    response = seeded_client.get("/eventos/11")
+    client, _ = seeded_client
+    response = client.get("/eventos/11")
 
     assert response.status_code == 404
 
 
 def test_events_page_breaks_equal_date_ties_by_id(seeded_client):
-    response = seeded_client.get("/eventos")
+    client, _ = seeded_client
+    response = client.get("/eventos")
 
     assert response.status_code == 200
     assert response.text.index("Mutirão de atendimento") < response.text.index("Outro mutirão")
     assert "Evento desativado" not in response.text
+
+
+def test_events_page_separates_past_events_from_upcoming_and_undated(seeded_client):
+    client, _ = seeded_client
+    response = client.get("/eventos")
+
+    assert response.status_code == 200
+    assert response.text.index("Eventos MotoVida") < response.text.index("Data a confirmar")
+    assert response.text.index("Data a confirmar") < response.text.index("Eventos anteriores")
+    assert response.text.index("Eventos anteriores") < response.text.index("Evento anterior")
+
+
+def test_affiliate_events_page_separates_past_events(seeded_client):
+    from app.security import hash_password
+
+    _, session_factory = seeded_client
+    db = session_factory()
+    user = models.User(email="eventos@teste.example", password_hash=hash_password("senha-segura"))
+    affiliate = models.Affiliate(
+        user=user,
+        full_name="Afiliado de Eventos",
+        cpf="52998224725",
+        phone="11999999999",
+        whatsapp="11999999999",
+        email=user.email,
+        city="São Paulo",
+        state="SP",
+        profession="motoboy",
+        mei_status="nao_sei_informar",
+    )
+    db.add_all([user, affiliate])
+    db.commit()
+    user_email = user.email
+    db.close()
+    client = TestClient(app)
+    import re
+    login_page = client.get("/login")
+    token = re.search(r'name="csrf_token" value="([^"]+)"', login_page.text).group(1)
+    client.post("/login", data={
+        "csrf_token": token,
+        "email": user_email,
+        "password": "senha-segura",
+    })
+    response = client.get("/afiliado/eventos")
+
+    assert response.status_code == 200
+    assert response.text.index("Eventos e ações") < response.text.index("Data a confirmar")
+    assert response.text.index("Data a confirmar") < response.text.index("Eventos anteriores")
+    assert response.text.index("Eventos anteriores") < response.text.index("Evento anterior")

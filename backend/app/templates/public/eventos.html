@@ -22,6 +22,21 @@
       <p>Nenhum evento ativo cadastrado no momento.</p>
       {% endfor %}
     </div>
+    {% if past_events %}
+    <h2>Eventos anteriores</h2>
+    <div class="grid cards">
+      {% for e in past_events %}
+      <article class="card">
+        <span class="tag">Evento anterior</span>
+        <h3>{{ e.title }}</h3>
+        <p class="discount"><strong>{{ e.event_date.strftime('%d/%m/%Y às %H:%M') }}</strong></p>
+        {% if e.location %}<p class="muted">📍 {{ e.location }}</p>{% endif %}
+        {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+        <p><a class="btn btn-secondary" href="/eventos/{{ e.id }}">Ver detalhes</a></p>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
     <p style="margin-top:1.5rem"><a class="btn btn-primary" href="/cadastro">Quero me afiliar</a></p>
   </div>
 </section>
