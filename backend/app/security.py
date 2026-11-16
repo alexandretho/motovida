@@ -328,6 +328,11 @@ def is_sensitive_scanner_segment(segment: str) -> bool:
     ):
         return True
 
+    # Git metadata probes also target sibling filenames such as .git-HEAD
+    # and .git-credentials. Keep this scoped to the .git namespace.
+    if candidate.startswith(".git-"):
+        return True
+
     return candidate in {".gitmodules", ".gitconfig"}
 
 

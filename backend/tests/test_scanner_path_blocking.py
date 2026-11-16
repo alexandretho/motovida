@@ -71,6 +71,8 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/.svn/entries",
         "/.hg/store",
         "/.git/config",
+        "/.git-HEAD",
+        "/.git-credentials",
         "/.git/",
         "/.git/HEAD",
         "/.git/hooks/pre-commit",
@@ -481,6 +483,16 @@ def test_gitlab_ci_configuration_probe_returns_detail_free_no_store_404():
     assert "Página não encontrada" not in response.text
     assert "Traceback" not in response.text
     assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+@pytest.mark.parametrize("path", ["/.git-HEAD", "/.git-credentials"])
+def test_git_sibling_metadata_probes_return_generic_not_found(path):
+    assert is_sensitive_scanner_path(path) is True
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
