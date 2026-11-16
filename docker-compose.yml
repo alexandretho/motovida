@@ -4,15 +4,15 @@ services:
     container_name: motovida-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?gere .env com python3 scripts/init-env.py}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-motovida}
       MYSQL_USER: ${MYSQL_USER:-motovida}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?gere .env com python3 scripts/init-env.py}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${MYSQL_ROOT_PASSWORD}\""]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -30,51 +30,56 @@ services:
       MYSQL_PORT: "3306"
       MYSQL_DATABASE: ${MYSQL_DATABASE:-motovida}
       MYSQL_USER: ${MYSQL_USER:-motovida}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
-      SECRET_KEY: ${SECRET_KEY:?defina SECRET_KEY no .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?gere .env com python3 scripts/init-env.py}
+      SECRET_KEY: ${SECRET_KEY:?gere .env com python3 scripts/init-env.py}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
+      SESSION_COOKIE_SAME_SITE: ${SESSION_COOKIE_SAME_SITE:-lax}
+      SESSION_COOKIE_MAX_AGE_SECONDS: ${SESSION_COOKIE_MAX_AGE_SECONDS:-28800}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-motovida_session}
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-0}
-      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-private}
-      SITE_URL: ${SITE_URL:-https://motovida.syntratech.com.br}
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-}
+      SITE_URL: ${SITE_URL:-http://localhost:9205}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
-      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-G-VHCJDB0QNS}
+      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+      MAX_FORM_BODY_BYTES: ${MAX_FORM_BODY_BYTES:-65536}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?defina ADMIN_EMAIL no .env}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?defina ADMIN_PASSWORD no .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?gere .env com python3 scripts/init-env.py}
+      SEED_SAMPLE_DATA: ${SEED_SAMPLE_DATA:-0}
     expose:
       - "8000"
     ports:
-      # Acesso privado via Tailscale; não expor app direto na internet pública.
-      - "100.74.78.59:9205:8000"
+      # Não expor diretamente à internet; use proxy reverso/firewall.
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-9205}:8000"
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).read()\""]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).read()"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 30s
     networks:
       - default
+      - proxy
 
   nginx-proxy-manager:
+    profiles: ["proxy"]
     image: jc21/nginx-proxy-manager:latest
     container_name: motovida-npm
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "127.0.0.1:81:81"
+      - "${NPM_HTTP_PORT:-80}:80"
+      - "${NPM_HTTPS_PORT:-443}:443"
+      - "${NPM_ADMIN_BIND_ADDRESS:-127.0.0.1}:${NPM_ADMIN_PORT:-81}:81"
     volumes:
       - npm_data:/data
       - npm_letsencrypt:/etc/letsencrypt
     depends_on:
       - app
     networks:
-      - default      # alcança motovida-app
-      - npm_shared   # alcança apps de outros projetos
+      - proxy
 
 networks:
-  default:
-  npm_shared:
-    external: true
+  proxy:
+    internal: true
 
 volumes:
   mysql_data:

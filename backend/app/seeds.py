@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from . import models
-from .config import ADMIN_EMAIL, ADMIN_PASSWORD, POLICY_VERSION
+from .config import ADMIN_EMAIL, ADMIN_PASSWORD, POLICY_VERSION, env_flag
 from .security import hash_password
 
 
@@ -11,6 +11,11 @@ def run_seeds(db: Session):
 
     admin = models.User(email=ADMIN_EMAIL, password_hash=hash_password(ADMIN_PASSWORD), role="admin")
     db.add(admin)
+
+    if not env_flag("SEED_SAMPLE_DATA"):
+        db.commit()
+        print("[motovida] Conta de administrador inicial criada; dados fictícios desativados.")
+        return
 
     courses = [
         ("Educação e conscientização no trânsito", "Fundamentos de comportamento seguro, legislação e convivência no trânsito urbano.", "Trânsito", 8),

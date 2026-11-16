@@ -1,202 +1,95 @@
-# 🏍️💙 Sistema Nacional de Cadastro e Atendimento – Instituto MotoVida Guilherme França
+# MotoVida — subir localmente ou em um servidor próprio
 
-> "Cuidando de quem move o Brasil todos os dias."
+Plataforma de cadastro e atendimento do Instituto MotoVida. Inclui FastAPI, MySQL, migrações Alembic e Nginx Proxy Manager opcional para publicação HTTPS.
 
-Plataforma nacional de cadastro, atendimento e gestão de afiliados (motoboys, motociclistas, entregadores e familiares), com apoio jurídico, psicológico e social, cursos, auxílio MEI e rede de parceiros.
+## Requisitos
 
-## Stack
+- Docker Engine e plugin Docker Compose v2 (`docker compose version`)
+- Para publicar na internet: domínio apontado para o servidor e portas TCP 80/443 liberadas no firewall
+- Para usar o NPM incluído: portas 80 e 443 disponíveis. A interface administrativa do NPM fica restrita a `127.0.0.1:81` por padrão.
 
-| Camada | Tecnologia |
-|---|---|
-| Backend | Python 3.12 + **FastAPI** + SQLAlchemy |
-| Banco de dados | **MySQL 8** (Docker, volume persistente) |
-| Frontend | Jinja2 + HTML/CSS responsivo mobile-first (sem dependências externas) |
-| Proxy / SSL | **Nginx Proxy Manager** (Let's Encrypt automático) |
-| Infra | Docker + docker-compose (com healthcheck) |
-
-FastAPI foi escolhido por ser leve, rápido e simples de containerizar; os templates são servidos pelo próprio backend, então **um único serviço de aplicação** atende área pública, área do afiliado e painel admin.
-
-## Como rodar
-
-Pré-requisito: Docker + Docker Compose.
+## Instalação segura
 
 ```bash
-# 1. (opcional) configure variáveis de ambiente
-cp .env.example .env
-
-# 2. suba tudo
-docker compose up --build
+git clone https://github.com/alexandretho/motovida.git
+cd motovida
+python3 scripts/init-env.py
 ```
 
-**Desenvolvimento local:** a aplicação fica em **http://localhost:8000** (acesso direto, sem passar pelo NPM).
+O script cria `.env` apenas se ainda não existir, gera senhas/chaves aleatórias distintas e aplica permissão `600`. Não sobrescreve arquivos existentes. O `.env` é ignorado pelo Git; nunca o envie, compartilhe ou cole em chamados.
 
-**Produção com domínio e HTTPS:** veja a seção [Configuração SSL](#configuração-ssl-produção) abaixo.
+Edite `.env` localmente:
 
-No primeiro boot, automaticamente:
-- o MySQL é criado com volume persistente (`mysql_data`);
-- a aplicação aguarda o banco ficar saudável (healthcheck + retry);
-- **Alembic aplica as migrações pendentes**; banco legado completo sem histórico é adotado com `stamp`, sem recriar tabelas nem apagar registros;
-- os **seeds** são aplicados: usuário admin, afiliado de demonstração, 5 cursos, 8 parceiros e 1 evento.
+- `ADMIN_EMAIL`: e-mail do administrador inicial. A senha forte é gerada automaticamente e fica somente no `.env`; consulte o arquivo localmente e guarde-a num gerenciador de senhas antes do primeiro acesso.
+- `SITE_URL`: `http://localhost:9205` para teste local ou URL HTTPS real em produção, sem barra final.
+- `SESSION_COOKIE_SECURE=1` quando o site estiver publicado exclusivamente por HTTPS.
+- `ALLOWED_HOSTS`: opcional; hosts aceitos separados por vírgula. O domínio de `SITE_URL` e hosts locais são incluídos automaticamente.
+- `TRUST_PROXY_HEADERS=1` apenas atrás de proxy confiável; defina também `TRUSTED_PROXY_CIDRS` com os endereços/CIDRs reais do proxy.
+- `GA_MEASUREMENT_ID`: vazio desativa analytics; informe apenas um ID próprio se desejar.
+- `MAX_FORM_BODY_BYTES`: limite de tamanho dos formulários sensíveis (padrão 65536 bytes).
+- `APP_PORT`, `NPM_HTTP_PORT`, `NPM_HTTPS_PORT`: altere se houver conflito de portas. Não exponha a porta da aplicação diretamente à internet.
 
-## Validação operacional
-
-Última validação Docker ponta a ponta: **2026-10-06**.
-
-Checks executados com sucesso:
-- `docker compose config`
-- `docker compose up -d --build`
-- containers `mysql`, `app` e `nginx-proxy-manager` em execução, com MySQL saudável
-- healthcheck do app em `/healthz`
-- smoke HTTP de `/`, `/healthz`, `/robots.txt`, `/favicon.ico`, `/.env` e `/wp-admin/`
-- login admin e login do afiliado demo redirecionando para as áreas corretas
-
-## Usuários de teste
-
-| Perfil | Origem | Observação |
-|---|---|---|
-| Administrador | `ADMIN_EMAIL` / `ADMIN_PASSWORD` no `.env` | Defina uma senha forte antes do primeiro boot. |
-| Afiliado demo | seed de desenvolvimento | Não use credenciais de demonstração em produção. |
-
-Copie `.env.example` para `.env` e preencha os segredos reais localmente. O arquivo `.env` não deve ser versionado.
-
-## Mapa do sistema
-
-**Área pública** (`/`)
-- Página institucional, lista de benefícios, parceiros em destaque
-- `/cadastro` — cadastro de afiliado com validação de CPF, e-mail, UF e aceite LGPD obrigatório (data/hora registradas)
-- `/parceiros`, `/contato`, `/privacidade`, `/login`
-- `/recuperar-senha` — solicitação pública de recuperação assistida, sem revelar se o e-mail existe
-
-**Área do afiliado** (`/afiliado` — requer login de afiliado)
-- Dashboard com resumo dos atendimentos
-- `/afiliado/juridico` — acidentes de trânsito, dúvidas trabalhistas/previdenciárias, com status
-- `/afiliado/psicologico` — acolhimento emocional, vítima/familiar, preferência de agendamento
-- `/afiliado/cursos` — listagem e inscrição em cursos
-- `/afiliado/mei` — passo a passo + solicitação de suporte especializado
-- `/afiliado/ajuda` — abertura de solicitações (tipo, prioridade, status, histórico completo)
-- `/afiliado/consentimentos` — histórico dos aceites LGPD da própria conta (versão, data/hora e IP registrado)
-
-**Painel administrativo** (`/admin` — requer login de admin)
-- Dashboard com relatórios: total de afiliados, por estado, por cidade, por profissão, solicitações por tipo/status, cursos com mais inscritos e principais demandas
-- `/admin/afiliados` — listagem com filtros por estado, cidade e profissão + detalhe completo + registro de atendimentos + redefinição assistida de senha do afiliado (registrada no histórico de atendimentos)
-- `/admin/solicitacoes` — gestão de solicitações com alteração de status e histórico
-- `/admin/atendimentos` — demandas jurídicas, psicológicas e MEI
-- `/admin/cursos` — cadastro/edição de cursos e lista de inscritos
-- `/admin/eventos` e `/admin/parceiros` — cadastro e edição
-
-## Configuração SSL (produção)
-
-O `docker-compose.yml` inclui o **Nginx Proxy Manager** que gerencia certificados SSL via Let's Encrypt automaticamente.
-
-### Portas expostas
-
-| Porta | Função |
-|---|---|
-| `80` | HTTP — redirecionamento para HTTPS e ACME challenge |
-| `443` | HTTPS |
-| `81` | Painel admin do NPM (pode ser bloqueado no firewall após configurar) |
-
-### Passo a passo
-
-1. Aponte o DNS do seu domínio para o IP do servidor (registro `A`).
-
-2. Suba os containers:
-   ```bash
-   docker compose up -d
-   ```
-
-3. Acesse o painel do NPM: `http://IP_DO_SERVIDOR:81`
-   - Login inicial: `admin@example.com` / `changeme`
-   - **Troque a senha imediatamente.**
-
-4. Crie um **Proxy Host**:
-   - **Domain Names:** `seudominio.com.br`
-   - **Forward Hostname:** `motovida-app`
-   - **Forward Port:** `8000`
-   - Aba **SSL** → "Request a new SSL Certificate" → ative "Force SSL" e "HTTP/2"
-
-5. Pronto — o NPM emite e renova o certificado automaticamente.
-
-> **Firewall:** em produção bloqueie a porta `81` após a configuração inicial e a porta `8000` (o app não deve ser acessível diretamente, apenas via NPM).
-
-## Banco de dados
-
-Tabela e índice são criados/aplicados automaticamente pelas migrações Alembic: `users`, `affiliates`, `support_requests`, `request_history`, `legal_support`, `psychological_support`, `mei_support`, `specialized_support_history`, `courses`, `course_enrollments`, `events`, `partners`, `attendances`, `lgpd_consents`.
-
-Para inspecionar o banco:
+Valide a configuração sem imprimi-la (a expansão contém segredos) e suba:
 
 ```bash
-docker exec -it motovida-mysql mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
+docker compose config -q
+docker compose up -d --build
+docker compose ps
 ```
 
-### Migrações de esquema
+A aplicação fica disponível localmente em `http://127.0.0.1:9205` por padrão. O banco usa volume persistente. No primeiro boot, a aplicação aguarda o MySQL, aplica migrações Alembic e cria o administrador com as credenciais do `.env`. Dados fictícios de afiliado, cursos, parceiros e evento ficam desativados por padrão (`SEED_SAMPLE_DATA=0`). Não há senha de demonstração ativa.
 
-As migrações são versionadas em `backend/alembic/versions/` e aplicadas automaticamente antes dos seeds no startup. Para conferir o estado ou criar uma nova migração:
+> Se a interface do NPM for necessária num servidor remoto, mantenha a porta 81 restrita a localhost e acesse por túnel SSH, por exemplo `ssh -L 8181:127.0.0.1:81 usuario@servidor`; abra `http://127.0.0.1:8181` no computador local. Não publique a porta administrativa na internet.
+
+## Configurar domínio e HTTPS (NPM incluído)
+
+1. Aponte os registros DNS `A` (e `AAAA`, se aplicável) do domínio para o IP público correto. Libere 80/443 no firewall.
+2. Em `.env`, ajuste `SITE_URL=https://seu-dominio.example` e `SESSION_COOKIE_SECURE=1`. Se preencher `ALLOWED_HOSTS`, inclua o domínio e aliases usados.
+3. Inicie também o NPM: `docker compose --profile proxy up -d`. Acesse a interface NPM localmente (ou pelo túnel SSH descrito acima). O primeiro acesso do NPM exibe o fluxo inicial de criação/alteração da conta administrativa; conclua-o e use uma senha exclusiva e forte. Não mantenha credenciais padrão.
+4. Crie um Proxy Host para o domínio, encaminhando para o hostname `motovida-app`, porta `8000`, esquema `http` (na rede Docker Compose).
+5. Solicite um certificado Let's Encrypt na aba SSL, habilite Force SSL e HTTP/2 e salve. Confirme que `/healthz` retorna HTTP 200 por HTTPS.
+
+O NPM deste Compose tem volumes próprios e uma rede privada do projeto. Se já houver outro reverse proxy ocupando 80/443, não suba o serviço NPM incluído: ajuste cuidadosamente o Compose para usar o proxy existente e conecte-o à rede Docker apropriada, sem expor a aplicação publicamente.
+
+## Administração e dados
+
+- Entre com `ADMIN_EMAIL` e `ADMIN_PASSWORD` definidos no `.env` no primeiro boot.
+- Altere a senha inicial após o primeiro acesso e guarde-a num gerenciador de senhas.
+- Faça backup regular do MySQL e teste a restauração. O volume Docker não substitui backup.
+- `docker compose down` para os containers e preserva dados. **Não use `docker compose down -v`** em ambiente com dados: isso apaga os volumes do banco e do NPM.
+- Configuração local e segredos ficam em `.env`, não no GitHub.
+
+## Migrações do banco
+
+As revisões ficam em `backend/alembic/versions/` e são aplicadas automaticamente no startup antes dos seeds. Em banco legado, o sistema só registra a baseline se o schema esperado estiver completo; caso contrário, para com erro explícito. A baseline inicial não aceita downgrade automático. Faça backup antes de qualquer mudança no banco persistente.
+
+O mantenedor do projeto controla a criação, revisão, aplicação e validação das migrações. Para operação normal, quem instala não precisa executar comandos Alembic manualmente.
+
+## Validação após subir
 
 ```bash
-cd backend
-alembic current
-alembic history
-alembic revision --autogenerate -m "descrever mudança"
-alembic upgrade head
+docker compose ps
+curl --fail http://127.0.0.1:9205/healthz
 ```
 
-Revise sempre a migração gerada antes de aplicá-la. Bancos sem histórico são adotados somente quando as tabelas e colunas esperadas já existem; esquemas incompletos fazem o startup parar com erro explícito, sem tentativa destrutiva de reparo. A baseline inicial é intencionalmente não reversível por `downgrade`, para impedir que um comando apague o banco inteiro; faça restore explícito de backup quando necessário.
+Se estiver atrás do NPM, valide também `https://seu-dominio.example/healthz`. Confira os logs sem compartilhá-los antes de remover dados sensíveis: `docker compose logs --tail=100 app`.
 
-## Segurança e LGPD
+## Estrutura
 
-- Senhas com hash **PBKDF2-SHA256** (260 mil iterações + salt) — nunca em texto puro
-- Aceite LGPD obrigatório no cadastro, com **versão da política e data/hora registradas** em `lgpd_consents`
-- Política de privacidade pública em `/privacidade`
-- Rotas `/admin/*` e `/afiliado/*` protegidas por sessão assinada, com perfis separados (admin × afiliado)
-- Cookie de sessão com nome explícito/configurável (`SESSION_COOKIE_NAME`), `HttpOnly`, `SameSite` configurável (`SESSION_COOKIE_SAME_SITE`) e duração máxima configurável (`SESSION_COOKIE_MAX_AGE_SECONDS`); em produção HTTPS use `SESSION_COOKIE_SECURE=1`
-- Headers de proxy para IP real (`CF-Connecting-IP`/`X-Forwarded-For`) só são usados com `TRUST_PROXY_HEADERS=1`; restrinja os proxies aceitos com `TRUSTED_PROXY_CIDRS` (IPs/CIDRs ou presets `private`/`cloudflare`, separados por vírgula). Para NPM/Docker, use `TRUSTED_PROXY_CIDRS=private` para aceitar apenas proxies em redes privadas/loopback. Valor vazio mantém a compatibilidade anterior.
-- URL pública (`SITE_URL`) e Google Analytics 4 (`GA_MEASUREMENT_ID`) são configuráveis por ambiente para manter sitemap, robots e templates alinhados ao domínio real
-- `ALLOWED_HOSTS` permite restringir o header `Host` aceito pela aplicação; `SITE_URL`, `testserver`, `localhost` e `127.0.0.1` são preservados para produção, testes e desenvolvimento local
-- Áreas autenticadas, login/cadastro e bloqueios de scanners recebem `X-Robots-Tag: noindex, nofollow`; rotas sensíveis também usam `Cache-Control: no-store`
-- Limite configurável de corpo em formulários sensíveis (`MAX_FORM_BODY_BYTES`, padrão 64 KiB) rejeita payloads abusivos com 413 antes do processamento/CSRF
-- Bloqueio 404 sem detalhes para variações comuns de scanners (`.env`, `.git`, WordPress/PHP, dumps/backups, manifests de dependências e paths percent-encoded)
-- `/.well-known/security.txt` e `/security.txt` publicados para divulgação responsável de vulnerabilidades, apontando para `/contato` e `/privacidade`
-- Logs HTTP estruturados em JSON no app (`event`, método, path sem query string, status, duração, IP anonimizado e request id); o access log padrão do Uvicorn fica desativado no container para evitar vazamento de query strings sensíveis
-- Alertas não bloqueantes no startup quando a configuração usa segredos padrão/fracos, cookie de sessão sem `Secure` em HTTPS ou `ALLOWED_HOSTS=*`
-- Validação de CPF (algoritmo oficial dos dígitos verificadores), e-mail e UF
-- Sanitização de entradas (remoção de caracteres de controle + limite de tamanho) e escape automático nos templates (Jinja2)
+- `backend/app/`: aplicação FastAPI, modelos, rotas e templates.
+- `backend/alembic/`: migrações versionadas.
+- `backend/tests/`: testes automatizados.
+- `docker-compose.yml`: app, MySQL e NPM opcional.
+- `.env.example`: nomes de opções e valores de exemplo neutros; nunca contém segredos operacionais.
+- `scripts/init-env.py`: gerador local de credenciais.
 
-## Estrutura do projeto
-
-```
-motovida/
-├── docker-compose.yml
-├── .env.example
-├── README.md
-└── backend/
-    ├── Dockerfile
-    ├── requirements.txt
-    └── app/
-        ├── main.py            # entrypoint FastAPI (startup: aguarda DB, migrações, seeds)
-        ├── config.py          # variáveis de ambiente
-        ├── database.py        # engine, sessão e espera do MySQL
-        ├── models.py          # 14 tabelas (SQLAlchemy)
-        ├── security.py        # hash de senha PBKDF2
-        ├── validators.py      # CPF, e-mail, UF, sanitização
-        ├── seeds.py           # admin, afiliado demo, cursos, parceiros, evento
-        ├── deps.py            # sessão do usuário, flash e rótulos PT-BR
-        ├── routers/
-        │   ├── public.py      # home, cadastro, parceiros, contato, privacidade
-        │   ├── auth.py        # login / logout
-        │   ├── affiliate.py   # área exclusiva do afiliado
-        │   └── admin.py       # painel administrativo
-        ├── templates/         # Jinja2 (public / affiliate / admin)
-        └── static/css/        # estilo responsivo mobile-first
-```
-
-## Comandos úteis
+## Desenvolvimento e testes
 
 ```bash
-docker compose up --build           # subir tudo (primeira vez)
-docker compose up -d                # subir em background
-docker compose down                 # parar (mantém os dados)
-docker compose down -v              # parar e APAGAR todos os volumes
-docker compose logs -f app          # logs da aplicação
-docker compose logs -f nginx-proxy-manager  # logs do NPM
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+PYTHONPATH=backend pytest -q
 ```
+
+Não use dados pessoais reais em testes ou seeds. Não comite `.env`, dumps, backups, uploads ou credenciais.
