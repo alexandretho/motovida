@@ -279,6 +279,9 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/local_settings.py",
         "/web.config",
         "/foo%5c.env",
+        # Unicode slash lookalikes can be treated as separators by an
+        # intermediary before the request reaches the application.
+        "/tenant\u2044wp-admin\u2044setup-config.php",
         # Encoded backslashes can become separators after URL decoding.
         "/foo/%2e%2e%5c.env",
         "/foo/%252e%252e%255c.git/config",
@@ -700,6 +703,7 @@ def test_sensitive_scanner_backup_variants_are_blocked(path):
         "/tenant/.github.bak.old/config",
         "/.gitlab-ci.example.yml",
         "/docs/gitlab-ci.yml.example",
+        "/eventos\u2044arquivo",
     ],
 )
 def test_legitimate_public_paths_are_not_blocked_by_scanner_filter(path):

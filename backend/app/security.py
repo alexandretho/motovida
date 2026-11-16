@@ -191,7 +191,9 @@ def is_sensitive_scanner_prefix(path: str) -> bool:
 
 def normalize_scanner_path(path: str) -> str:
     """Normaliza variações comuns usadas por scanners antes do bloqueio."""
-    normalized = f"/{path.lstrip('/')}".replace("\\", "/")
+    # Some intermediaries normalize Unicode slash lookalikes into path
+    # separators. Canonicalize the common fraction slash before checking.
+    normalized = f"/{path.lstrip('/')}".replace("\\", "/").replace("\u2044", "/")
     # Repeated encoding is common in scanner evasion probes. Keep decoding
     # bounded, but continue until stable so nested-encoded paths are covered.
     for _ in range(MAX_SCANNER_PATH_DECODE_PASSES):
