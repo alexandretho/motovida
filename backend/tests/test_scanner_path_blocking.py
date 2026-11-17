@@ -517,6 +517,21 @@ def test_legitimate_public_route_is_preserved():
     assert "User-agent: *" in response.text
 
 
+@pytest.mark.parametrize("slash", ["\\u2044", "\\u2215"])
+def test_unicode_slash_scanner_path_variants_are_blocked(slash):
+    path = f"/wp-admin{slash}setup-config.php"
+
+    assert is_sensitive_scanner_path(path) is True
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+
+
+def test_unicode_division_slash_does_not_block_unrelated_route():
+    assert is_sensitive_scanner_path("/eventos\u2215arquivo") is False
+
+
 @pytest.mark.parametrize("path", [
     "/static/../.env",
     "/static/css/../../.git/config",
