@@ -277,14 +277,15 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     php_version_extension = alias_extension.startswith("php") and all(
         part.isdigit() for part in alias_extension[3:].split(".")
     ) and bool(alias_extension[3:])
-    if alias_stem in {"phpinfo", "phpinf", "i"} or any(
+    if alias_stem in {"phpinfo", "phpinf", "phpversion", "i"} or any(
         alias_stem.startswith(prefix) and alias_stem[len(prefix):].isdigit()
-        for prefix in ("phpinfo", "phpinf", "i")
+        for prefix in ("phpinfo", "phpinf", "phpversion", "i")
     ):
         if (
             (
                 alias_stem.startswith("phpinfo") and alias_stem[len("phpinfo"):].isdigit()
                 or alias_stem.startswith("phpinf") and alias_stem[len("phpinf"):].isdigit()
+                or alias_stem.startswith("phpversion") and alias_stem[len("phpversion"):].isdigit()
                 or alias_stem.startswith("i") and alias_stem[1:].isdigit()
             )
             and alias_separator
@@ -292,7 +293,7 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         ):
             return True
         return not alias_separator or alias_extension in {
-            "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps"
+            "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps", "inc"
         } or php_version_extension
 
     phpinfo_stem, separator, extension = candidate.partition(".")
@@ -303,7 +304,7 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         # Scanners try several executable PHP extensions and occasionally
         # encode the dot. The path is decoded before this function is called.
         return not separator or extension in {
-            "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps"
+            "php", "php3", "php4", "php5", "php7", "php8", "php9", "phtml", "phar", "phps", "inc"
         } or (
             extension.startswith("php")
             and bool(extension[3:])
