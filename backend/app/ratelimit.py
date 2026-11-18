@@ -122,6 +122,10 @@ def client_ip(request) -> str:
 
 def hit(scope: str, ip: str, limit: int, window: float, now: float | None = None) -> bool:
     """Registra uma tentativa. Retorna True se excedeu o limite (bloquear)."""
+    # A misconfigured limit must never silently disable throttling. Treat
+    # non-positive limits/windows as blocked and avoid retaining unusable keys.
+    if limit <= 0 or window <= 0:
+        return True
     now = monotonic() if now is None else now
     with _lock:
         for k in [k for k, v in _hits.items() if not v or now - v[-1] >= window]:

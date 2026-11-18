@@ -32,6 +32,14 @@ def test_scoped_by_ip_and_scope():
     assert ratelimit.hit("cadastro", "1.1.1.1", 3, 60, now=4.0) is False
 
 
+def test_invalid_rate_limit_configuration_blocks_without_storing_key():
+    assert ratelimit.hit("contato", "1.1.1.1", 0, 60, now=1.0) is True
+    assert ratelimit.hit("contato", "1.1.1.1", -1, 60, now=1.0) is True
+    assert ratelimit.hit("contato", "1.1.1.1", 3, 0, now=1.0) is True
+    assert ratelimit.hit("contato", "1.1.1.1", 3, -1, now=1.0) is True
+    assert ratelimit._hits == {}
+
+
 def test_rate_limit_key_store_stays_bounded_and_evicts_oldest():
     original_capacity = ratelimit.MAX_RATE_LIMIT_KEYS
     ratelimit.MAX_RATE_LIMIT_KEYS = 2
