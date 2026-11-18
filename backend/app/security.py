@@ -284,6 +284,13 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         alias_stem.startswith(prefix) and alias_stem[len(prefix):].isdigit()
         for prefix in ("phpinfo", "phpinf", "phpversion", "i")
     ):
+        # A second alias-like suffix (for example phpinfo.phpinfo or i.i)
+        # is also used by scanner lists as a filename variant. Match it only
+        # after an already recognized alias stem to avoid broadening names.
+        if alias_separator and alias_extension in {
+            "phpinfo", "phpinf", "phpversion", "i",
+        }:
+            return True
         if (
             (
                 alias_stem.startswith("phpinfo") and alias_stem[len("phpinfo"):].isdigit()
