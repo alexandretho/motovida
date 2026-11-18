@@ -198,6 +198,9 @@ def normalize_scanner_path(path: str) -> str:
         .replace("\\", "/")
         .replace("\u2044", "/")
         .replace("\u2215", "/")
+        # NFKC normalization in some proxies/frameworks maps the fullwidth
+        # solidus to an ASCII path separator. Canonicalize it before matching.
+        .replace("\uff0f", "/")
     )
     # Repeated encoding is common in scanner evasion probes. Keep decoding
     # bounded, but continue until stable so nested-encoded paths are covered.
