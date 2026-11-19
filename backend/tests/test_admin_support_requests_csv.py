@@ -125,6 +125,9 @@ def test_support_requests_csv_escapes_formula_like_values():
     assert admin.csv_safe("=2+2") == "'=2+2"
     assert admin.csv_safe("+5511999999999") == "'+5511999999999"
     assert admin.csv_safe("@usuario") == "'@usuario"
+    assert admin.csv_safe("  =2+2") == "'  =2+2"
+    assert admin.csv_safe("\t-1+1") == "'\t-1+1"
+    assert admin.csv_safe("\r\n@usuario") == "'\r\n@usuario"
     assert admin.csv_safe("texto normal") == "texto normal"
 
 

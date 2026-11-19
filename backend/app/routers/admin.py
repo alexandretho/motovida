@@ -89,7 +89,10 @@ def short_description(value: str, max_len: int = 120) -> str:
 def csv_safe(value) -> str:
     """Evita interpretação como fórmula ao abrir o CSV em planilhas."""
     text = str(value or "")
-    return f"'{text}" if text[:1] in {"=", "+", "-", "@"} else text
+    # Planilhas podem ignorar espaços e controles iniciais antes de avaliar
+    # uma fórmula. Preserve o conteúdo original, mas prefixe nesses casos.
+    formula_candidate = text.lstrip(" \t\r\n\v\f")
+    return f"'{text}" if formula_candidate[:1] in {"=", "+", "-", "@"} else text
 
 
 def latest_lgpd_consents_by_affiliate(db: Session, affiliate_ids: list[int]) -> dict[int, models.LgpdConsent]:
