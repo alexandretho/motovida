@@ -256,6 +256,13 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
     if filename == ".env" or filename.startswith(".env."):
         return True
 
+    # phpinfo probes are also split across path segments (for example
+    # /phpinfo/.php or /phpinfo/php). Treat those equivalent segments as a
+    # probe without matching descriptive names such as /phpinfo-api.php.
+    phpinfo_segment = filename.replace("_", "").replace("-", "")
+    if phpinfo_segment in {"phpinfo", "phpinf", "phpversion", "i"}:
+        return True
+
     # phpinfo and its short /i alias are probed with PHP version extensions
     # (for example phpinfo7.php and i.php5.6). Keep matching filename-specific
     # so descriptive application names remain available.
