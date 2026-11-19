@@ -587,6 +587,11 @@ def test_matrix_parameter_scanner_prefix_survives_traversal():
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+def test_encoded_separator_scanner_prefix_survives_traversal():
+    # Test the raw ASGI path: HTTP clients may normalize dot segments first.
+    assert is_sensitive_scanner_path("/tenant/wp-admin%2F..%2Feventos") is True
+
+
 @pytest.mark.parametrize("path", [
     "/tenant/wp-admin/setup-config.php",
     "/tenant/%77p-admin/setup-config.php",

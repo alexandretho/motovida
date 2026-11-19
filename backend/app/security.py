@@ -369,13 +369,39 @@ def is_sensitive_scanner_path(path: str) -> bool:
     # Some proxies resolve the path before routing, while others inspect the
     # original path, so do not let the normalized target hide the probe.
     original_path = f"/{path.lstrip('/')}".replace("\\", "/").lower()
+    # Decode the raw path separately for the original-prefix check. The
+    # normalized path can erase a sensitive prefix through traversal, while
+    # the raw path may still contain encoded separators that upstream servers
+    # decode before applying their own routing rules.
+    original_path_decoded = original_path
+    for _ in range(MAX_SCANNER_PATH_DECODE_PASSES):
+        decoded = unquote(original_path_decoded).replace("\\", "/")
+        if decoded == original_path_decoded:
+            break
+        original_path_decoded = decoded
     original_path_without_parameters = "/".join(
         segment.split(";", 1)[0] for segment in original_path.split("/")
     )
+    original_path_decoded_without_parameters = "/".join(
+        segment.split(";", 1)[0] for segment in original_path_decoded.split("/")
+    )
+    original_decoded_segments = [
+        segment.split(";", 1)[0] for segment in original_path_decoded.split("/")
+    ]
     if any(
         candidate == prefix or candidate.startswith(f"{prefix}/")
         for prefix in SENSITIVE_SCANNER_PREFIXES
-        for candidate in (original_path, original_path_without_parameters)
+        for candidate in (
+            original_path,
+            original_path_without_parameters,
+            original_path_decoded,
+            original_path_decoded_without_parameters,
+        )
+    ):
+        return True
+    if any(
+        is_sensitive_scanner_prefix("/" + segment)
+        for segment in original_decoded_segments
     ):
         return True
     # Some servers ignore path parameters while resolving a filename. Check
