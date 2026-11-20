@@ -174,7 +174,10 @@ SENSITIVE_SCANNER_BACKUP_SUFFIXES = (
 
 
 def is_sensitive_scanner_prefix(path: str) -> bool:
-    prefix_segment = path.lstrip("/").partition("/")[0]
+    # Prefix matching must be case-insensitive, just like filename matching
+    # after normalize_scanner_path. Keep this scoped to the first segment so
+    # ordinary application routes containing similar words remain routable.
+    prefix_segment = path.lstrip("/").partition("/")[0].lower()
     for prefix in SENSITIVE_SCANNER_PREFIXES:
         candidate = prefix_segment
         while True:
