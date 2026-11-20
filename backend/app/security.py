@@ -224,6 +224,10 @@ def normalize_scanner_path(path: str) -> str:
         for segment in normalized.replace("\\", "/").split("/")
     ):
         return "/__encoded_traversal__"
+    # HTTP intermediaries and legacy parsers may discard ASCII control bytes
+    # embedded in a path segment. Remove them before matching so controls
+    # cannot disguise a scanner prefix such as /wp-admin%0a/setup.php.
+    normalized = "".join(char for char in normalized if char == "\x00" or (ord(char) >= 0x20 and ord(char) != 0x7f))
     # A decoded question mark begins the query string to ASGI servers; ignore
     # that suffix so scanner probes cannot hide a sensitive path behind it.
     normalized = normalized.split("?", 1)[0]

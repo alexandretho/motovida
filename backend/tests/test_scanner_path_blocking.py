@@ -596,6 +596,18 @@ def test_encoded_separator_scanner_prefix_survives_traversal():
     assert is_sensitive_scanner_path("/tenant/wp-admin%2F..%2Feventos") is True
 
 
+@pytest.mark.parametrize("control", ["%09", "%0a", "%0d"])
+def test_encoded_control_characters_inside_scanner_prefix_are_blocked(control):
+    path = f"/wp-admin{control}/setup-config.php"
+
+    assert is_sensitive_scanner_path(path) is True
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
 @pytest.mark.parametrize("path", [
     "/tenant/wp-admin/setup-config.php",
     "/tenant/%77p-admin/setup-config.php",
