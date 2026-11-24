@@ -596,6 +596,16 @@ def test_encoded_separator_scanner_prefix_survives_traversal():
     assert is_sensitive_scanner_path("/tenant/wp-admin%2F..%2Feventos") is True
 
 
+@pytest.mark.parametrize("path", [
+    "/wp-admin./../eventos",
+    "/wp-admin%20/../eventos",
+    "/tenant/wp-admin./%2e%2e/eventos",
+])
+def test_windows_trimmed_scanner_prefix_survives_traversal(path):
+    # Windows style path handling may trim trailing dots/spaces before resolving traversal.
+    assert is_sensitive_scanner_path(path) is True
+
+
 @pytest.mark.parametrize("control", ["%09", "%0a", "%0d"])
 def test_encoded_control_characters_inside_scanner_prefix_are_blocked(control):
     path = f"/wp-admin{control}/setup-config.php"

@@ -395,6 +395,9 @@ def is_sensitive_scanner_path(path: str) -> bool:
     original_decoded_segments = [
         segment.split(";", 1)[0] for segment in original_path_decoded.split("/")
     ]
+    original_windows_trimmed_segments = [
+        segment.rstrip(". ") for segment in original_decoded_segments
+    ]
     if any(
         candidate == prefix or candidate.startswith(f"{prefix}/")
         for prefix in SENSITIVE_SCANNER_PREFIXES
@@ -408,7 +411,7 @@ def is_sensitive_scanner_path(path: str) -> bool:
         return True
     if any(
         is_sensitive_scanner_prefix("/" + segment)
-        for segment in original_decoded_segments
+        for segment in (*original_decoded_segments, *original_windows_trimmed_segments)
     ):
         return True
     # Some servers ignore path parameters while resolving a filename. Check
