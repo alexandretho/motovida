@@ -579,6 +579,16 @@ def test_phpinfo_path_with_literal_nul_is_blocked_by_filter():
     assert is_sensitive_scanner_path("/phpinfo.php\x00ignored") is True
 
 
+@pytest.mark.parametrize("path", ["/.env%00ignored", "/.git%00ignored/config"])
+def test_sensitive_path_before_decoded_nul_is_blocked(path):
+    assert is_sensitive_scanner_path(path) is True
+
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+
+
 def test_matrix_parameter_scanner_prefix_survives_traversal():
     path = "/wp-admin;v=1/%2e%2e/setup-config.php"
 

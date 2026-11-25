@@ -386,6 +386,13 @@ def is_sensitive_scanner_path(path: str) -> bool:
         if decoded == original_path_decoded:
             break
         original_path_decoded = decoded
+    # Legacy servers and filesystem APIs may terminate a path at a decoded
+    # NUL byte. Check that effective prefix too: otherwise a suffix after NUL
+    # can make the full normalized path look harmless (for example
+    # ``/.env%00ignored``).
+    for candidate in (original_path_decoded, normalize_scanner_path(original_path_decoded)):
+        if "\x00" in candidate and is_sensitive_scanner_path(candidate.split("\x00", 1)[0]):
+            return True
     original_path_without_parameters = "/".join(
         segment.split(";", 1)[0] for segment in original_path.split("/")
     )
