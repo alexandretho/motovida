@@ -43,6 +43,9 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
     "path",
     [
         "/.env",
+        "/.env.anything",
+        "/.env.production.local",
+        "/.env;download=1",
         # Common wildcard probes are represented by concrete requests so the
         # middleware's HTTP response contract stays covered.
         "/.env.local.php",
@@ -73,6 +76,7 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/.svn/entries",
         "/.hg/store",
         "/.git/config",
+        "/.git/anything/at/all",
         "/.git-HEAD",
         "/.git-credentials",
         "/.git-HEAD.bak.old",
@@ -144,6 +148,7 @@ def test_blocked_scanner_attempt_is_logged_without_probe_path_or_query(monkeypat
         "/wp-admin/setup-config.php",
         "/wp-admin/admin-post.php",
         "/wp-admin/",
+        "/wp-admin/anything/at/all",
         "/wp-admin/options.php",
         "/wp-admin/admin-ajax.php",
         "/wp-admin/install.php",
@@ -487,6 +492,26 @@ def test_requested_scanner_families_return_detail_free_404(path):
     assert "Página não encontrada" not in response.text
     assert "Traceback" not in response.text
     assert response.headers["x-robots-tag"] == "noindex, nofollow"
+
+
+@pytest.mark.parametrize("path", [
+    "/.env.secret?token=probe-secret",
+    "/.git/config",
+    "/wp-admin/options.php",
+    "/xmlrpc.php",
+    "/phpinfo.php",
+    "/php_info.php",
+    "/i.php",
+])
+@pytest.mark.parametrize("method", ["get", "head", "post", "trace"])
+def test_scanner_probes_have_generic_404_for_all_methods(path, method):
+    response = client.request(method.upper(), path, headers={"accept": "text/html"})
+
+    assert response.status_code == 404
+    assert response.content in (b"Not Found", b"")  # HEAD omits the response body.
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-robots-tag"] == "noindex, nofollow"
+    assert b"probe-secret" not in response.content
 
 
 @pytest.mark.parametrize("path", ["/phpinfo.php", "/php_info.php", "/i.php"])
