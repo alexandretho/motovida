@@ -298,6 +298,21 @@ def is_sensitive_scanner_filename(filename: str) -> bool:
         alias_stem.startswith(prefix) and alias_stem[len(prefix):].isdigit()
         for prefix in ("phpinfo", "phpinf", "phpversion", "i")
     ):
+        # Scanner wordlists and backup tools sometimes append a harmless
+        # looking second extension (for example phpinfo.php.txt). Match only
+        # known probe extensions followed by a small set of file suffixes;
+        # descriptive names such as phpinfo-report.php remain routable.
+        secondary_suffix = {"txt", "html", "htm", "json", "xml", "log"}
+        if alias_separator and "." in alias_extension:
+            first_extension, _, second_extension = alias_extension.partition(".")
+            if (
+                first_extension in {
+                    "php", "php3", "php4", "php5", "php7", "php8", "php9",
+                    "phtml", "phar", "phps", "inc",
+                }
+                and second_extension in secondary_suffix
+            ):
+                return True
         # A second alias-like suffix (for example phpinfo.phpinfo or i.i)
         # is also used by scanner lists as a filename variant. Match it only
         # after an already recognized alias stem to avoid broadening names.
